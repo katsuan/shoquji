@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" data-ls-dark="auto">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -16,7 +16,8 @@
 <meta property="og:image:alt" content="しょくじ（ShoQuji）：食べたものを、さっと記録">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#fff7e8">
+<meta name="theme-color" content="#fff7e8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16151a" media="(prefers-color-scheme: dark)">
 <!-- 確認がすむまで、検索に出さない（公開するときに外す） -->
 <meta name="robots" content="noindex, nofollow">
 <!-- アイコン・ロゴ・OGP は tools/icon.py で作る -->
@@ -28,7 +29,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610221010">
+<link rel="stylesheet" href="style.css?v=202610221446">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -129,7 +130,9 @@
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <!-- Q キットの動き（トーストなど） -->
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
-<script type="module" src="app.js?v=202610221010"></script>
+<script type="module" src="app.js?v=202610221446"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
+<!-- 電波がなくても開けるように（sw.js） -->
+<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
 </html>

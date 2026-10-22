@@ -120,3 +120,9 @@ body {
 .ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--ls-line); font-size: 14px; }
 .ranking li span:last-child { color: var(--ls-subtext); font-size: 13px; white-space: nowrap; }
 .ranking-title { margin: 6px 0 0; font-size: 14px; font-weight: 800; }
+
+/* ---- 暗い表示（index.html の data-ls-dark="auto"。Q キットの色は ui.css が暗くする） ---- */
+@media (prefers-color-scheme: dark) {
+  :root[data-ls-dark="auto"] body { background: radial-gradient(circle at top right, rgba(236, 138, 22, 0.16), transparent 40%), var(--ls-bg); }
+  :root[data-ls-dark="auto"] .bar { background: var(--ls-surface-sub); }
+}

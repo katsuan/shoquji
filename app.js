@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221010";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221010";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221446";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221446";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -337,8 +337,9 @@ $("importFile").addEventListener("change", async (e) => {
   }
 });
 
-$("resetBtn").addEventListener("click", () => {
-  if (!confirm("この端末のしょくじの記録をすべて消しますか？（もとに戻せません）")) return;
+$("resetBtn").addEventListener("click", async () => {
+  const ok = await LineShareUI.ask({ title: "記録をすべて消しますか？", text: "この端末のしょくじの記録を、すべて消します。もとに戻せません。", ok: "すべて消す", danger: true });
+  if (!ok) return;
   state = reset();
   cancelEdit();
   render();
