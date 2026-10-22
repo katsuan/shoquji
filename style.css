@@ -50,6 +50,7 @@ body {
 .brand-icon { display: block; width: 30px; height: 30px; }
 .brand-logo { display: block; width: auto; height: 28px; }
 .brand-copy { margin: -6px 0 0; color: var(--accent-dark); font-size: 14px; font-weight: 800; }
+.lead { margin: -8px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
 
 /* 日付 */
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -150,6 +151,12 @@ input:focus { outline: none; border-color: var(--accent); background: #fff; }
 .btn.line small { font-size: 12px; opacity: 0.9; }
 .btn.line.is-off { background: #c9c2b8; pointer-events: none; }
 .file-btn { position: relative; overflow: hidden; }
+.send-area { display: grid; gap: 6px; }
+.send-note { margin: 0; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-align: center; }
+.edit-hint { margin: -4px 0 0; color: var(--ink-soft); font-size: 12px; text-align: right; }
+/* 記録したばかりの品を、少しのあいだ光らせる */
+.item.is-new { animation: shine 1.6s ease-out; }
+@keyframes shine { 0%, 30% { background: #ffe1a6; border-color: var(--accent); } 100% { background: transparent; } }
 .send-text { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
 .send-text input { flex: 0 0 auto; width: 20px; height: 20px; min-height: 0; margin: 1px 0 0; padding: 0; accent-color: var(--accent); }
 .send-text span { display: grid; gap: 1px; }
@@ -161,6 +168,8 @@ input:focus { outline: none; border-color: var(--accent); background: #fff; }
 .status { min-height: 1.2em; margin: 0; color: var(--accent-dark); font-size: 14px; font-weight: 700; }
 .status:empty { display: none; }
 .hint { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+.hint.sub-title { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); color: var(--ink); font-size: 14px; font-weight: 800; }
+.hint.sub-title:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
 
 /* この日の合計：カロリーは大きく、PFC は細いバー */
 .totals { display: grid; gap: 8px; }

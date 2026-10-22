@@ -10,7 +10,7 @@
 <meta property="og:title" content="しょくじ｜食べたものを、さっと記録">
 <meta property="og:description" content="食べたものをさっと記録。1日の合計・1週間のふりかえり。記録はこの端末の中だけで、LINE にカードで送れます。">
 <meta property="og:url" content="https://katsuan.github.io/shoquji/">
-<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=2">
+<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=4">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="しょくじ（ShoQuji）：食べたものを、さっと記録">
@@ -26,7 +26,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <main class="wrap">
@@ -36,6 +36,7 @@
     <img class="brand-logo" src="logo.svg" alt="ShoQuji" width="85" height="28">
   </header>
   <p class="brand-copy">食べたら、ぱっと残そう</p>
+  <p class="lead">食べたものを入れるだけ。記録はこの端末の中だけに残ります。</p>
 
   <!-- 日付：きょう・きのう・ほかの日。記録する日と、下の「この日のしょくじ」の日は同じ -->
   <nav class="days" aria-label="日付">
@@ -75,9 +76,11 @@
     <h2 id="dayTitle" class="card-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
-    <a id="sendBtn" class="btn line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
-    <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE のボット（食事記録）に送ると、ボットが読んで記録できる -->
-    <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送るとき用（カードの後ろに文字も1通つきます）</small></span></label>
+    <!-- 記録が1件以上あるときだけ出す -->
+    <div id="sendArea" class="send-area" hidden>
+      <a id="sendBtn" class="btn line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
+      <p id="sendTextNote" class="send-note" hidden>📝 記録用の文字もいっしょに送ります（⚙️ で切りかえ）</p>
+    </div>
   </section>
 
   <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
@@ -90,15 +93,19 @@
 
   <!-- 設定：目標・控え（書き出し・読みこみ）・全部消す -->
   <details class="card fold" id="settings">
-    <summary class="card-title">⚙️ 目標・記録の控え</summary>
-    <p class="hint">1日の目標（ふりかえりのバーの目安）</p>
+    <summary class="card-title">⚙️ 目標・送り方・記録の控え</summary>
+    <p class="hint sub-title">🎯 1日の目標（バーの目安）</p>
     <div class="nutri-grid">
       <label class="field"><span class="label">カロリー</span><span class="unit-input"><input id="tKcal" inputmode="decimal"><i>kcal</i></span></label>
       <label class="field"><span class="label">たんぱく質</span><span class="unit-input"><input id="tP" inputmode="decimal"><i>g</i></span></label>
       <label class="field"><span class="label">脂質</span><span class="unit-input"><input id="tF" inputmode="decimal"><i>g</i></span></label>
       <label class="field"><span class="label">炭水化物</span><span class="unit-input"><input id="tC" inputmode="decimal"><i>g</i></span></label>
     </div>
-    <p class="hint">🔒 記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておいてください。</p>
+    <p class="hint sub-title">💬 LINE で送るとき</p>
+    <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
+    <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
+    <p class="hint sub-title">🔒 記録の控え</p>
+    <p class="hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておいてください。</p>
     <div class="form-actions">
       <button id="exportBtn" class="btn ghost" type="button">⬇️ 控えを書き出す</button>
       <label class="btn ghost file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
@@ -112,7 +119,7 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script type="module" src="app.js?v=2"></script>
+<script type="module" src="app.js?v=4"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 </body>
 </html>

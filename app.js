@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, save, updateLog } from "./js/store.js?v=2";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=2";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, save, updateLog } from "./js/store.js?v=4";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=4";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -10,7 +10,8 @@ let state = load();
 const ui = {
   date: ymd(), // 記録する日・見る日
   meal: mealNow(),
-  editing: null // 直している記録の id
+  editing: null, // 直している記録の id
+  justAdded: null // 記録したばかりの id（一覧で少し光らせる）
 };
 
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -120,8 +121,8 @@ $("saveBtn").addEventListener("click", () => {
     say(`✏️ 「${entry.name.trim()}」を直しました`);
     ui.editing = null;
   } else {
-    addLog(state, entry);
-    say(`🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました`);
+    ui.justAdded = addLog(state, entry).id;
+    say(`🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`);
   }
   persist();
   clearForm();
@@ -167,32 +168,36 @@ function renderDay() {
     $("dayList").innerHTML = '<p class="empty">まだ記録がありません。上で食べたものを入れてみましょう 🍙</p>';
   } else {
     const missing = t.count - t.withKcal;
+    // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
+    const hasPfc = logs.some((l) => l.p != null || l.f != null || l.c != null);
     $("totals").innerHTML = `
       <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
       <div class="bar${t.kcal > g.kcal ? " over" : ""}"><i style="width:${pct(t.kcal, g.kcal)}%"></i></div>
-      <div class="pfc">
+      ${!hasPfc ? "" : `<div class="pfc">
         ${[["p", "たんぱく質"], ["f", "脂質"], ["c", "炭水化物"]]
           .map(([k, name]) => `<div class="${k}">${name}<b>${fmt(t[k])}<small> / ${fmt(g[k])}g</small></b><span class="bar"><i style="width:${pct(t[k], g[k])}%"></i></span></div>`)
           .join("")}
-      </div>
+      </div>`}
       ${missing ? `<p class="note">※ カロリーを入れていないものが ${missing} 件あります（合計に入っていません）</p>` : ""}`;
     $("dayList").innerHTML = MEALS.map((meal) => {
       const items = logs.filter((l) => l.meal === meal);
       if (!items.length) return "";
       return `<div class="meal-group"><span class="meal-tag">${meal}</span><div class="items">${items
         .map(
-          (l) => `<div class="item${l.id === ui.editing ? " is-editing" : ""}">
+          (l) => `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
             <button class="name" type="button" data-edit="${l.id}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
             <button class="del" type="button" data-del="${l.id}" aria-label="${esc(l.name)} を消す">✕</button>
           </div>`
         )
         .join("")}</div></div>`;
-    }).join("");
+    }).join("") + '<p class="edit-hint">名前を押すと直せます</p>';
   }
-  const send = $("sendBtn");
-  send.classList.toggle("is-off", !logs.length);
-  send.href = logs.length ? cardUrl(ui.date, logs, t) : "#";
+  ui.justAdded = null;
+  // LINE で送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
+  $("sendArea").hidden = !logs.length;
+  $("sendTextNote").hidden = !state.sendText;
+  $("sendBtn").href = logs.length ? cardUrl(ui.date, logs, t) : "#";
 }
 
 $("dayList").addEventListener("click", (e) => {
