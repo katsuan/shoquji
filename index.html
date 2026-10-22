@@ -26,92 +26,100 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4">
+<!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
+<link rel="stylesheet" href="style.css?v=202610221010">
 </head>
 <body>
-<main class="wrap">
-  <!-- 見出しの行：アイコン＋名前（左）と横長のロゴ（右）。ほかの Q のツールと同じ形 -->
-  <header class="brand">
-    <h1 class="brand-name"><img class="brand-icon" src="icon.svg" alt="" width="30" height="30">しょくじ</h1>
-    <img class="brand-logo" src="logo.svg" alt="ShoQuji" width="85" height="28">
+<main class="ls-page ls-stack">
+  <!-- 見出しの行：アイコン＋名前（左）と横長のロゴ（右）。Q キットの ls-brand -->
+  <header class="ls-brand">
+    <h1 class="ls-brand-name"><img class="ls-brand-icon" src="icon.svg" alt="" width="30" height="30">しょくじ</h1>
+    <img class="ls-brand-logo" src="logo.svg" alt="ShoQuji" width="85" height="28">
   </header>
-  <p class="brand-copy">食べたら、ぱっと残そう</p>
-  <p class="lead">食べたものを入れるだけ。記録はこの端末の中だけに残ります。</p>
+  <p class="ls-brand-copy">食べたら、ぱっと残そう</p>
+  <p class="ls-hint lead">食べたものを入れるだけ。記録はこの端末の中だけに残ります。</p>
 
   <!-- 日付：きょう・きのう・ほかの日。記録する日と、下の「この日のしょくじ」の日は同じ -->
   <nav class="days" aria-label="日付">
-    <button class="chip" type="button" data-day="0">きょう</button>
-    <button class="chip" type="button" data-day="-1">きのう</button>
-    <label class="chip date-pick"><span id="pickLabel">📅 日付</span><input id="datePick" type="date" aria-label="ほかの日"></label>
+    <button class="ls-chip" type="button" data-day="0">きょう</button>
+    <button class="ls-chip" type="button" data-day="-1">きのう</button>
+    <label class="ls-chip date-pick"><span id="pickLabel">📅 日付</span><input id="datePick" type="date" aria-label="ほかの日"></label>
   </nav>
 
   <!-- 記録する -->
-  <section class="card" aria-labelledby="formTitle">
-    <h2 id="formTitle" class="card-title">📝 <span id="formHeading">記録する</span></h2>
+  <section class="ls-panel" aria-labelledby="formTitle">
+    <h2 id="formTitle" class="ls-panel-title">📝 <span id="formHeading">記録する</span></h2>
     <div class="meals" role="radiogroup" aria-label="いつ食べた？"></div>
-    <label class="field">
-      <span class="label">食べたもの</span>
-      <input id="name" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done">
+    <label class="ls-field">
+      <span class="ls-label">食べたもの</span>
+      <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done">
     </label>
     <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
-    <div id="suggest" class="suggest" aria-label="よく食べるもの"></div>
-    <details id="nutri" class="nutri">
-      <summary>栄養も入れる <small>（入れなくても記録できます）</small></summary>
-      <div class="nutri-grid">
-        <label class="field"><span class="label">カロリー</span><span class="unit-input"><input id="kcal" inputmode="decimal" placeholder="0"><i>kcal</i></span></label>
-        <label class="field"><span class="label">たんぱく質</span><span class="unit-input"><input id="p" inputmode="decimal" placeholder="0"><i>g</i></span></label>
-        <label class="field"><span class="label">脂質</span><span class="unit-input"><input id="f" inputmode="decimal" placeholder="0"><i>g</i></span></label>
-        <label class="field"><span class="label">炭水化物</span><span class="unit-input"><input id="c" inputmode="decimal" placeholder="0"><i>g</i></span></label>
+    <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
+    <details id="nutri" class="ls-fold nutri">
+      <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
+      <div class="ls-fold-body nutri-grid">
+        <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" placeholder="0"><i>kcal</i></span></label>
+        <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
+        <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="f" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
+        <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
       </div>
     </details>
     <div class="form-actions">
-      <button id="saveBtn" class="btn primary" type="button">＋ 記録する</button>
-      <button id="cancelEdit" class="btn ghost" type="button" hidden>やめる</button>
+      <button id="saveBtn" class="ls-button is-primary is-block" type="button">＋ 記録する</button>
+      <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>
     </div>
     <p id="status" class="status" role="status"></p>
   </section>
 
   <!-- この日のしょくじ：合計と目標、食事ごとの一覧（押すと直せる）、LINE で送る -->
-  <section class="card" aria-labelledby="dayTitle">
-    <h2 id="dayTitle" class="card-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
+  <section class="ls-panel" aria-labelledby="dayTitle">
+    <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
-      <a id="sendBtn" class="btn line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
-      <p id="sendTextNote" class="send-note" hidden>📝 記録用の文字もいっしょに送ります（⚙️ で切りかえ）</p>
+      <a id="sendBtn" class="ls-button is-block line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
+      <p id="sendTextNote" class="ls-hint send-note" hidden>📝 記録用の文字もいっしょに送ります（⚙️ で切りかえ）</p>
     </div>
   </section>
 
-  <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
-  <details class="card fold" id="lookback">
-    <summary class="card-title">📈 ふりかえり</summary>
-    <div id="streak" class="streak"></div>
-    <div id="week" class="week" aria-label="1週間のカロリー"></div>
-    <div id="ranking" class="ranking"></div>
-  </details>
+  <div class="ls-folds">
+    <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
+    <details class="ls-fold" id="lookback">
+      <summary><span class="ls-fold-icon" aria-hidden="true">📈</span>ふりかえり</summary>
+      <div class="ls-fold-body">
+        <div id="streak" class="streak"></div>
+        <div id="week" class="week" aria-label="1週間のカロリー"></div>
+        <div id="ranking" class="ranking"></div>
+      </div>
+    </details>
 
-  <!-- 設定：目標・控え（書き出し・読みこみ）・全部消す -->
-  <details class="card fold" id="settings">
-    <summary class="card-title">⚙️ 目標・送り方・記録の控え</summary>
-    <p class="hint sub-title">🎯 1日の目標（バーの目安）</p>
-    <div class="nutri-grid">
-      <label class="field"><span class="label">カロリー</span><span class="unit-input"><input id="tKcal" inputmode="decimal"><i>kcal</i></span></label>
-      <label class="field"><span class="label">たんぱく質</span><span class="unit-input"><input id="tP" inputmode="decimal"><i>g</i></span></label>
-      <label class="field"><span class="label">脂質</span><span class="unit-input"><input id="tF" inputmode="decimal"><i>g</i></span></label>
-      <label class="field"><span class="label">炭水化物</span><span class="unit-input"><input id="tC" inputmode="decimal"><i>g</i></span></label>
-    </div>
-    <p class="hint sub-title">💬 LINE で送るとき</p>
-    <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
-    <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
-    <p class="hint sub-title">🔒 記録の控え</p>
-    <p class="hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておいてください。</p>
-    <div class="form-actions">
-      <button id="exportBtn" class="btn ghost" type="button">⬇️ 控えを書き出す</button>
-      <label class="btn ghost file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
-    </div>
-    <button id="resetBtn" class="link danger" type="button">記録をすべて消す</button>
-  </details>
+    <!-- 設定：目標・控え（書き出し・読みこみ）・全部消す -->
+    <details class="ls-fold" id="settings">
+      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>目標・送り方・記録の控え</summary>
+      <div class="ls-fold-body">
+        <p class="sub-title">🎯 1日の目標（バーの目安）</p>
+        <div class="nutri-grid">
+          <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="tKcal" class="ls-input" inputmode="decimal"><i>kcal</i></span></label>
+          <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="tP" class="ls-input" inputmode="decimal"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="tF" class="ls-input" inputmode="decimal"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal"><i>g</i></span></label>
+        </div>
+        <p class="sub-title">💬 LINE で送るとき</p>
+        <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
+        <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
+        <p class="sub-title">🔒 記録の控え</p>
+        <p class="ls-hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておいてください。</p>
+        <div class="form-actions">
+          <button id="exportBtn" class="ls-button is-block" type="button">⬇️ 控えを書き出す</button>
+          <label class="ls-button is-block file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
+        </div>
+        <button id="resetBtn" class="link danger" type="button">記録をすべて消す</button>
+      </div>
+    </details>
+  </div>
 
   <!-- 「📤 しょくじを紹介する」：おくるんで紹介カードを送る窓口（line-share/shared/tool-share.js。中身は line-share/data/hub-links.json） -->
   <div data-tool-share></div>
@@ -119,7 +127,9 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script type="module" src="app.js?v=4"></script>
+<!-- Q キットの動き（トーストなど） -->
+<script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
+<script type="module" src="app.js?v=202610221010"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 </body>
 </html>

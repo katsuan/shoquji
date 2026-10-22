@@ -85,6 +85,13 @@ export function removeLog(state, id) {
   if (state.logs.length !== before) state.deleted = [...state.deleted, id].slice(-500);
 }
 
+// 消した記録を戻す（「元に戻す」）。消した記録の id の控えからも外す
+export function restoreLog(state, log) {
+  if (!log || state.logs.some((l) => l.id === log.id)) return;
+  state.logs.push(log);
+  state.deleted = state.deleted.filter((id) => id !== log.id);
+}
+
 function normalize(e) {
   return {
     date: e.date,

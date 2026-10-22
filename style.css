@@ -1,225 +1,122 @@
-/* しょくじ（ShoQuji）。色はロゴの玉子焼きの黄色、字は丸ゴシック（ほかのツールとそろえる） */
+/* しょくじ（ShoQuji）。部品（見出しの行・カード・チップ・入力欄・ボタン・開閉・トースト）は Q キット
+ * （https://katsuan.github.io/line-share/shared/ui.css）。ここには、しょくじの色と字、しょくじにしかない見た目だけを置く */
 :root {
-  --accent: #ec8a16;
-  --accent-dark: #b35f00;
-  --accent-soft: #fff0d6;
+  /* Q キットの色と字を、しょくじの色（ロゴの玉子焼きの黄色）と丸ゴシックに */
+  --ls-accent: #ec8a16;
+  --ls-accent-strong: #c97513;
+  --ls-accent-soft: #fff0d6;
+  --ls-accent-ink: #b35f00;
+  --ls-bg: #fff7e8;
+  --ls-surface-sub: #fffaf0;
+  --ls-text: #3b2f22;
+  --ls-subtext: #6f604f; /* 年配の方でも読めるよう濃いめ */
+  --ls-line: #f1e0c4;
+  --ls-line-strong: #ead2ac;
+  --ls-shadow: 0 10px 28px rgba(150, 100, 30, 0.1);
+  --ls-font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
+
   --ume: #e64648;
-  --ink: #3b2f22;
-  --ink-soft: #6f604f; /* 年配の方でも読めるよう濃いめ */
-  --line: #f1e0c4;
   --line-green: #06c755;
-  --bg: #fff7e8;
-  --card: #ffffff;
-  --shadow: 0 10px 28px rgba(150, 100, 30, 0.1);
-  --radius-lg: 22px;
-  --radius-md: 14px;
-  --max-w: 480px;
-  --font: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif;
   /* PFC の色（たんぱく質・脂質・炭水化物） */
   --pc: #e0573f;
   --fc: #e8a317;
   --cc: #4a9be0;
 }
 
-* { box-sizing: border-box; }
-
-/* iPhone・LINE の中のブラウザで、キーボードが出て画面がずれたとき、ページの外（黒）が見えないよう、ページそのものにも背景の色 */
-html { background-color: var(--bg); }
 body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top right, #ffe2ad, transparent 40%), var(--bg);
-  color: var(--ink);
-  font-family: var(--font);
+  background: radial-gradient(circle at top right, #ffe2ad, transparent 40%), var(--ls-bg);
   -webkit-font-smoothing: antialiased;
 }
 
-[hidden] { display: none !important; }
-
-.wrap {
-  display: grid;
-  gap: 14px;
-  width: min(100%, var(--max-w));
-  margin: 0 auto;
-  padding: 14px 16px calc(32px + env(safe-area-inset-bottom));
+.ls-page {
+  padding-bottom: calc(32px + env(safe-area-inset-bottom));
 }
+.lead { margin-top: -8px; }
 
-/* 見出しの行：アイコン＋名前（左）とロゴ（右） */
-.brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.brand-name { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 24px; font-weight: 800; }
-.brand-icon { display: block; width: 30px; height: 30px; }
-.brand-logo { display: block; width: auto; height: 28px; }
-.brand-copy { margin: -6px 0 0; color: var(--accent-dark); font-size: 14px; font-weight: 800; }
-.lead { margin: -8px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
-
-/* 日付 */
+/* 日付・食事：横に等分 */
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.chip {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 44px;
-  padding: 0 8px;
-  border: 2px solid var(--line);
-  border-radius: 999px;
-  background: var(--card);
-  color: var(--ink);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.chip.is-active, .chip[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-dark); }
+.meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.days .ls-chip, .meals .ls-chip { min-height: 44px; font-size: 15px; font-weight: 800; }
 /* 日付の欄は丸いボタンの上に透明で重ねる（押すと端末の日付えらびが開く） */
 .date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 
-.card {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  box-shadow: var(--shadow);
-}
-.card-title { margin: 0; font-size: 17px; font-weight: 800; }
-
-/* 朝・昼・夜・間食 */
-.meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-.meals .chip { min-height: 42px; font-size: 15px; }
-
-.field { display: grid; gap: 4px; min-width: 0; }
-.label { color: var(--ink-soft); font-size: 13px; font-weight: 700; }
-input {
-  width: 100%;
-  min-height: 46px;
-  padding: 8px 12px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fffdf8;
-  color: var(--ink);
-  font: inherit;
-  font-size: 16px; /* 16px 未満だと iPhone で入力のとき画面が寄る */
-}
-input:focus { outline: none; border-color: var(--accent); background: #fff; }
-.unit-input { position: relative; display: block; }
-.unit-input input { padding-right: 44px; text-align: right; }
-.unit-input i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-soft); font-size: 13px; font-style: normal; pointer-events: none; }
-
-/* よく食べるもの（押すと入る） */
-.suggest { display: flex; flex-wrap: wrap; gap: 6px; }
-.suggest:empty { display: none; }
-.pick {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 4px;
-  min-height: 36px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--line);
-  border-radius: 999px;
-  background: #fffaf0;
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.pick small { color: var(--ink-soft); font-size: 11px; font-weight: 700; }
-
-.nutri summary { cursor: pointer; color: var(--accent-dark); font-size: 14px; font-weight: 800; }
-.nutri summary small { color: var(--ink-soft); font-weight: 700; }
-.nutri[open] summary { margin-bottom: 10px; }
+/* 単位つきの入力欄 */
+.unit-input { position: relative; display: block; min-width: 0; }
+.unit-input .ls-input { padding-right: 44px; text-align: right; }
+.unit-input i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ls-subtext); font-size: 13px; font-style: normal; pointer-events: none; }
 .nutri-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
-.form-actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
-.btn {
-  display: grid;
-  place-items: center;
-  min-height: 50px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 999px;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 800;
-  text-align: center;
-  text-decoration: none;
-  cursor: pointer;
-}
-.btn.primary { background: linear-gradient(135deg, #ffb53d, var(--accent)); color: #fff; box-shadow: 0 6px 16px rgba(236, 138, 22, 0.3); }
-.btn.ghost { border: 2px solid var(--line); background: var(--card); color: var(--ink); font-size: 14px; }
-.btn.line { display: flex; align-items: center; justify-content: center; gap: 4px; background: var(--line-green); color: #fff; }
-.btn.line small { font-size: 12px; opacity: 0.9; }
-.btn.line.is-off { background: #c9c2b8; pointer-events: none; }
-.file-btn { position: relative; overflow: hidden; }
-.send-area { display: grid; gap: 6px; }
-.send-note { margin: 0; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-align: center; }
-.edit-hint { margin: -4px 0 0; color: var(--ink-soft); font-size: 12px; text-align: right; }
-/* 記録したばかりの品を、少しのあいだ光らせる */
-.item.is-new { animation: shine 1.6s ease-out; }
-@keyframes shine { 0%, 30% { background: #ffe1a6; border-color: var(--accent); } 100% { background: transparent; } }
-.send-text { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
-.send-text input { flex: 0 0 auto; width: 20px; height: 20px; min-height: 0; margin: 1px 0 0; padding: 0; accent-color: var(--accent); }
-.send-text span { display: grid; gap: 1px; }
-.send-text small { color: var(--ink-soft); font-size: 12px; font-weight: 700; }
-.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
-.link.danger { color: #b3261e; }
+/* よく食べるもの（押すと入る） */
+.suggest:empty { display: none; }
+.pick small { color: var(--ls-subtext); font-size: 11px; font-weight: 700; }
 
-.status { min-height: 1.2em; margin: 0; color: var(--accent-dark); font-size: 14px; font-weight: 700; }
+.form-actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
+.ls-button.line { gap: 4px; border-color: var(--line-green); background: var(--line-green); color: #fff; }
+.ls-button.line small { font-size: 12px; opacity: 0.9; }
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.send-area { display: grid; gap: 6px; }
+.send-note { font-size: 12px; font-weight: 700; text-align: center; }
+.send-text { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.send-text input { flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ls-accent); }
+.send-text span { display: grid; gap: 1px; }
+.send-text small { color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
+.link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.link.danger { color: var(--ls-danger); }
+.sub-title { margin: 6px 0 0; padding-top: 10px; border-top: 1px dashed var(--ls-line); font-size: 14px; font-weight: 800; }
+.sub-title:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Q キットのトーストが読めないときだけ出す文字 */
+.status { min-height: 1.2em; margin: 0; color: var(--ls-accent-ink); font-size: 14px; font-weight: 700; }
 .status:empty { display: none; }
-.hint { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
-.hint.sub-title { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line); color: var(--ink); font-size: 14px; font-weight: 800; }
-.hint.sub-title:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
 
 /* この日の合計：カロリーは大きく、PFC は細いバー */
 .totals { display: grid; gap: 8px; }
+.totals:empty { display: none; }
 .kcal-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .kcal-line b { font-size: 30px; font-weight: 800; letter-spacing: 0.01em; }
 .kcal-line b small { margin-left: 2px; font-size: 14px; }
-.kcal-line span { color: var(--ink-soft); font-size: 13px; font-weight: 700; }
+.kcal-line span { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .bar { position: relative; height: 10px; overflow: hidden; border-radius: 999px; background: #f6ead6; }
-.bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--accent); }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--ls-accent); }
 .bar.over i { background: var(--ume); }
 .pfc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.pfc div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
-.pfc b { color: var(--ink); font-size: 14px; }
+.pfc div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
+.pfc b { color: var(--ls-text); font-size: 14px; }
 .pfc .bar { height: 6px; }
 .pfc .p i { background: var(--pc); }
 .pfc .f i { background: var(--fc); }
 .pfc .c i { background: var(--cc); }
-.note { color: var(--ink-soft); font-size: 12px; }
+.note { margin: 0; color: var(--ls-subtext); font-size: 12px; }
 
 /* 食事ごとの一覧：横に「朝」などの札、押すと直せる */
 .day-list { display: grid; gap: 10px; }
 .meal-group { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: start; }
-.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-dark); font-size: 13px; font-weight: 800; }
+.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 10px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 13px; font-weight: 800; }
 .items { display: grid; gap: 6px; }
-.item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 6px 4px 6px 10px; border: 1.5px solid var(--line); border-radius: 12px; }
-.item.is-editing { border-color: var(--accent); background: var(--accent-soft); }
-.item button.name { overflow: hidden; padding: 4px 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 15px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-.item .kc { color: var(--ink-soft); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 6px 4px 6px 10px; border: 1.5px solid var(--ls-line); border-radius: 12px; }
+.item.is-editing { border-color: var(--ls-accent); background: var(--ls-accent-soft); }
+.item button.name { overflow: hidden; padding: 4px 0; border: 0; background: none; font-size: 15px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.item .kc { color: var(--ls-subtext); font-size: 13px; font-weight: 700; white-space: nowrap; }
 .item .del { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: #a8978a; font-size: 16px; cursor: pointer; }
-.empty { margin: 0; color: var(--ink-soft); font-size: 14px; text-align: center; }
+.edit-hint { margin: -4px 0 0; color: var(--ls-subtext); font-size: 12px; text-align: right; }
+/* 記録したばかりの品を、少しのあいだ光らせる */
+.item.is-new { animation: shine 1.6s ease-out; }
+@keyframes shine { 0%, 30% { background: #ffe1a6; border-color: var(--ls-accent); } 100% { background: transparent; } }
 
-/* たたんだ欄 */
-.fold > summary { cursor: pointer; list-style: none; }
-.fold > summary::-webkit-details-marker { display: none; }
-.fold > summary::after { content: "▾"; float: right; color: var(--ink-soft); }
-.fold[open] > summary::after { content: "▴"; }
-
+/* ふりかえり */
 .streak { font-size: 15px; font-weight: 800; }
-.streak b { color: var(--accent-dark); font-size: 22px; }
-/* 1週間：縦のバー。目標の線を横に */
-/* 数字（14px）・バー（110px）・日付（16px）の3段。目標の線はバーの段の中に JS で置く */
+.streak b { color: var(--ls-accent-ink); font-size: 22px; }
+/* 1週間：縦のバー。数字（14px）・バー（110px）・日付（16px）の3段。目標の線はバーの段の中に JS で置く */
 .week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .week .goal { position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(230, 70, 72, 0.5); pointer-events: none; }
 .week .goal span { position: absolute; right: 0; top: 1px; padding: 0 3px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); color: var(--ume); font-size: 10px; font-weight: 700; }
-.day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 2px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ink-soft); }
+.day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 2px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
 .day-col .v { font-size: 10px; line-height: 14px; white-space: nowrap; }
 .day-col .col { display: flex; align-items: flex-end; justify-content: center; }
-.day-col .col i { width: 70%; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(#ffc45a, var(--accent)); }
-.day-col.today { color: var(--accent-dark); }
+.day-col .col i { width: 70%; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(#ffc45a, var(--ls-accent)); }
+.day-col.today { color: var(--ls-accent-ink); }
 .ranking { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--line); font-size: 14px; }
-.ranking li span:last-child { color: var(--ink-soft); font-size: 13px; white-space: nowrap; }
+.ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--ls-line); font-size: 14px; }
+.ranking li span:last-child { color: var(--ls-subtext); font-size: 13px; white-space: nowrap; }
 .ranking-title { margin: 6px 0 0; font-size: 14px; font-weight: 800; }

@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, save, updateLog } from "./js/store.js?v=4";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=4";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221010";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221010";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -21,7 +21,12 @@ function persist() {
   if (!save(state)) say("この端末に残せませんでした（プライベートブラウズでは、閉じると消えます）");
 }
 
-function say(text) {
+// 知らせは Q キットのトースト（下に数秒）。取り消せるものは「元に戻す」を付ける。読めないときは下の文字で
+function say(text, undo) {
+  if (window.LineShareUI?.toast) {
+    window.LineShareUI.toast(text, undo ? { actionLabel: "元に戻す", onAction: undo } : {});
+    return;
+  }
   $("status").textContent = text;
   clearTimeout(say.timer);
   if (text) say.timer = setTimeout(() => ($("status").textContent = ""), 3500);
@@ -56,7 +61,7 @@ $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.targ
 // ---- 朝・昼・夜・間食 ----
 function renderMeals() {
   const box = document.querySelector(".meals");
-  box.innerHTML = MEALS.map((m) => `<button class="chip" type="button" role="radio" aria-checked="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
+  box.innerHTML = MEALS.map((m) => `<button class="ls-chip" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
 }
 document.querySelector(".meals").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");
@@ -72,7 +77,7 @@ function renderSuggest() {
     .filter((m) => !q || (m.name.includes(q) && m.name !== q))
     .slice(0, q ? 6 : 8);
   $("suggest").innerHTML = list
-    .map((m, i) => `<button class="pick" type="button" data-i="${i}">${esc(m.name)}${m.kcal != null ? `<small>${fmt(m.kcal)}kcal</small>` : ""}</button>`)
+    .map((m, i) => `<button class="ls-chip is-small pick" type="button" data-i="${i}">${esc(m.name)}${m.kcal != null ? `<small>${fmt(m.kcal)}kcal</small>` : ""}</button>`)
     .join("");
   $("suggest").onclick = (e) => {
     const b = e.target.closest("[data-i]");
@@ -165,7 +170,7 @@ function renderDay() {
 
   if (!logs.length) {
     $("totals").innerHTML = "";
-    $("dayList").innerHTML = '<p class="empty">まだ記録がありません。上で食べたものを入れてみましょう 🍙</p>';
+    $("dayList").innerHTML = '<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう</div>';
   } else {
     const missing = t.count - t.withKcal;
     // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
@@ -206,12 +211,17 @@ $("dayList").addEventListener("click", (e) => {
   const del = e.target.closest("[data-del]");
   if (!del) return;
   const log = state.logs.find((l) => l.id === del.dataset.del);
-  if (!log || !confirm(`「${log.name}」の記録を消しますか？`)) return;
+  if (!log) return;
+  // すぐ消して、トーストの「元に戻す」で戻せるようにする（Q のツール共通。確かめのダイアログは出さない）
   removeLog(state, log.id);
   if (ui.editing === log.id) cancelEdit();
   persist();
-  say(`🗑 「${log.name}」を消しました`);
   render();
+  say(`🗑 「${log.name}」を消しました`, () => {
+    restoreLog(state, log);
+    persist();
+    render();
+  });
 });
 
 // おくるんのお知らせカード（line-share の shared/oqrn.js）。中身は食事ごとの名前と合計
