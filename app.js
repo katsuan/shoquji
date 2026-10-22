@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221615";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221615";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610222214";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610222214";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -203,9 +203,9 @@ function renderDay() {
       return `<div class="meal-group"><span class="meal-tag">${meal}</span><div class="items">${items
         .map(
           (l) => `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
-            <button class="name" type="button" data-edit="${l.id}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
+            <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <button class="del" type="button" data-del="${l.id}" aria-label="${esc(l.name)} を消す">✕</button>
+            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">✕</button>
           </div>`
         )
         .join("")}</div></div>`;
@@ -340,6 +340,8 @@ $("importFile").addEventListener("change", async (e) => {
   const file = e.target.files[0];
   e.target.value = "";
   if (!file) return;
+  // 控えは大きくても数 MB。それより大きいものは読まない
+  if (file.size > 5 * 1024 * 1024) return say("読みこめませんでした（ファイルが大きすぎます）");
   try {
     const added = importJson(state, await file.text());
     persist();

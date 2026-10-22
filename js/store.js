@@ -13,10 +13,20 @@ function blank() {
   return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [], sendText: false };
 }
 
+const MAX_NUM = 99999; // カロリー・PFC・目標の上限
+const MAX_LOGS = 20000; // 読みこむ記録の数の上限
+const ID_RE = /^[a-z0-9]{1,40}$/i; // newId() の形
+
 function num(v) {
   if (v === null || v === undefined || v === "") return null;
   const n = Number(String(v).replace(/[^\d.]/g, ""));
-  return Number.isFinite(n) ? Math.round(n * 10) / 10 : null;
+  return Number.isFinite(n) ? Math.min(MAX_NUM, Math.round(n * 10) / 10) : null;
+}
+
+// 時刻（ミリ秒）。おかしな値は「いま」にする
+function time(v, fallback) {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 && n < 1e14 ? n : fallback;
 }
 
 // 読みこんだ中身を、正しい形にそろえる（壊れた行は捨てる）
@@ -25,10 +35,19 @@ function clean(raw) {
   if (!raw || typeof raw !== "object") return s;
   const t = raw.targets || {};
   for (const k of Object.keys(DEFAULT_TARGETS)) s.targets[k] = num(t[k]) ?? DEFAULT_TARGETS[k];
+  const seen = new Set();
   s.logs = (Array.isArray(raw.logs) ? raw.logs : [])
-    .filter((l) => l && /^\d{4}-\d{2}-\d{2}$/.test(l.date) && String(l.name || "").trim())
-    .map((l) => ({
-      id: String(l.id || newId()),
+    .slice(-MAX_LOGS)
+    .filter((l) => l && typeof l === "object" && typeof l.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.date) && String(l.name ?? "").trim())
+    .map((l) => {
+      // id は自分で作った形だけ使う（ちがう形・重なりは作りなおす）
+      let id = typeof l.id === "string" && ID_RE.test(l.id) && !seen.has(l.id) ? l.id : newId();
+      while (seen.has(id)) id = newId();
+      seen.add(id);
+      return { l, id };
+    })
+    .map(({ l, id }) => ({
+      id,
       date: l.date,
       meal: MEALS.includes(l.meal) ? l.meal : "間食",
       name: String(l.name).trim().slice(0, 40),
@@ -36,10 +55,10 @@ function clean(raw) {
       p: num(l.p),
       f: num(l.f),
       c: num(l.c),
-      at: Number(l.at) || Date.now(),
-      upd: Number(l.upd) || Number(l.at) || Date.now()
+      at: time(l.at, Date.now()),
+      upd: time(l.upd, time(l.at, Date.now()))
     }));
-  s.deleted = (Array.isArray(raw.deleted) ? raw.deleted : []).map(String).slice(-500);
+  s.deleted = (Array.isArray(raw.deleted) ? raw.deleted : []).filter((id) => typeof id === "string" && ID_RE.test(id)).slice(-500);
   s.sendText = raw.sendText === true;
   return s;
 }
