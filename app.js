@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221446";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221446";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610221615";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610221615";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -88,12 +88,21 @@ function renderSuggest() {
 // 前に食べたものを入れる（名前と、最後に入れたカロリー・PFC）
 function fillMenu(m) {
   $("name").value = m.name;
+  hideNameError();
   NUTRI.forEach((k) => ($(k).value = m[k] ?? ""));
   if (NUTRI.some((k) => m[k] != null)) $("nutri").open = true;
   renderSuggest();
 }
 
-$("name").addEventListener("input", renderSuggest);
+function hideNameError() {
+  $("nameError").hidden = true;
+  $("name").removeAttribute("aria-invalid");
+}
+
+$("name").addEventListener("input", () => {
+  if ($("name").value.trim()) hideNameError();
+  renderSuggest();
+});
 // 名前を入れ終えたとき、同じ名前を前に食べていれば栄養も入れる（空の欄だけ）
 $("name").addEventListener("change", () => {
   const m = menus(state).find((x) => x.name === $("name").value.trim());
@@ -110,14 +119,17 @@ function readForm() {
 
 function clearForm() {
   $("name").value = "";
+  hideNameError();
   NUTRI.forEach((k) => ($(k).value = ""));
   renderSuggest();
 }
 
 $("saveBtn").addEventListener("click", () => {
   const entry = readForm();
+  // 足りないときは、その欄のすぐ下に赤い文字で
   if (!entry.name.trim()) {
-    say("食べたものを入れてください");
+    $("nameError").hidden = false;
+    $("name").setAttribute("aria-invalid", "true");
     $("name").focus();
     return;
   }
@@ -140,6 +152,7 @@ function startEdit(id) {
   ui.editing = id;
   ui.meal = log.meal;
   $("name").value = log.name;
+  hideNameError();
   NUTRI.forEach((k) => ($(k).value = log[k] ?? ""));
   $("nutri").open = NUTRI.some((k) => log[k] != null);
   render();
@@ -196,7 +209,7 @@ function renderDay() {
           </div>`
         )
         .join("")}</div></div>`;
-    }).join("") + '<p class="edit-hint">名前を押すと直せます</p>';
+    }).join("");
   }
   ui.justAdded = null;
   // LINE で送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
@@ -361,3 +374,10 @@ function render() {
 }
 
 render();
+
+// はじめての人にだけ、使い方を3つ（「わかった」で消え、二度と出さない）
+window.LineShareUI?.firstTip(
+  "shoquji",
+  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "記録はこの端末の中だけ。💬 LINEで送ると、カードで見せられます"],
+  document.querySelector(".days")
+);

@@ -29,7 +29,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610221446">
+<link rel="stylesheet" href="style.css?v=202610221615">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -39,7 +39,6 @@
     <img class="ls-brand-logo" src="logo.svg" alt="ShoQuji" width="85" height="28">
   </header>
   <p class="ls-brand-copy">食べたら、ぱっと残そう</p>
-  <p class="ls-hint lead">食べたものを入れるだけ。記録はこの端末の中だけに残ります。</p>
 
   <!-- 日付：きょう・きのう・ほかの日。記録する日と、下の「この日のしょくじ」の日は同じ -->
   <nav class="days" aria-label="日付">
@@ -54,17 +53,18 @@
     <div class="meals" role="radiogroup" aria-label="いつ食べた？"></div>
     <label class="ls-field">
       <span class="ls-label">食べたもの</span>
-      <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done">
+      <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done" aria-describedby="nameError">
     </label>
+    <p id="nameError" class="ls-hint is-error" hidden>食べたものを入れてね</p>
     <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
     <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
     <details id="nutri" class="ls-fold nutri">
       <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
       <div class="ls-fold-body nutri-grid">
-        <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" placeholder="0"><i>kcal</i></span></label>
-        <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
-        <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="f" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
-        <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" placeholder="0"><i>g</i></span></label>
+        <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>kcal</i></span></label>
+        <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+        <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="f" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+        <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
       </div>
     </details>
     <div class="form-actions">
@@ -103,16 +103,16 @@
       <div class="ls-fold-body">
         <p class="sub-title">🎯 1日の目標（バーの目安）</p>
         <div class="nutri-grid">
-          <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="tKcal" class="ls-input" inputmode="decimal"><i>kcal</i></span></label>
-          <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="tP" class="ls-input" inputmode="decimal"><i>g</i></span></label>
-          <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="tF" class="ls-input" inputmode="decimal"><i>g</i></span></label>
-          <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="tKcal" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>kcal</i></span></label>
+          <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="tP" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="tF" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
         </div>
         <p class="sub-title">💬 LINE で送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
         <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
         <p class="sub-title">🔒 記録の控え</p>
-        <p class="ls-hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておいてください。</p>
+        <p class="ls-hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておくと安心です。</p>
         <div class="form-actions">
           <button id="exportBtn" class="ls-button is-block" type="button">⬇️ 控えを書き出す</button>
           <label class="ls-button is-block file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
@@ -130,7 +130,7 @@
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <!-- Q キットの動き（トーストなど） -->
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
-<script type="module" src="app.js?v=202610221446"></script>
+<script type="module" src="app.js?v=202610221615"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
