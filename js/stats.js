@@ -1,5 +1,5 @@
 // しょくじ：集計（画面に関係しない計算だけ）
-import { MEALS } from "./store.js?v=1";
+import { MEALS } from "./store.js?v=2";
 
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 

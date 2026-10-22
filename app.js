@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, save, updateLog } from "./js/store.js?v=1";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=1";
+import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, save, updateLog } from "./js/store.js?v=2";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -229,8 +229,26 @@ function cardUrl(date, logs, t) {
     actionUrl: PAGE_URL,
     from: "shoquji"
   });
+  if (state.sendText) params.set("sendText", recordText(date, logs));
   return window.OQRN ? window.OQRN.cardUrl(params) : "#";
 }
+
+// 記録用の文字（食事記録ボットが読む形。line-meal-project の 3_usecase.shoquji.gs）
+//   #しょくじ 2026/10/22
+//   朝 トースト 250kcal P8 F6 C40
+function recordText(date, logs) {
+  const lines = logs.map((l) => {
+    const nums = [l.kcal != null ? `${l.kcal}kcal` : "", l.p != null ? `P${l.p}` : "", l.f != null ? `F${l.f}` : "", l.c != null ? `C${l.c}` : ""].filter(Boolean);
+    return [l.meal, l.name.replace(/\s+/g, " "), ...nums].join(" ");
+  });
+  return [`#しょくじ ${date.replace(/-/g, "/")}`, ...lines].join("\n");
+}
+
+$("sendTextToggle").addEventListener("change", (e) => {
+  state.sendText = e.target.checked;
+  persist();
+  render();
+});
 
 // ---- ふりかえり ----
 function renderLookback() {
@@ -320,6 +338,7 @@ function render() {
   renderDay();
   renderLookback();
   renderTargets();
+  $("sendTextToggle").checked = state.sendText;
   $("formHeading").textContent = ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
   $("saveBtn").textContent = ui.editing ? "✏️ 直す" : "＋ 記録する";
   $("cancelEdit").hidden = !ui.editing;

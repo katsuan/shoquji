@@ -150,6 +150,10 @@ input:focus { outline: none; border-color: var(--accent); background: #fff; }
 .btn.line small { font-size: 12px; opacity: 0.9; }
 .btn.line.is-off { background: #c9c2b8; pointer-events: none; }
 .file-btn { position: relative; overflow: hidden; }
+.send-text { display: flex; align-items: flex-start; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
+.send-text input { flex: 0 0 auto; width: 20px; height: 20px; min-height: 0; margin: 1px 0 0; padding: 0; accent-color: var(--accent); }
+.send-text span { display: grid; gap: 1px; }
+.send-text small { color: var(--ink-soft); font-size: 12px; font-weight: 700; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ink-soft); font: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; }
 .link.danger { color: #b3261e; }

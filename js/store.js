@@ -2,6 +2,7 @@
 // 記録 1件 = { id, date: "YYYY-MM-DD", meal: "朝"|"昼"|"夜"|"間食", name, kcal, p, f, c, at, upd }
 //   kcal・p（たんぱく質）・f（脂質）・c（炭水化物）は数字か null（入れなかった）
 //   at は記録した時刻、upd は最後に直した時刻（あとで自分のサーバーとそろえるときに使う）
+// sendText：LINE で送るとき、カードと一緒に「記録用の文字」も送るか（食事記録ボットに読ませる用。はじめはオフ）
 // 消した記録の id は deleted に残す（同じく、あとでそろえるとき用。古いものから 500 件まで）
 
 const KEY = "shoquji:v1";
@@ -9,7 +10,7 @@ export const MEALS = ["朝", "昼", "夜", "間食"];
 export const DEFAULT_TARGETS = { kcal: 2000, p: 65, f: 60, c: 280 };
 
 function blank() {
-  return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [] };
+  return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [], sendText: false };
 }
 
 function num(v) {
@@ -39,6 +40,7 @@ function clean(raw) {
       upd: Number(l.upd) || Number(l.at) || Date.now()
     }));
   s.deleted = (Array.isArray(raw.deleted) ? raw.deleted : []).map(String).slice(-500);
+  s.sendText = raw.sendText === true;
   return s;
 }
 

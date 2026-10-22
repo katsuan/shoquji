@@ -10,7 +10,7 @@
 <meta property="og:title" content="しょくじ｜食べたものを、さっと記録">
 <meta property="og:description" content="食べたものをさっと記録。1日の合計・1週間のふりかえり。記録はこの端末の中だけで、LINE にカードで送れます。">
 <meta property="og:url" content="https://katsuan.github.io/shoquji/">
-<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=1">
+<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="しょくじ（ShoQuji）：食べたものを、さっと記録">
@@ -26,7 +26,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 <main class="wrap">
@@ -76,6 +76,8 @@
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
     <a id="sendBtn" class="btn line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
+    <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE のボット（食事記録）に送ると、ボットが読んで記録できる -->
+    <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送るとき用（カードの後ろに文字も1通つきます）</small></span></label>
   </section>
 
   <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
@@ -110,7 +112,7 @@
 
 <!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
-<script type="module" src="app.js?v=1"></script>
+<script type="module" src="app.js?v=2"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 </body>
 </html>
