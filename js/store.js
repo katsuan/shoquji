@@ -17,9 +17,12 @@ const MAX_NUM = 99999; // カロリー・PFC・目標の上限
 const MAX_LOGS = 20000; // 読みこむ記録の数の上限
 const ID_RE = /^[a-z0-9]{1,40}$/i; // newId() の形
 
-function num(v) {
-  if (v === null || v === undefined || v === "") return null;
-  const n = Number(String(v).replace(/[^\d.]/g, ""));
+// 数字を読む（全角の数字・「250kcal」「1,200」も）。数字がなければ null（入れていない）
+export function num(v) {
+  if (v === null || v === undefined) return null;
+  const digits = String(v).normalize("NFKC").replace(/[^\d.]/g, "");
+  if (!/\d/.test(digits)) return null;
+  const n = Number(digits);
   return Number.isFinite(n) ? Math.min(MAX_NUM, Math.round(n * 10) / 10) : null;
 }
 
@@ -128,8 +131,11 @@ export function exportJson(state) {
   return JSON.stringify({ app: "shoquji", exportedAt: new Date().toISOString(), ...state }, null, 1);
 }
 
+//   しょくじの控えでないもの（記録の一覧がない）は投げる（画面は「読みこめませんでした」）。目標は控えにあるときだけ
 export function importJson(state, text) {
-  const incoming = clean(JSON.parse(text));
+  const raw = JSON.parse(text);
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.logs)) throw new Error("not a shoquji backup");
+  const incoming = clean(raw);
   const byId = new Map(state.logs.map((l) => [l.id, l]));
   let added = 0;
   incoming.logs.forEach((l) => {
@@ -142,7 +148,7 @@ export function importJson(state, text) {
     }
   });
   state.logs = [...byId.values()];
-  state.targets = incoming.targets;
+  if (raw.targets && typeof raw.targets === "object") state.targets = incoming.targets;
   return added;
 }
 

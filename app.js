@@ -1,6 +1,6 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610222214";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610222214";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610230131";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610230131";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -124,8 +124,10 @@ function clearForm() {
   renderSuggest();
 }
 
+let savedAt = 0; // 記録した時刻（すぐの二度押しで「入れてね」を出さない）
 $("saveBtn").addEventListener("click", () => {
   const entry = readForm();
+  if (!entry.name.trim() && Date.now() - savedAt < 1000) return;
   // 足りないときは、その欄のすぐ下に赤い文字で
   if (!entry.name.trim()) {
     $("nameError").hidden = false;
@@ -141,6 +143,7 @@ $("saveBtn").addEventListener("click", () => {
     ui.justAdded = addLog(state, entry).id;
     say(`🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`);
   }
+  savedAt = Date.now();
   persist();
   clearForm();
   render();
@@ -174,10 +177,43 @@ function pct(v, goal) {
   return goal > 0 ? Math.min(100, Math.round((v / goal) * 100)) : 0;
 }
 
+// 合計カロリーと目標のバー、PFC
+function totalsHtml(logs, t, g) {
+  const missing = t.count - t.withKcal;
+  // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
+  const hasPfc = logs.some((l) => l.p != null || l.f != null || l.c != null);
+  const pfc = [["p", "たんぱく質"], ["f", "脂質"], ["c", "炭水化物"]]
+    .map(([k, name]) => `<div class="${k}">${name}<b>${fmt(t[k])}<small> / ${fmt(g[k])}g</small></b><span class="bar"><i style="width:${pct(t[k], g[k])}%"></i></span></div>`)
+    .join("");
+  return `
+      <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
+      <div class="bar${t.kcal > g.kcal ? " over" : ""}"><i style="width:${pct(t.kcal, g.kcal)}%"></i></div>
+      ${hasPfc ? `<div class="pfc">
+        ${pfc}
+      </div>` : ""}
+      ${missing ? `<p class="note">※ カロリーを入れていないものが ${missing} 件あります（合計に入っていません）</p>` : ""}`;
+}
+
+// 食事ごとの一覧（名前を押すと直す、✕ で消す）
+function itemHtml(l) {
+  return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
+            <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
+            <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
+            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">✕</button>
+          </div>`;
+}
+
+function dayListHtml(logs) {
+  return MEALS.map((meal) => {
+    const items = logs.filter((l) => l.meal === meal);
+    if (!items.length) return "";
+    return `<div class="meal-group"><span class="meal-tag">${meal}</span><div class="items">${items.map(itemHtml).join("")}</div></div>`;
+  }).join("");
+}
+
 function renderDay() {
   const logs = logsOf(state, ui.date);
   const t = totals(logs);
-  const g = state.targets;
   const off = dayOffset();
   $("dayHeading").textContent = off === 0 ? "きょうのしょくじ" : off === -1 ? "きのうのしょくじ" : `${label(ui.date)}のしょくじ`;
 
@@ -185,31 +221,8 @@ function renderDay() {
     $("totals").innerHTML = "";
     $("dayList").innerHTML = '<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう</div>';
   } else {
-    const missing = t.count - t.withKcal;
-    // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
-    const hasPfc = logs.some((l) => l.p != null || l.f != null || l.c != null);
-    $("totals").innerHTML = `
-      <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
-      <div class="bar${t.kcal > g.kcal ? " over" : ""}"><i style="width:${pct(t.kcal, g.kcal)}%"></i></div>
-      ${!hasPfc ? "" : `<div class="pfc">
-        ${[["p", "たんぱく質"], ["f", "脂質"], ["c", "炭水化物"]]
-          .map(([k, name]) => `<div class="${k}">${name}<b>${fmt(t[k])}<small> / ${fmt(g[k])}g</small></b><span class="bar"><i style="width:${pct(t[k], g[k])}%"></i></span></div>`)
-          .join("")}
-      </div>`}
-      ${missing ? `<p class="note">※ カロリーを入れていないものが ${missing} 件あります（合計に入っていません）</p>` : ""}`;
-    $("dayList").innerHTML = MEALS.map((meal) => {
-      const items = logs.filter((l) => l.meal === meal);
-      if (!items.length) return "";
-      return `<div class="meal-group"><span class="meal-tag">${meal}</span><div class="items">${items
-        .map(
-          (l) => `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
-            <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
-            <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">✕</button>
-          </div>`
-        )
-        .join("")}</div></div>`;
-    }).join("");
+    $("totals").innerHTML = totalsHtml(logs, t, state.targets);
+    $("dayList").innerHTML = dayListHtml(logs);
   }
   ui.justAdded = null;
   // LINE で送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
@@ -308,7 +321,8 @@ function renderTargets() {
 }
 Object.entries(TARGET_INPUTS).forEach(([id, k]) =>
   $(id).addEventListener("change", () => {
-    const v = Number($(id).value);
+    // 全角の数字も読む。0 や数字でないときは前の目標のまま
+    const v = num($(id).value);
     if (v > 0) state.targets[k] = Math.round(v);
     persist();
     render();
@@ -323,9 +337,9 @@ $("exportBtn").addEventListener("click", async () => {
     try {
       await navigator.share({ files: [file], title: "しょくじの記録の控え" });
       return;
-    } catch {
-      // やめたときは何もしない
-      return;
+    } catch (err) {
+      // やめたときは何もしない。共有できなかったときは、下のダウンロードで
+      if (err?.name === "AbortError") return;
     }
   }
   const a = document.createElement("a");
@@ -376,6 +390,20 @@ function render() {
 }
 
 render();
+
+// 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
+let shownToday = ymd();
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  const today = ymd();
+  if (today === shownToday) return;
+  const wasToday = ui.date === shownToday;
+  shownToday = today;
+  if (!wasToday || ui.editing || $("name").value.trim()) return render();
+  ui.date = today;
+  ui.meal = mealNow();
+  render();
+});
 
 // はじめての人にだけ、使い方を3つ（「わかった」で消え、二度と出さない）
 window.LineShareUI?.firstTip(

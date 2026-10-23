@@ -1,5 +1,5 @@
 // しょくじ：集計（画面に関係しない計算だけ）
-import { MEALS } from "./store.js?v=202610222214";
+import { MEALS } from "./store.js?v=202610230131";
 
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -64,7 +64,8 @@ export function menus(state) {
 export function week(state, today) {
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(today, i - 6);
-    return { date, kcal: totals(logsOf(state, date)).kcal, count: logsOf(state, date).length };
+    const t = totals(logsOf(state, date));
+    return { date, kcal: t.kcal, count: t.count };
   });
 }
 
