@@ -1,14 +1,14 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250500";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250500";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250500";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250500";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250500";
-import { cardUrl } from "./js/card.js?v=202610250500";
-import { writeDays } from "./js/days.js?v=202610250500";
-import { initLineGuide } from "./js/line-guide.js?v=202610250500";
-import { readLink } from "./js/link.js?v=202610250500";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250500";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250600";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250600";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250600";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250600";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250600";
+import { cardUrl } from "./js/card.js?v=202610250600";
+import { writeDays } from "./js/days.js?v=202610250600";
+import { initLineGuide } from "./js/line-guide.js?v=202610250600";
+import { readLink } from "./js/link.js?v=202610250600";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250600";
 
 const $ = (id) => document.getElementById(id);
 
