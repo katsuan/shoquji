@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610250400";
+import { LINE_LOG } from "./line-config.js?v=202610250500";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -154,12 +154,19 @@ export function botLogsForView(botLogs, localLogs, deleted = []) {
 // - しょくじで消した記録がボットに残っていれば、ボットから消す（remove）
 // - 中身がちがえば、あとから直したほう（しょくじは upd、ボットは updatedAt）にそろえる：しょくじが新しければボットを直す（push）、
 //   ボットが新しければ（トークでカロリーを入れたなど）しょくじを直す（pull）
+// - 送ったはずなのにボットにない自分の記録は、ほかの端末（LINE 版）で消されたので、手元からも消す（drop）。
+//   読んだ期間（range：{ from, to }）の中で、sent（送ったことのある id）にあるものだけ
 // - skip：いま「元に戻す」を待っている記録の id（まだボットに送らない）
-export function planSync(botLogs, localLogs, deleted = [], skip = new Set()) {
+export function planSync(botLogs, localLogs, deleted = [], skip = new Set(), { sent = [], range = null } = {}) {
   const local = new Map(localLogs.map((l) => [l.id, l]));
   const gone = new Set(deleted);
   const n = (v) => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
-  const plan = { push: [], pull: [], remove: [] };
+  const plan = { push: [], pull: [], remove: [], drop: [] };
+  const onBot = new Set((Array.isArray(botLogs) ? botLogs : []).map((b) => String(b?.clientId || "")).filter(Boolean));
+  if (range && range.from && range.to) {
+    const wasSent = new Set(sent);
+    plan.drop = localLogs.filter((l) => wasSent.has(l.id) && !onBot.has(l.id) && !skip.has(l.id) && l.date >= range.from && l.date <= range.to).map((l) => l.id).slice(0, 30);
+  }
   (Array.isArray(botLogs) ? botLogs : []).forEach((b) => {
     const id = String(b?.clientId || "");
     if (!id || skip.has(id)) return;

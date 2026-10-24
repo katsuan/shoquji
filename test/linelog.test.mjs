@@ -145,3 +145,20 @@ test("しょくじの記録とボットの行をそろえる：消した記録�
   assert.deepEqual(plan.pull, [{ id: "talk3", entry: { date: "2026-10-24", meal: "間食", name: "プリン", kcal: 250, p: null, f: null, c: null } }], "トークで入れたほうが新しい");
   assert.deepEqual(plan.remove, ["gone4"], "しょくじで消したものはボットからも");
 });
+
+test("ほかの端末で消された自分の記録：送ったことがあって、読んだ期間の中で、ボットにないものだけ手元からも消す", async () => {
+  const { planSync } = await import("../js/linelog.js");
+  const local = [
+    { id: "gone1", date: "2026-10-24", meal: "朝", name: "パン", kcal: 200, upd: 1 },
+    { id: "here2", date: "2026-10-24", meal: "昼", name: "そば", kcal: 500, upd: 1 },
+    { id: "never3", date: "2026-10-24", meal: "夜", name: "まだ送っていない", kcal: 300, upd: 1 },
+    { id: "old4", date: "2026-07-01", meal: "夜", name: "読んだ期間の外", kcal: 300, upd: 1 },
+    { id: "wait5", date: "2026-10-24", meal: "夜", name: "元に戻す待ち", kcal: 300, upd: 1 }
+  ];
+  const bot = [{ clientId: "here2", date: "2026-10-24", meal: "昼", menu: "そば", kcal: 500, updatedAt: 1 }];
+  const sent = ["gone1", "here2", "old4", "wait5"];
+  const plan = planSync(bot, local, [], new Set(["wait5"]), { sent, range: { from: "2026-08-26", to: "2026-10-24" } });
+  assert.deepEqual(plan.drop, ["gone1"]);
+  // 全部読めなかったとき（range なし）は消さない
+  assert.deepEqual(planSync(bot, local, [], new Set(), { sent }).drop, []);
+});

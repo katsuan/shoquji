@@ -1,14 +1,14 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250400";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250400";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250400";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250400";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250400";
-import { cardUrl } from "./js/card.js?v=202610250400";
-import { writeDays } from "./js/days.js?v=202610250400";
-import { initLineGuide } from "./js/line-guide.js?v=202610250400";
-import { readLink } from "./js/link.js?v=202610250400";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250400";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250500";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250500";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250500";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250500";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250500";
+import { cardUrl } from "./js/card.js?v=202610250500";
+import { writeDays } from "./js/days.js?v=202610250500";
+import { initLineGuide } from "./js/line-guide.js?v=202610250500";
+import { readLink } from "./js/link.js?v=202610250500";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250500";
 
 const $ = (id) => document.getElementById(id);
 
@@ -42,6 +42,7 @@ const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
 const gasTarget = () => state.gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
 let bot = loadBot();
 let lastRead = 0;
+let botRange = null; // ボットの記録を読んだ期間 { from, to }
 const hiddenBot = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す。js/removals.js が待つ）
 
 function loadBot() {
@@ -149,6 +150,8 @@ async function readBot(force = false, given = null) {
     return;
   }
   bot = Array.isArray(res.logs) ? res.logs : [];
+  // 読んだ期間（全部読めたときだけ。この中でだけ、ないものを「ほかで消された」とみなす）
+  botRange = res.from && res.to && res.complete === true ? { from: res.from, to: res.to } : null;
   try {
     localStorage.setItem(BOT_KEY, JSON.stringify({ gasUrl: gasTarget(), logs: bot }));
   } catch {
@@ -164,9 +167,12 @@ let syncing = false;
 async function syncWithBot() {
   if (!lineLog || syncing) return;
   const waiting = waitingOwnIds();
-  const plan = planSync(bot, state.logs, state.deleted, waiting);
-  if (!plan.push.length && !plan.pull.length && !plan.remove.length) return;
+  const plan = planSync(bot, state.logs, state.deleted, waiting, { sent: state.sent, range: botRange });
+  if (!plan.push.length && !plan.pull.length && !plan.remove.length && !plan.drop.length) return;
   syncing = true;
+  // ほかの端末（LINE 版）で消された自分の記録：手元からも消す（消した印も残すので、あとで生き返らない）
+  plan.drop.forEach((id) => removeLog(state, id));
+  if (plan.drop.length) persist();
   // ボットのほうが新しい（トークでカロリーを入れたなど）：しょくじの記録を直す（ボットには送りなおさない）
   plan.pull.forEach(({ id, entry }) => updateLog(state, id, entry));
   if (plan.pull.length) persist();

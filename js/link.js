@@ -1,8 +1,8 @@
 // 食事記録ボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…）の指定を読む
 // LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
 // 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
-import { MEALS, num } from "./store.js?v=202610250400";
-import { addDays, ymd } from "./stats.js?v=202610250400";
+import { MEALS, num } from "./store.js?v=202610250500";
+import { addDays, ymd } from "./stats.js?v=202610250500";
 
 export function readLink(href = location.href) {
   const url = new URL(href);
