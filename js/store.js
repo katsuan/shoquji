@@ -4,18 +4,21 @@
 //   at は記録した時刻、upd は最後に直した時刻（あとで自分のサーバーとそろえるときに使う）
 // sendText：LINE で送るとき、カードと一緒に「記録用の文字」も送るか（食事記録ボットに読ませる用。はじめはオフ）
 // 消した記録の id は deleted に残す（同じく、あとでそろえるとき用。古いものから 500 件まで）
+// gasUrl：LINE の中で開いたときに、記録を入れる食事記録ボットの GAS の URL（使う人が自分で入れる。秘密ではない。js/linelog.js と同じ形）
+// sent：食事記録ボットに入れた記録の id（もう一度送らないため。古いものから 2000 件まで）
 
 const KEY = "shoquji:v1";
 export const MEALS = ["朝", "昼", "夜", "間食"];
 export const DEFAULT_TARGETS = { kcal: 2000, p: 65, f: 60, c: 280 };
 
 function blank() {
-  return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [], sendText: false };
+  return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [], sendText: false, gasUrl: "", sent: [] };
 }
 
 const MAX_NUM = 99999; // カロリー・PFC・目標の上限
 const MAX_LOGS = 20000; // 読みこむ記録の数の上限
 const ID_RE = /^[a-z0-9]{1,40}$/i; // newId() の形
+const GAS_URL = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,120}\/exec$/; // js/linelog.js の cleanGasUrl と同じ
 
 // 数字を読む（全角の数字・「250kcal」「1,200」も）。数字がなければ null（入れていない）
 export function num(v) {
@@ -63,6 +66,8 @@ function clean(raw) {
     }));
   s.deleted = (Array.isArray(raw.deleted) ? raw.deleted : []).filter((id) => typeof id === "string" && ID_RE.test(id)).slice(-500);
   s.sendText = raw.sendText === true;
+  s.gasUrl = GAS_URL.test(String(raw.gasUrl || "")) ? String(raw.gasUrl) : "";
+  s.sent = (Array.isArray(raw.sent) ? raw.sent : []).filter((id) => typeof id === "string" && ID_RE.test(id)).slice(-2000);
   return s;
 }
 
@@ -150,6 +155,13 @@ export function importJson(state, text) {
   state.logs = [...byId.values()];
   if (raw.targets && typeof raw.targets === "object") state.targets = incoming.targets;
   return added;
+}
+
+// 食事記録ボットに入れた記録の id を覚える
+export function markSent(state, ids) {
+  const set = new Set(state.sent);
+  ids.forEach((id) => ID_RE.test(String(id)) && set.add(String(id)));
+  state.sent = [...set].slice(-2000);
 }
 
 export function reset() {

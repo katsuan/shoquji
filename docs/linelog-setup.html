@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja" data-ls-dark="auto">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>しょくじ｜自分の食事記録ボットとつなぐ</title>
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
+<link rel="stylesheet" href="../style.css?v=202610241500">
+<style>.doc h2 { margin: 1.4em 0 .4em; font-size: 18px; } .doc li { margin: .3em 0; } .doc code { overflow-wrap: anywhere; } .doc pre { overflow-x: auto; padding: 10px; border-radius: 10px; background: var(--ls-surface-sub); font-size: 13px; }</style>
+</head>
+<body>
+<main class="ls-page ls-stack doc">
+  <header class="ls-brand">
+    <h1 class="ls-brand-name"><img class="ls-brand-icon" src="../icon.svg" alt="" width="30" height="30">しょくじ</h1>
+  </header>
+  <p class="ls-brand-copy">自分の食事記録ボットとつなぐ</p>
+
+  <section class="ls-panel">
+    <p>しょくじは、ふだんは記録をこの端末の中だけに残します。LINE の中で開いたときだけ、<b>自分で用意した GAS（食事記録ボットの配布用シートのコピー）</b>にも記録を入れられます。ボットのトークで送った記録も、しょくじに出ます。</p>
+    <p>しょくじは、あなたの LINE の鍵を預かりません。送るのは、LINE が出す「本人の確かめ用の印（ID トークン）」と、記録（日付・食事・名前・カロリー・PFC）だけです。印は確かめに使うだけで、しょくじにも GAS にも残りません。</p>
+  </section>
+
+  <section class="ls-panel">
+    <h2>つなぎ方（はじめて）</h2>
+    <ol>
+      <li><a id="sheetLink" href="#" target="_blank" rel="noopener">配布用シート（食事記録 しょくじ版）</a>を開き、「コピーを作成」（シートについた GAS も一緒にコピーされます。記録はこのシートに入ります）</li>
+      <li>コピーしたシートの「拡張機能」→「Apps Script」を開き、<code>setupShoquji</code> を実行（はじめは権限の確認が出ます）</li>
+      <li>「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」、実行するユーザー「自分」、アクセスできるユーザー「全員」→ 出てきた URL（<code>…/exec</code>）をコピー<br><small>（しょくじからの呼び出しは、確かめた本人のものだけ受けます）</small></li>
+      <li>LINE の中でしょくじを開き、「⚙️ LINE とつなぐ（くわしい人向け）」に 3 の URL を入れる。「持ち主の登録を受けつけました」と出ます</li>
+      <li>10分以内に、同じ Apps Script で <code>adoptShoqujiOwner</code> を実行（実行ログに自分の名前が出ればよい）。しょくじを開きなおすと、記録がシートにも入ります</li>
+    </ol>
+    <p class="ls-hint">やめるときは、しょくじの URL の欄を空にし、GAS のデプロイをアーカイブします。</p>
+    <p class="ls-hint">LINE のトークでも記録したいときは、同じ GAS を LINE の Messaging API のボットにつなぎます（くわしくは食事記録ボットの README）。</p>
+  </section>
+
+  <section class="ls-panel">
+    <h2>受け口の約束（GAS を自分で作る人向け）</h2>
+    <p>しょくじは、入れた URL に POST します（本文は text/plain の JSON）。</p>
+<pre>{ "action": "submitMealBatch", "idToken": "…", "source": "shoquji", "dedupe": false, "sendLineSummary": false,
+  "items": [{ "clientId": "lq3x8k2abc", "mealDate": "2026-10-24", "meal": "昼", "menu": "カレーライス", "kcal": 780, "protein": 20, "fat": 25, "carb": 110 }] }
+→ { "ok": true, "added": [ … ], "skipped": 0 }
+
+{ "action": "listMealLogs", "idToken": "…", "from": "2026-08-26", "to": "2026-10-24" }
+→ { "ok": true, "logs": [{ "logId": "…", "clientId": "…", "date": "2026-10-24", "meal": "その他", "menu": "プリン", "kcal": 200, "protein": null, "fat": null, "carb": null }] }
+
+うまくいかないとき → { "ok": false, "error": "（やさしい言葉）" }</pre>
+    <ul>
+      <li>本人の確かめ：<code>POST https://api.line.me/oauth2/v2.1/verify</code>（id_token、client_id＝しょくじの LIFF のチャネル ID）。送られてきた userId は使わない</li>
+      <li>書く：同じ <code>clientId</code> は何度送られても1件だけ。1回に30件まで。間食は <code>その他</code></li>
+      <li>読む：本人の、62日までの記録だけ。ほかの人の記録・userId は返さない</li>
+      <li>持ち主が決まるまでは何も書かない（持ち主の候補を10分だけ覚え、エディタで <code>adoptShoqujiOwner</code> を実行すると持ち主になる）</li>
+    </ul>
+    <p class="ls-hint">URL は秘密ではありません。知られても、確かめなしには何も書けず、何も読めません。ただし、知らない人から渡された URL は入れないでください（入れた先に、確かめ用の印が届きます）。</p>
+  </section>
+</main>
+</body>
+</html>

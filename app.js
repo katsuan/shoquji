@@ -1,6 +1,8 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610230942";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610230942";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241500";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241500";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, startLineLog } from "./js/linelog.js?v=202610241500";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241500";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -19,6 +21,95 @@ const NUTRI = ["kcal", "p", "f", "c"];
 
 function persist() {
   if (!save(state)) say("この端末に残せませんでした（プライベートブラウズでは、閉じると消えます）");
+}
+
+// ---- 食事記録ボット（LINE の中で開いて、つないだときだけ。js/linelog.js） ----
+let lineLog = null; // startLineLog の返事（つなげないときは null）
+const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE の中で開いたときだけ出す
+const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
+const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
+let bot = loadBot();
+let lastRead = 0;
+
+function loadBot() {
+  if (!inLine || !state.gasUrl) return [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(BOT_KEY) || "null");
+    return raw && raw.gasUrl === state.gasUrl && Array.isArray(raw.logs) ? raw.logs : [];
+  } catch {
+    return [];
+  }
+}
+
+// 画面に出す中身：この端末の記録＋ボットで入れた記録（しょくじから送ったもの・消したものは除く）。ボットの記録は端末には足さない
+function view() {
+  if (!bot.length) return state;
+  return { ...state, logs: [...state.logs, ...botLogsForView(bot, state.logs, state.deleted)] };
+}
+
+// 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
+async function sendToBot(logs, { quiet = false } = {}) {
+  if (!lineLog || !logs.length) return;
+  const res = await lineLog.record(logs);
+  if (res.ok) {
+    markSent(state, logs.map((l) => l.id));
+    persist();
+    if (!quiet && res.added?.length) say(`💬 食事記録ボットにも入れました`);
+    return;
+  }
+  if ((res.error === "net" || res.error === "fail") && window.LineShareUI?.toast) {
+    window.LineShareUI.toast(lineLogMessage(res.error), { actionLabel: "もう一度", onAction: () => sendToBot(logs), ms: 8000 });
+  } else {
+    say(lineLogMessage(res.error));
+  }
+}
+
+// まだボットに入れていない、ここ7日の記録を入れる（つながったとき。電波がなかったときの分など）
+function sendUnsent() {
+  const from = addDays(ymd(), -6);
+  const sent = new Set(state.sent);
+  const todo = state.logs.filter((l) => l.date >= from && !sent.has(l.id)).slice(0, 30);
+  return sendToBot(todo, { quiet: true });
+}
+
+// ボットで入れた記録を読む（つながったとき・戻ってきたとき。1分に1回まで）
+async function readBot(force = false) {
+  if (!lineLog || (!force && Date.now() - lastRead < 60000)) return;
+  lastRead = Date.now();
+  const res = await lineLog.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
+  if (!res.ok) {
+    if (res.error !== "net") say(lineLogMessage(res.error));
+    return;
+  }
+  bot = Array.isArray(res.logs) ? res.logs : [];
+  try {
+    localStorage.setItem(BOT_KEY, JSON.stringify({ gasUrl: state.gasUrl, logs: bot }));
+  } catch {
+    // 残せなくても、開いているあいだは出る
+  }
+  render();
+}
+
+// つなぎ先を入れなおしたときも、ここからやりなおす
+function connectLineLog() {
+  const had = !!lineLog;
+  lineLog = null;
+  return startLineLog(state.gasUrl).then(async (client) => {
+    // つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
+    $("reopenInLiff").hidden = !!client || !state.gasUrl || !inLineApp();
+    $("lineLogNote").hidden = !client;
+    $("lineIntro").hidden = !!client;
+    if (!client) {
+      $("whereNote").hidden = true;
+      return had && render();
+    }
+    lineLog = client;
+    $("whereNote").innerHTML = "📱 LINE で開いたしょくじの記録は、Safari などのブラウザで開いたときとは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。"; // qcheck-ok: W1 決まった文字だけ
+    $("whereNote").hidden = false;
+    render();
+    await sendUnsent();
+    readBot(true);
+  });
 }
 
 // 知らせは Q キットのトースト（下に数秒）。取り消せるものは「元に戻す」を付ける。読めないときは下の文字で
@@ -73,7 +164,7 @@ document.querySelector(".meals").addEventListener("click", (e) => {
 // ---- 食べたもの・よく食べるもの ----
 function renderSuggest() {
   const q = $("name").value.trim();
-  const list = menus(state)
+  const list = menus(view())
     .filter((m) => !q || (m.name.includes(q) && m.name !== q))
     .slice(0, q ? 6 : 8);
   $("suggest").innerHTML = list
@@ -105,7 +196,7 @@ $("name").addEventListener("input", () => {
 });
 // 名前を入れ終えたとき、同じ名前を前に食べていれば栄養も入れる（空の欄だけ）
 $("name").addEventListener("change", () => {
-  const m = menus(state).find((x) => x.name === $("name").value.trim());
+  const m = menus(view()).find((x) => x.name === $("name").value.trim());
   if (!m) return;
   NUTRI.forEach((k) => {
     if ($(k).value === "" && m[k] != null) $(k).value = m[k];
@@ -140,8 +231,10 @@ $("saveBtn").addEventListener("click", () => {
     say(`✏️ 「${entry.name.trim()}」を直しました`);
     ui.editing = null;
   } else {
-    ui.justAdded = addLog(state, entry).id;
+    const log = addLog(state, entry);
+    ui.justAdded = log.id;
     say(`🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`);
+    sendToBot([log], { quiet: true });
   }
   savedAt = Date.now();
   persist();
@@ -196,6 +289,14 @@ function totalsHtml(logs, t, g) {
 
 // 食事ごとの一覧（名前を押すと直す、✕ で消す）
 function itemHtml(l) {
+  // ボットで入れた記録：見るだけ（直す・消すはボットのトークか食事記録の画面で）
+  if (l.bot) {
+    return `<div class="item is-bot">
+            <span class="bot-name">${esc(l.name)}</span>
+            <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
+            <span class="bot-tag" title="食事記録ボットで入れた記録">ボット</span>
+          </div>`;
+  }
   return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
             <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
@@ -212,7 +313,7 @@ function dayListHtml(logs) {
 }
 
 function renderDay() {
-  const logs = logsOf(state, ui.date);
+  const logs = logsOf(view(), ui.date);
   const t = totals(logs);
   const off = dayOffset();
   $("dayHeading").textContent = off === 0 ? "きょうのしょくじ" : off === -1 ? "きのうのしょくじ" : `${label(ui.date)}のしょくじ`;
@@ -294,9 +395,10 @@ $("sendTextToggle").addEventListener("change", (e) => {
 // ---- ふりかえり ----
 function renderLookback() {
   const today = ymd();
-  const n = streak(state, today);
+  const all = view();
+  const n = streak(all, today);
   $("streak").innerHTML = n ? `🔥 <b>${n}</b> 日つづけて記録しています` : "記録した日が続くと、ここに日数が出ます";
-  const days = week(state, today);
+  const days = week(all, today);
   const goal = state.targets.kcal;
   const top = Math.max(goal * 1.2, ...days.map((d) => d.kcal), 1);
   $("week").innerHTML =
@@ -308,7 +410,7 @@ function renderLookback() {
         return `<div class="day-col${d.date === today ? " today" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><i style="height:${(d.kcal / top) * 100}%"></i></span><span>${m}/${dd}</span></div>`;
       })
       .join("");
-  const top5 = menus(state).slice(0, 5);
+  const top5 = menus(all).slice(0, 5);
   $("ranking").innerHTML = top5.length
     ? `<p class="ranking-title">🏅 よく食べるもの</p><ol class="ranking">${top5.map((m) => `<li><span>${esc(m.name)}</span><span>${m.count} 回</span></li>`).join("")}</ol>`
     : "";
@@ -369,7 +471,10 @@ $("importFile").addEventListener("change", async (e) => {
 $("resetBtn").addEventListener("click", async () => {
   const ok = await LineShareUI.ask({ title: "記録をすべて消しますか？", text: "この端末のしょくじの記録を、すべて消します。もとに戻せません。", ok: "すべて消す", danger: true });
   if (!ok) return;
+  const gasUrl = state.gasUrl; // つなぎ先は記録ではないので残す
   state = reset();
+  state.gasUrl = gasUrl;
+  persist();
   cancelEdit();
   render();
   say("記録をすべて消しました");
@@ -391,10 +496,29 @@ function render() {
 
 render();
 
+// ---- LINE とつなぐ（くわしい人向け）----
+$("gasField").hidden = !inLine;
+$("reopenLink").href = OPEN_URL;
+$("gasUrl").value = state.gasUrl;
+// つなぐ GAS の URL（自分で入れたものだけ。URL の ?〜 からは受けとらない）
+$("gasUrl").addEventListener("change", () => {
+  const raw = $("gasUrl").value.trim();
+  const url = cleanGasUrl(raw);
+  $("gasUrlError").hidden = !raw || !!url;
+  if (raw && !url) return;
+  state.gasUrl = url;
+  bot = [];
+  persist();
+  say(url ? "💬 つなぎ先を決めました" : "つなぎ先を消しました");
+  connectLineLog();
+});
+connectLineLog();
+
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
 let shownToday = ymd();
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
+  readBot();
   const today = ymd();
   if (today === shownToday) return;
   const wasToday = ui.date === shownToday;

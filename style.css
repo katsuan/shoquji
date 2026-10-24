@@ -124,3 +124,12 @@ body {
   :root[data-ls-dark="auto"] body { background: radial-gradient(circle at top right, rgba(236, 138, 22, 0.16), transparent 40%), var(--ls-bg); }
   :root[data-ls-dark="auto"] .bar { background: var(--ls-surface-sub); }
 }
+
+/* LINE とつなぐ（くわしい人向け）：記録の置き場所の説明・開きなおしの案内・ボットで入れた記録 */
+.ls-hint.small { font-size: 12px; }
+.where-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 13px; line-height: 1.55; }
+.where-note b { color: var(--ls-text); }
+.where-note[hidden] { display: none; }
+.item.is-bot { border-style: dashed; }
+.item .bot-name { overflow: hidden; padding: 4px 0; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.item .bot-tag { justify-self: end; padding: 1px 8px; border-radius: 999px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 11px; font-weight: 700; white-space: nowrap; }

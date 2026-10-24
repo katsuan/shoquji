@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610230942">
+<link rel="stylesheet" href="style.css?v=202610241500">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -78,6 +78,10 @@
     <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
+    <!-- LINE の中で食事記録ボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
+    <p class="where-note" id="whereNote" hidden></p>
+    <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
+    <p class="where-note" id="reopenInLiff" hidden>💬 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE のしょくじで開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
       <a id="sendBtn" class="ls-button is-block line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
@@ -93,6 +97,26 @@
         <div id="streak" class="streak"></div>
         <div id="week" class="week" aria-label="1週間のカロリー"></div>
         <div id="ranking" class="ranking"></div>
+      </div>
+    </details>
+
+    <!-- LINE とつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
+    <details class="ls-fold" id="lineFold">
+      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>LINE とつなぐ（くわしい人向け）</summary>
+      <div class="ls-fold-body">
+        <!-- はじめだけ要る説明 -->
+        <p id="lineIntro" class="ls-hint">LINE の中で開いたしょくじは、自分の食事記録ボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザで開いたしょくじは、今までどおり何も送りません。</p>
+        <!-- つながっているあいだの説明 -->
+        <p id="lineLogNote" class="ls-hint" hidden>💬 いまは LINE の中で、食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
+        <div id="gasField" hidden>
+          <label class="ls-field">
+            <span class="ls-label">記録を入れる、食事記録ボットの GAS の URL</span>
+            <input id="gasUrl" class="ls-input" type="url" inputmode="url" maxlength="200" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
+          </label>
+          <p id="gasUrlError" class="ls-hint is-error" role="alert" hidden>GAS のウェブアプリの URL（…/exec）を入れてね</p>
+          <p class="ls-hint small">配布用シートをコピーして作った、自分の GAS の URL です。この欄は LINE の中で開いたときに出ます。</p>
+        </div>
+        <p class="ls-hint small"><a href="docs/linelog-setup.html" target="_blank" rel="noopener">つなぎ方（配布用シートのコピーから5手）</a></p>
       </div>
     </details>
 
@@ -129,7 +153,7 @@
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <!-- Q キットの動き（トーストなど） -->
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
-<script type="module" src="app.js?v=202610230942"></script>
+<script type="module" src="app.js?v=202610241500"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
