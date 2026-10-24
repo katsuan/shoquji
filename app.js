@@ -28,14 +28,16 @@ let lineLog = null; // startLineLog の返事（つなげないときは null）
 const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE の中で開いたときだけ出す
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
+// つなぐ先：自分で入れた URL。なければ、この LIFF の食事記録ボット
+const gasTarget = () => state.gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
 let bot = loadBot();
 let lastRead = 0;
 
 function loadBot() {
-  if (!inLine || !state.gasUrl) return [];
+  if (!inLine || !gasTarget()) return [];
   try {
     const raw = JSON.parse(localStorage.getItem(BOT_KEY) || "null");
-    return raw && raw.gasUrl === state.gasUrl && Array.isArray(raw.logs) ? raw.logs : [];
+    return raw && raw.gasUrl === gasTarget() && Array.isArray(raw.logs) ? raw.logs : [];
   } catch {
     return [];
   }
@@ -83,7 +85,7 @@ async function readBot(force = false) {
   }
   bot = Array.isArray(res.logs) ? res.logs : [];
   try {
-    localStorage.setItem(BOT_KEY, JSON.stringify({ gasUrl: state.gasUrl, logs: bot }));
+    localStorage.setItem(BOT_KEY, JSON.stringify({ gasUrl: gasTarget(), logs: bot }));
   } catch {
     // 残せなくても、開いているあいだは出る
   }
@@ -94,9 +96,9 @@ async function readBot(force = false) {
 function connectLineLog() {
   const had = !!lineLog;
   lineLog = null;
-  return startLineLog(state.gasUrl).then(async (client) => {
-    // つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
-    $("reopenInLiff").hidden = !!client || !state.gasUrl || !inLineApp();
+  return startLineLog(gasTarget()).then(async (client) => {
+    // つなぎ先がある人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
+    $("reopenInLiff").hidden = !!client || !gasTarget() || !inLineApp();
     $("lineLogNote").hidden = !client;
     $("lineIntro").hidden = !!client;
     if (!client) {
@@ -108,7 +110,8 @@ function connectLineLog() {
     $("whereNote").hidden = false;
     render();
     await sendUnsent();
-    readBot(true);
+    await readBot(true);
+    if (link.logId) showLinkedLog(link.logId);
   });
 }
 
@@ -496,6 +499,74 @@ function render() {
 
 render();
 
+// ---- 食事記録ボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…） ----
+// LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
+// 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
+const link = readLink();
+function readLink() {
+  const url = new URL(location.href);
+  let q = url.searchParams;
+  if (!q.has("mode") && q.has("liff.state")) {
+    try {
+      q = new URLSearchParams(String(q.get("liff.state") || "").replace(/^[^?]*\?/, ""));
+    } catch {
+      q = new URLSearchParams();
+    }
+  }
+  const get = (k, n = 40) => String(q.get(k) || "").trim().slice(0, n);
+  const meal = get("meal", 4);
+  let date = /^\d{4}-\d{2}-\d{2}$/.test(get("mealDate", 10)) ? get("mealDate", 10) : get("datePreset") === "yesterday" ? addDays(ymd(), -1) : "";
+  if (date > ymd()) date = "";
+  return {
+    mode: ["input", "logs", "summary", "quick"].includes(get("mode")) ? get("mode") : "",
+    meal: meal === "その他" ? "間食" : MEALS.includes(meal) ? meal : "",
+    date,
+    menu: get("menu"),
+    nums: { kcal: num(q.get("kcal")), p: num(q.get("protein")), f: num(q.get("fat")), c: num(q.get("carb")) },
+    logId: /^[A-Za-z0-9-]{1,60}$/.test(get("logId", 60)) ? get("logId", 60) : ""
+  };
+}
+
+function openFromLink() {
+  if (!link.mode && !link.meal && !link.menu && !link.logId) return;
+  // 一度読んだら、アドレスから消す（開きなおしで同じことをくり返さない）
+  if (!inLineApp()) {
+    const url = new URL(location.href);
+    ["mode", "meal", "menu", "mealDate", "datePreset", "logId", "row", "masterKey", "kcal", "protein", "fat", "carb", "salt", "fiber", "flavor", "unit", "note", "liff.state"].forEach((k) => url.searchParams.delete(k));
+    history.replaceState(null, "", url);
+  }
+  if (link.date) ui.date = link.date;
+  if (link.meal) ui.meal = link.meal;
+  if (link.menu && !link.logId) {
+    $("name").value = link.menu;
+    NUTRI.forEach((k) => ($(k).value = link.nums[k] ?? ""));
+    if (NUTRI.some((k) => link.nums[k] != null)) $("nutri").open = true;
+  }
+  render();
+  if (link.mode === "logs" || link.logId) $("dayTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+  else if (link.mode === "summary") {
+    $("lookback").open = true;
+    $("lookback").scrollIntoView({ behavior: "smooth", block: "start" });
+  } else if (link.mode === "quick") say("よく記録するものの並べかえは、まだしょくじにありません。よく食べるものは、名前の欄の下に出ます");
+  else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
+}
+
+// カードの「画面で詳しく」から、ボットの記録（logId）を開いたとき：その日を出し、直し方を知らせる
+function showLinkedLog(logId) {
+  const b = bot.find((x) => String(x.logId) === logId);
+  if (!b) return;
+  if (b.date && b.date !== ui.date) {
+    ui.date = b.date;
+    render();
+  }
+  if (b.kcal == null) {
+    // カロリーがまだの品：名前を入れて、カロリーから入れられるように（記録はしょくじに1件ふえる。ボットの記録はトークで直す）
+    say(`「${b.menu}」のカロリーは、トークで数字を送ると入ります（例：350）`);
+  } else {
+    say(`「${b.menu}」はボットで入れた記録です。しょくじでは、まだ直せません`);
+  }
+}
+
 // ---- LINE とつなぐ（くわしい人向け）----
 $("gasField").hidden = !inLine;
 $("reopenLink").href = OPEN_URL;
@@ -509,9 +580,10 @@ $("gasUrl").addEventListener("change", () => {
   state.gasUrl = url;
   bot = [];
   persist();
-  say(url ? "💬 つなぎ先を決めました" : "つなぎ先を消しました");
+  say(url ? "💬 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとの食事記録ボットにもどしました" : "つなぎ先を消しました");
   connectLineLog();
 });
+openFromLink();
 connectLineLog();
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
