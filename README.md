@@ -28,7 +28,7 @@
 
 ## LINE とつなぐ（くわしい人向け）
 
-LINE の中（LIFF）で開いたしょくじだけ、自分の食事記録ボット（[line-meal-project](https://github.com/katsuan/line-meal-project) の GAS。配布用シートのコピー）とつなげる。つくりは、つづく（q-tuzuq）の「LINE とつなぐ」を写したもの。
+LINE の中（LIFF）で開いたしょくじだけ、自分の食事記録ボット（line-meal-project の GAS。リポジトリは非公開。配布用シートのコピー）とつなげる。つくりは、つづく（q-tuzuq）の「LINE とつなぐ」を写したもの。
 
 - 画面：「⚙️ LINE とつなぐ（くわしい人向け）」のたたみ欄。GAS の URL（`…/exec`）を入れる欄は LINE の中で開いたときだけ出る。形がちがえば赤字。つないでいるあいだは、この日のしょくじの下に「LINE で開いたしょくじの記録は、ブラウザとは別」と出す。LINE のアプリ内のブラウザ（LIFF でない形）で開いたときは「LINE のしょくじで開きなおす」
 - 記録すると、ボットのシートにも1行入る（`submitMealBatch`。しょくじの記録の id を `clientId` として送り、同じ id は何度送っても1回だけ）。つながったときに、まだ送っていないここ7日の記録も送る（送った id は `sent`）
@@ -50,6 +50,7 @@ LINE の中（LIFF）で開いたしょくじだけ、自分の食事記録ボ�
 | `js/store.js` | 記録の保存・控えの書き出しと読みこみ |
 | `js/stats.js` | 計算（日付・合計・よく食べるもの・1週間・続けた日数） |
 | `js/linelog.js`・`js/line-config.js` | LINE の中で開いたときの、食事記録ボットとのつなぎ（つづくの写し）と、その LIFF の ID |
+| `img/meal-richmenu-main.png` | 食事記録ボットの共通のリッチメニュー（「📝 記録」）の画像。ボットの GAS が、メニューを作りなおすときにここから取る |
 | `docs/linelog-setup.html` | 自分の食事記録ボットとつなぐ手順と、受け口の約束 |
 | `test/` | 控えの読みこみと計算・ボットとのつなぎのテスト（`node --test test/`。`package.json` は node に js/ を読ませるためだけ） |
 | `tools/icon.py` | アイコン・ロゴ・OGP |
