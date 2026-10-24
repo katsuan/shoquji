@@ -179,3 +179,6 @@ body {
 .scale-row { align-items: center; gap: 6px; }
 .scale-row .scale-label { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .scale-row .ls-chip { min-height: 44px; }
+
+/* LINE で開く良さ（「💬 LINE で使う」の上。つづくと同じ形） */
+.line-merit { display: grid; gap: 4px; margin: 0 0 8px; padding-left: 0; list-style: none; }

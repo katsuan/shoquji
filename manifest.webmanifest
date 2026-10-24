@@ -1,7 +1,7 @@
 {
   "name": "しょくじ（ShoQuji）",
   "short_name": "しょくじ",
-  "description": "食べたものを、さっと記録。記録はこの端末の中だけ。",
+  "description": "食べたものを、さっと記録。LINE で開くと食事記録ボットのシートにも残ります。",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

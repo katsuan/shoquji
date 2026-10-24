@@ -3,9 +3,9 @@
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
-import { fmt } from "./stats.js?v=202610250200";
-import { lineLogMessage } from "./linelog.js?v=202610250200";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250200";
+import { fmt } from "./stats.js?v=202610250300";
+import { lineLogMessage } from "./linelog.js?v=202610250300";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250300";
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
