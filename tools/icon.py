@@ -104,7 +104,7 @@ def main():
     (ROOT / "logo.svg").write_text(teacup_logo(logo), encoding="utf-8")
     BRAND.write_ogp(
         ROOT / "ogp.png", SHAPES, "しょくじ", "ShoQuji",
-        ["食べたものを、さっと記録", "LINE で開けばシートにも残る"], decorate,
+        ["食べたものを、さっと記録", "LINE 版ならシートにも残る"], decorate,
         copy="食べたら、ぱっと残そう",
     )
     print(f"アイコン・logo.svg（高さ 28px なら幅 {28 * ratio:.0f}px）・ogp.png を書き出しました")

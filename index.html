@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>しょくじ｜食べたものを、さっと記録</title>
-<meta name="description" content="しょくじ（ShoQuji）。食べたものとカロリー・PFC をさっと記録して、1日の合計や1週間のふりかえりを見られます。ブラウザでは記録はこの端末の中に、LINE で開くと食事記録ボットのシートにも残ります。LINE にカードで送れます。">
+<meta name="description" content="しょくじ（ShoQuji）。食べたものとカロリー・PFC をさっと記録して、1日の合計や1週間のふりかえりを見られます。ブラウザ版は記録がこの端末の中に、LINE 版は食事記録ボットのシートにも残ります。カードで送れます。">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="しょくじ（ShoQuji）">
 <meta property="og:title" content="しょくじ｜食べたものを、さっと記録">
-<meta property="og:description" content="食べたものをさっと記録。1日の合計・1週間のふりかえり。LINE で開くと食事記録ボットのシートにも残り、トークからも記録できます。">
+<meta property="og:description" content="食べたものをさっと記録。1日の合計・1週間のふりかえり。LINE 版なら食事記録ボットのシートにも残り、トークからも記録できます。">
 <meta property="og:url" content="https://katsuan.github.io/shoquji/">
-<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=5">
+<meta property="og:image" content="https://katsuan.github.io/shoquji/ogp.png?v=6">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="しょくじ（ShoQuji）：食べたものを、さっと記録">
@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610250300">
+<link rel="stylesheet" href="style.css?v=202610250400">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -88,33 +88,33 @@
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
     <!-- LINE の中で食事記録ボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
-    <p class="where-note" id="whereNote" hidden>📱 LINE で開いたしょくじの記録は、Safari などのブラウザで開いたときとは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。</p>
+    <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
-    <p class="where-note" id="reopenInLiff" hidden>💬 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE のしょくじで開きなおす ›</a></p>
+    <p class="where-note" id="reopenInLiff" hidden>💬 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
-      <a id="sendBtn" class="ls-button is-block line" href="#">💬 LINEで送る<small>（おくるん）</small></a>
+      <a id="sendBtn" class="ls-button is-block line" href="#">💬 カードで送る<small>（おくるん）</small></a>
       <p id="sendTextNote" class="ls-hint send-note" hidden>📝 記録用の文字もいっしょに送ります（⚙️ で切りかえ）</p>
     </div>
   </section>
 
   <!-- LINE で使う（最初だけ・閉じられる）：LINE で開く案内と、4コマの使い方（LINE の画面に似せた絵。明るいまま）。つづくと同じ作り。
-       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE の中では出さない（「⚙️ LINE とつなぐ」から見られる） -->
+       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE 版では出さない（「⚙️ 食事記録ボットとつなぐ」から見られる） -->
   <section class="ls-panel" id="lineGuidePanel" aria-labelledby="lineGuideTitle" hidden>
     <div class="guide-head">
-      <h2 id="lineGuideTitle" class="ls-panel-title">💬 LINE で使う</h2>
-      <button class="line-guide-close" type="button" data-close-line-guide aria-label="LINE の案内を閉じる">✕ 閉じる</button>
+      <h2 id="lineGuideTitle" class="ls-panel-title">📱 LINE 版で使う</h2>
+      <button class="line-guide-close" type="button" data-close-line-guide aria-label="案内を閉じる">✕ 閉じる</button>
     </div>
     <!-- 「LINEで開く」は、おくるん（Q キット）の共通の案内（LineShareLiff.outsideHelp） -->
     <!-- LINE で開く良さ（言い切れることだけ） -->
     <ul class="ls-hint line-merit">
-      <li>💾 LINE で開くと、記録が食事記録ボットのシートにも残ります。ブラウザだけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
-      <li>📱 機種を変えても、LINE で開けばボットに入った記録が出ます（ここ60日分）</li>
+      <li>💾 記録が食事記録ボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
+      <li>📱 機種を変えても、ボットに入った記録が出ます（ここ60日分）</li>
       <li>💬 ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</li>
     </ul>
     <div id="lineOutside"></div>
-    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ LINE とつなぐ」からまた見られます）。</p>
-    <div class="line-guide" role="list" aria-label="LINE での使い方">
+    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ 食事記録ボットとつなぐ」からまた見られます）。</p>
+    <div class="line-guide" role="list" aria-label="4コマの使い方">
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
           <div class="lg-top">‹ 自分のトーク</div>
@@ -123,7 +123,7 @@
             <div class="lg-tap">👆</div>
           </div>
         </div>
-        <figcaption><b>1. LINE で開く</b>リンクを押すと、LINE の中でしょくじが開きます（自分あてのトークに貼っておくと便利）。LINE の中はブラウザとは別の記録なので、いまの記録は「🔒 記録の控え」でうつせます</figcaption>
+        <figcaption><b>1. リンクを開く</b>上のボタンのリンクを押すと開きます（自分あてのトークに貼っておくと便利）。ブラウザ版とは別の記録なので、いまの記録は「🔒 記録の控え」でうつせます</figcaption>
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -135,7 +135,7 @@
             <div class="lg-toast">💬 食事記録ボットにも入れました</div>
           </div>
         </div>
-        <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。LINE の中で開くと、食事記録ボットのシートにも入ります</figcaption>
+        <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。食事記録ボットのシートにも入ります</figcaption>
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -148,7 +148,7 @@
             </div>
           </div>
         </div>
-        <figcaption><b>3. カードで送る</b>「💬 LINEで送る」で、家族や友だちに、きょう食べたものを送れます</figcaption>
+        <figcaption><b>3. カードで送る</b>「💬 カードで送る」で、家族や友だちに、きょう食べたものを送れます</figcaption>
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -161,7 +161,7 @@
         <figcaption><b>4. トークで送っても記録</b>食事記録ボットのトークに食べたものを送っても記録できます。しょくじにも「ボット」の札で出ます</figcaption>
       </figure>
     </div>
-    <p id="openInLineNote" class="ls-hint small">パソコンで見ているときは、スマホの LINE で同じリンク（https://liff.line.me/2010088825-CulmmaFc）を開いてね。</p>
+    <p id="openInLineNote" class="ls-hint small">パソコンで見ているときは、スマホで同じリンク（https://liff.line.me/2010088825-CulmmaFc）を開いてね。</p>
   </section>
 
   <div class="ls-folds">
@@ -187,7 +187,7 @@
           <input id="pinSearch" class="ls-input" maxlength="40" placeholder="例：カレー" autocomplete="off" enterkeyhint="search">
         </label>
         <div id="pinCands" class="cand-list"></div>
-        <label class="send-text"><input id="richOn" type="checkbox"><span>LINE のメニューにも出す<small>トークの下の「⚡ よく記録」に、前から 6 品が並びます</small></span></label>
+        <label class="send-text"><input id="richOn" type="checkbox"><span>トークのメニューにも出す<small>トークの下の「⚡ よく記録」に、前から 6 品が並びます</small></span></label>
         <div id="richPreview" class="rich-preview"></div>
         <button id="savePins" class="ls-button is-primary is-block" type="button">📌 この並びで保存</button>
       </div>
@@ -195,21 +195,21 @@
 
     <!-- LINE とつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
     <details class="ls-fold" id="lineFold">
-      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>LINE とつなぐ（くわしい人向け）</summary>
+      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>食事記録ボットとつなぐ（くわしい人向け）</summary>
       <div class="ls-fold-body">
         <!-- はじめだけ要る説明 -->
-        <p id="lineIntro" class="ls-hint">LINE の中で開いたしょくじは、自分の食事記録ボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザで開いたしょくじは、今までどおり何も送りません。</p>
+        <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、自分の食事記録ボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
         <!-- つながっているあいだの説明 -->
-        <p id="lineLogNote" class="ls-hint" hidden>💬 いまは LINE の中で、食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
+        <p id="lineLogNote" class="ls-hint" hidden>💬 いまは食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
         <div id="gasField" hidden>
           <label class="ls-field">
             <span class="ls-label">記録を入れる、食事記録ボットの GAS の URL</span>
             <input id="gasUrl" class="ls-input" type="url" inputmode="url" maxlength="200" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
           </label>
           <p id="gasUrlError" class="ls-hint is-error" role="alert" hidden>GAS のウェブアプリの URL（…/exec）を入れてね</p>
-          <p class="ls-hint small">配布用シートをコピーして作った、自分の GAS の URL です。空のときは、この LINE の食事記録ボットにつながります。この欄は LINE の中で開いたときに出ます。</p>
+          <p class="ls-hint small">配布用シートをコピーして作った、自分の GAS の URL です。空のときは、いつもの食事記録ボットにつながります。</p>
         </div>
-        <button class="ls-button is-block" type="button" data-show-line-guide>👀 LINE での使い方（4コマ）を見る</button>
+        <button class="ls-button is-block" type="button" data-show-line-guide>👀 使い方（4コマ）を見る</button>
         <p class="ls-hint small"><a href="docs/linelog-setup.html" target="_blank" rel="noopener">自分の GAS につなぐ（配布用シートのコピーから5手）</a></p>
       </div>
     </details>
@@ -226,8 +226,8 @@
           <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
         </div>
         <!-- 食事記録ボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
-        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日は LINE でお知らせ<small>食事記録ボットから届きます。目標カロリーもボットとそろえます</small></span></label>
-        <p class="sub-title">💬 LINE で送るとき</p>
+        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>食事記録ボットから届きます。目標カロリーもボットとそろえます</small></span></label>
+        <p class="sub-title">💬 カードで送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
         <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
         <p class="sub-title">🔒 記録の控え</p>
@@ -251,7 +251,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610250300"></script>
+<script type="module" src="app.js?v=202610250400"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

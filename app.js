@@ -1,14 +1,14 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250300";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250300";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250300";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250300";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250300";
-import { cardUrl } from "./js/card.js?v=202610250300";
-import { writeDays } from "./js/days.js?v=202610250300";
-import { initLineGuide } from "./js/line-guide.js?v=202610250300";
-import { readLink } from "./js/link.js?v=202610250300";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250300";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250400";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250400";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250400";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250400";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250400";
+import { cardUrl } from "./js/card.js?v=202610250400";
+import { writeDays } from "./js/days.js?v=202610250400";
+import { initLineGuide } from "./js/line-guide.js?v=202610250400";
+import { readLink } from "./js/link.js?v=202610250400";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250400";
 
 const $ = (id) => document.getElementById(id);
 
@@ -372,7 +372,7 @@ $("saveBtn").addEventListener("click", () => {
 let savingRemote = false;
 async function saveRemote(entry) {
   if (savingRemote) return;
-  if (!lineLog) return say("ボットの記録・MYメニューは、LINE の中で開いたときに直せます");
+  if (!lineLog) return say("ボットの記録・MYメニューは、LINE 版で直せます");
   const e = { ...entry, name: entry.name.trim(), kcal: num(entry.kcal), p: num(entry.p), f: num(entry.f), c: num(entry.c) };
   if (e.kcal == null) {
     $("nutri").open = true;
@@ -738,7 +738,7 @@ function openFromLink() {
   else if (link.mode === "summary") {
     $("lookback").open = true;
     $("lookback").scrollIntoView({ behavior: "smooth", block: "start" });
-  } else if (link.mode === "quick" && !inLine) say("よく記録するものの並べかえは、LINE の中で開いたときにできます");
+  } else if (link.mode === "quick" && !inLine) say("よく記録するものの並べかえは、LINE 版でできます");
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
 }
 
@@ -782,6 +782,6 @@ document.addEventListener("visibilitychange", () => {
 // はじめての人にだけ、使い方を3つ（「わかった」で消え、二度と出さない）
 window.LineShareUI?.firstTip(
   "shoquji",
-  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "ブラウザでは記録はこの端末の中だけ。LINE で開くと、食事記録ボットのシートにも残ります"],
+  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "ブラウザ版の記録はこの端末の中だけ。LINE 版なら、食事記録ボットのシートにも残ります"],
   document.querySelector(".days")
 );

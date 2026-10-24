@@ -1,5 +1,5 @@
-// 「💬 LINE で使う」：ブラウザで開いたときの「LINEで開く」の案内と、4コマの使い方（最初だけ。閉じたら出さない）。つづくと同じ作り
-//   「⚙️ LINE とつなぐ」の「👀 LINE での使い方（4コマ）を見る」で、また出る（LINE の中でも）
+// 「📱 LINE 版で使う」：ブラウザで開いたときの「LINEで開く」の案内と、4コマの使い方（最初だけ。閉じたら出さない）。つづくと同じ作り
+//   「⚙️ 食事記録ボットとつなぐ」の「👀 使い方（4コマ）を見る」で、また出る（LINE 版でも）
 const BANNER_KEY = "shoquji:lineBannerOff"; // この端末で閉じたか（設定なので端末に残してよい）
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -18,7 +18,7 @@ export function initLineGuide({ inside, openUrl, say }) {
   // 「LINEで開く」は、おくるんの共通の案内に（読みこめなければ、ふつうのリンク）
   if (!inside) {
     const shown = window.LineShareLiff?.outsideHelp?.($("lineOutside"), { appUrl: () => openUrl, canLogin: false });
-    if (!shown) $("lineOutside").innerHTML = `<a class="ls-button line is-block" href="${esc(openUrl)}">💬 LINEで開く</a>`;
+    if (!shown) $("lineOutside").innerHTML = `<a class="ls-button line is-block" href="${esc(openUrl)}">📱 LINE 版で開く</a>`;
   }
   const remember = (value) => {
     try {
@@ -32,7 +32,7 @@ export function initLineGuide({ inside, openUrl, say }) {
     b.addEventListener("click", () => {
       show(false);
       remember(true);
-      say("LINE の案内を閉じました（「⚙️ LINE とつなぐ」からまた見られます）");
+      say("案内を閉じました（「⚙️ 食事記録ボットとつなぐ」からまた見られます）");
     })
   );
   document.querySelectorAll("[data-show-line-guide]").forEach((b) =>

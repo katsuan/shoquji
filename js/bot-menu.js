@@ -3,9 +3,9 @@
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
-import { fmt } from "./stats.js?v=202610250300";
-import { lineLogMessage } from "./linelog.js?v=202610250300";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250300";
+import { fmt } from "./stats.js?v=202610250400";
+import { lineLogMessage } from "./linelog.js?v=202610250400";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250400";
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -23,7 +23,7 @@ export const resetProfile = () => {
   pins = null;
 };
 
-const RICH_KEY = "shoquji:richOn"; // 「LINE のメニューにも出す」（この端末の設定）
+const RICH_KEY = "shoquji:richOn"; // 「トークのメニューにも出す」（この端末の設定）
 const richOn = () => {
   try {
     return localStorage.getItem(RICH_KEY) !== "0";
@@ -98,7 +98,7 @@ export async function refreshRichMenuIfStale() {
   richRefreshing = true;
   try {
     const res = await saveProfile({ richMenu: { image: await drawQuickMenu(items), items: items.map((i) => i.name), key } });
-    if (res && res.richMenu && res.richMenu.ok && !existed) ctx.say("LINE のメニューの「⚡ よく記録」に、よく記録するものを並べました");
+    if (res && res.richMenu && res.richMenu.ok && !existed) ctx.say("トークのメニューの「⚡ よく記録」に、よく記録するものを並べました");
   } catch (error) {
     console.error(error);
   }
@@ -148,7 +148,7 @@ async function renderRichPreview() {
   if (key === previewKey) return;
   previewKey = key;
   const url = await drawQuickMenu(items);
-  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="LINE のメニュー「⚡ よく記録」の見本">`;
+  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="トークのメニュー「⚡ よく記録」の見本">`;
 }
 
 export function initBotMenu(context) {
@@ -201,8 +201,8 @@ export function initBotMenu(context) {
           profile.quickMenus = [...list.map((k) => ({ ...map.get(k), pinned: true })), ...profile.quickMenus.filter((m) => !list.includes(m.masterKey)).map((m) => ({ ...m, pinned: false }))];
         }
         pins = null;
-        if (res.richMenu && !res.richMenu.ok) ctx.say("並びは保存しました。LINE のメニューは作れませんでした。少し待って、もう一度ためしてね");
-        else ctx.say(richMenu ? "📌 並びを保存して、LINE のメニューにも出しました" : "📌 よく記録するものの並びを保存しました");
+        if (res.richMenu && !res.richMenu.ok) ctx.say("並びは保存しました。トークのメニューは作れませんでした。少し待って、もう一度ためしてね");
+        else ctx.say(richMenu ? "📌 並びを保存して、トークのメニューにも出しました" : "📌 よく記録するものの並びを保存しました");
       }
     } finally {
       $("savePins").disabled = false;
