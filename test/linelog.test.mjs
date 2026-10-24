@@ -107,3 +107,18 @@ test("失敗の言葉は、やさしい言葉だけ（仕組みの言葉を出�
     assert.doesNotMatch(m, /error|LIFF|API|token/i);
   }
 });
+
+test("直す・消す・設定の呼び出しの形（自分の記録は clientId で。カロリーなしでもよい。MYメニューには触らない）", async () => {
+  const seen = [];
+  const c = makeClient(GAS, () => TOKEN, okFetch({ ok: true }, seen));
+  await c.updateOwn({ id: "abc123", date: "2026-10-24", meal: "夜", name: "そば", kcal: null, p: null, f: null, c: null });
+  assert.deepEqual(seen[0].body, { idToken: TOKEN, action: "updateMealLog", source: "shoquji", clientId: "abc123", allowPending: true, mealDate: "2026-10-24", meal: "夜", menu: "そば", kcal: null, protein: null, fat: null, carb: null, saveToMaster: false, sendLineSummary: false });
+  await c.removeOwn("abc123");
+  assert.deepEqual(seen[1].body, { idToken: TOKEN, action: "deleteMealLog", source: "shoquji", clientId: "abc123" });
+  await c.removeBot("L9");
+  assert.deepEqual(seen[2].body, { idToken: TOKEN, action: "deleteMealLog", source: "shoquji", logId: "L9" });
+  await c.profile({ notify: true });
+  assert.deepEqual(seen[3].body, { idToken: TOKEN, action: "updateProfile", source: "shoquji", notify: true });
+  await c.state();
+  assert.deepEqual(seen[4].body, { idToken: TOKEN, action: "getLiffAppState", source: "shoquji" });
+});

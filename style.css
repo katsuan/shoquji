@@ -157,3 +157,14 @@ body {
 .lg-card-body { padding: 8px 10px; }
 .lg-card-body b { display: block; font-size: 14px; }
 .lg-card-btn { padding: 7px; border-top: 1px solid #efe6da; color: #c26a00; font-weight: 700; text-align: center; }
+
+/* よく記録するもの（LINE のメニュー）：固定した品の並べかえ・メニューの見本 */
+.pin-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.pin-row { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; border: 1.5px solid var(--ls-line); border-radius: 12px; }
+.pin-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.pin-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
+.pin-row button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--ls-subtext); font-size: 15px; cursor: pointer; }
+.pin-row button:disabled { opacity: 0.3; cursor: default; }
+.rich-preview img { display: block; width: 100%; border: 1.5px solid var(--ls-line); border-radius: 12px; }
+.rich-preview:empty { display: none; }
+.item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; }

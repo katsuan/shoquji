@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610241900";
+import { LINE_LOG } from "./line-config.js?v=202610242100";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -111,6 +111,17 @@ export function makeClient(gasUrl, getIdToken, fetchImpl = (...a) => fetch(...a)
     // ボットに入っている記録（logId）を直す（カロリーは要る）。MYメニューにも保存する（前の食事記録の画面と同じ）
     update: (logId, e) =>
       post({ action: "updateMealLog", source: "shoquji", logId, mealDate: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c, saveToMaster: true, sendLineSummary: false }),
+    // しょくじで直した自分の記録（id＝clientId）を、ボットにもそろえる（カロリーがなくてもよい。MYメニューには触らない）
+    updateOwn: (l) =>
+      post({ action: "updateMealLog", source: "shoquji", clientId: l.id, allowPending: true, mealDate: l.date, meal: toBotMeal(l.meal), menu: l.name, kcal: l.kcal, protein: l.p, fat: l.f, carb: l.c, saveToMaster: false, sendLineSummary: false }),
+    // しょくじで消した自分の記録（id）を、ボットからも消す。ボットにないときも ok
+    removeOwn: (id, keepalive) => post({ action: "deleteMealLog", source: "shoquji", clientId: id }, keepalive),
+    // ボットの記録（logId）を消す
+    removeBot: (logId, keepalive) => post({ action: "deleteMealLog", source: "shoquji", logId }, keepalive),
+    // 開いたときの中身（目標・20時のお知らせ・よく記録するもの・MYメニュー・「⚡ よく記録」のメニューの状態）
+    state: () => post({ action: "getLiffAppState", source: "shoquji" }),
+    // 目標・お知らせ・よく記録するものの固定（送った項目だけ直る）。richMenu：{ image, items, key } で「⚡ よく記録」を作りなおす
+    profile: (patch) => post({ action: "updateProfile", source: "shoquji", ...patch }),
     // MYメニュー（ボットの栄養の表）だけを保存する。masterKey があればその品を直す
     saveMaster: (masterKey, e) => post({ action: "saveNutritionMasterOnly", source: "shoquji", masterKey: masterKey || "", menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c })
   };

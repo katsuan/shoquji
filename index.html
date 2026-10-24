@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610241900">
+<link rel="stylesheet" href="style.css?v=202610242100">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -161,6 +161,24 @@
       </div>
     </details>
 
+    <!-- よく記録するもの（食事記録ボットとつないでいるときだけ）：📌 固定と並べかえ、LINE のリッチメニュー「⚡ よく記録」 -->
+    <details class="ls-fold" id="quickFold" hidden>
+      <summary><span class="ls-fold-icon" aria-hidden="true">📌</span>よく記録するもの（LINE のメニュー）</summary>
+      <div class="ls-fold-body">
+        <p class="ls-hint">📌 固定した品は、いつも前に並びます。あいたところは記録の多い順です。トークの下のメニュー「⚡ よく記録」から、押すだけで記録できます。</p>
+        <p class="sub-title">固定した品（<span id="pinCount">0</span>/12）</p>
+        <ol id="pinList" class="pin-list"></ol>
+        <label class="ls-field">
+          <span class="ls-label">固定する品をさがす（MYメニュー）</span>
+          <input id="pinSearch" class="ls-input" maxlength="40" placeholder="例：カレー" autocomplete="off" enterkeyhint="search">
+        </label>
+        <div id="pinCands" class="ls-chips"></div>
+        <label class="send-text"><input id="richOn" type="checkbox"><span>LINE のメニューにも出す<small>トークの下の「⚡ よく記録」に、前から 6 品が並びます</small></span></label>
+        <div id="richPreview" class="rich-preview"></div>
+        <button id="savePins" class="ls-button is-primary is-block" type="button">📌 この並びで保存</button>
+      </div>
+    </details>
+
     <!-- LINE とつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
     <details class="ls-fold" id="lineFold">
       <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>LINE とつなぐ（くわしい人向け）</summary>
@@ -193,6 +211,8 @@
           <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="tF" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
           <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
         </div>
+        <!-- 食事記録ボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
+        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日は LINE でお知らせ<small>食事記録ボットから届きます。目標カロリーもボットとそろえます</small></span></label>
         <p class="sub-title">💬 LINE で送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
         <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
@@ -217,7 +237,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610241900"></script>
+<script type="module" src="app.js?v=202610242100"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

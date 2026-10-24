@@ -1,8 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241900";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241900";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610241900";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241900";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242100";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242100";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242100";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242100";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -48,7 +49,65 @@ function loadBot() {
 // 画面に出す中身：この端末の記録＋ボットで入れた記録（しょくじから送ったもの・消したものは除く）。ボットの記録は端末には足さない
 function view() {
   if (!bot.length) return state;
-  return { ...state, logs: [...state.logs, ...botLogsForView(bot, state.logs, state.deleted)] };
+  const shown = bot.filter((b) => !hiddenBot.has(String(b.logId)));
+  return { ...state, logs: [...state.logs, ...botLogsForView(shown, state.logs, state.deleted)] };
+}
+
+// ---- 消すのは「元に戻す」を押せるあいだ待ってから、ボットにも送る（閉じる・切りかえるときは、すぐ送る） ----
+const UNDO_MS = 6500;
+const pendingRemovals = new Map(); // key → { run, timer }
+const hiddenBot = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す）
+function queueRemoval(key, run) {
+  cancelRemoval(key);
+  pendingRemovals.set(key, { run, timer: setTimeout(() => flushRemoval(key), UNDO_MS) });
+}
+function cancelRemoval(key) {
+  const p = pendingRemovals.get(key);
+  if (p) clearTimeout(p.timer);
+  pendingRemovals.delete(key);
+}
+async function flushRemoval(key, keepalive = false) {
+  const p = pendingRemovals.get(key);
+  if (!p) return;
+  cancelRemoval(key);
+  await p.run(keepalive);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") [...pendingRemovals.keys()].forEach((key) => flushRemoval(key, true));
+});
+
+// しょくじで消した自分の記録：ボットに送ってあれば、ボットからも消す
+function removeOwnLater(log) {
+  if (!lineLog || !state.sent.includes(log.id)) return;
+  queueRemoval(`own:${log.id}`, async (keepalive) => {
+    const res = await lineLog.removeOwn(log.id, keepalive);
+    if (!res.ok && !keepalive) say(lineLogMessage(res.error));
+  });
+}
+
+// ボットの記録を消す（画面からは先に消し、「元に戻す」を押せるあいだは待つ）
+function removeBot(logId) {
+  const b = bot.find((x) => String(x.logId) === String(logId));
+  if (!b || !lineLog) return;
+  if (ui.botEdit === String(logId)) cancelEdit();
+  hiddenBot.add(String(logId));
+  render();
+  queueRemoval(`bot:${logId}`, async (keepalive) => {
+    const res = await lineLog.removeBot(String(logId), keepalive);
+    if (res.ok) {
+      bot = bot.filter((x) => String(x.logId) !== String(logId));
+      hiddenBot.delete(String(logId));
+    } else if (!keepalive) {
+      hiddenBot.delete(String(logId));
+      say(lineLogMessage(res.error));
+    }
+    render();
+  });
+  say(`🗑 「${b.menu}」を消しました（食事記録ボットからも）`, () => {
+    cancelRemoval(`bot:${logId}`);
+    hiddenBot.delete(String(logId));
+    render();
+  });
 }
 
 // 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
@@ -103,6 +162,8 @@ function connectLineLog() {
     $("reopenInLiff").hidden = !!client || !gasTarget() || !inLineApp();
     $("lineLogNote").hidden = !client;
     $("lineIntro").hidden = !!client;
+    $("quickFold").hidden = !client;
+    $("botNotifyRow").hidden = !client;
     if (!client) {
       $("whereNote").hidden = true;
       return had && render();
@@ -113,6 +174,7 @@ function connectLineLog() {
     render();
     await sendUnsent();
     await readBot(true);
+    await readProfile();
     if (link.logId && !link.used) {
       link.used = true;
       startBotEdit(link.logId);
@@ -243,9 +305,14 @@ $("saveBtn").addEventListener("click", () => {
   }
   if (ui.botEdit || ui.masterEdit) return saveRemote(entry);
   if (ui.editing) {
-    updateLog(state, ui.editing, entry);
+    const edited = updateLog(state, ui.editing, entry);
     say(`✏️ 「${entry.name.trim()}」を直しました`);
     ui.editing = null;
+    // ボットにも：送ってあれば直す、まだなら送る
+    if (edited && lineLog) {
+      if (state.sent.includes(edited.id)) lineLog.updateOwn(edited).then((res) => !res.ok && say(lineLogMessage(res.error)));
+      else sendToBot([edited], { quiet: true });
+    }
   } else {
     const log = addLog(state, entry);
     ui.justAdded = log.id;
@@ -381,6 +448,7 @@ function itemHtml(l) {
             ${name}
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
             <span class="bot-tag" title="食事記録ボットで入れた記録">ボット</span>
+            ${lineLog ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">✕</button>` : ""}
           </div>`;
   }
   return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
@@ -421,6 +489,8 @@ function renderDay() {
 $("dayList").addEventListener("click", (e) => {
   const botEdit = e.target.closest("[data-bot-edit]");
   if (botEdit) return startBotEdit(botEdit.dataset.botEdit);
+  const botDel = e.target.closest("[data-bot-del]");
+  if (botDel) return removeBot(botDel.dataset.botDel);
   const edit = e.target.closest("[data-edit]");
   if (edit) return startEdit(edit.dataset.edit);
   const del = e.target.closest("[data-del]");
@@ -432,10 +502,15 @@ $("dayList").addEventListener("click", (e) => {
   if (ui.editing === log.id) cancelEdit();
   persist();
   render();
+  removeOwnLater(log);
   say(`🗑 「${log.name}」を消しました`, () => {
+    // もうボットから消してしまっていたら（閉じかけて送ったなど）、もう一度入れる
+    const already = !pendingRemovals.has(`own:${log.id}`);
+    cancelRemoval(`own:${log.id}`);
     restoreLog(state, log);
     persist();
     render();
+    if (already && lineLog) sendToBot([log], { quiet: true });
   });
 });
 
@@ -516,6 +591,8 @@ Object.entries(TARGET_INPUTS).forEach(([id, k]) =>
     if (v > 0) state.targets[k] = Math.round(v);
     persist();
     render();
+    // つないでいるときは、目標カロリーをボットにもそろえる（集計カード・20時のお知らせで使う）
+    if (k === "kcal" && v > 0 && lineLog) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、食事記録ボットにもそろえました");
   })
 );
 
@@ -585,6 +662,187 @@ function render() {
 
 render();
 
+// ---- 食事記録ボットの設定（目標・20時のお知らせ）と、よく記録するもの（📌 並べかえ・「⚡ よく記録」のメニュー） ----
+let profile = null; // { user, quickMenus, popularMenus, menus, quickRichMenu }
+let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
+const RICH_KEY = "shoquji:richOn"; // 「LINE のメニューにも出す」（この端末の設定）
+const richOn = () => {
+  try {
+    return localStorage.getItem(RICH_KEY) !== "0";
+  } catch {
+    return true;
+  }
+};
+const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim();
+
+// 開いたときに1回：ボットの目標・お知らせ・よく記録するもの・MYメニューを読む
+async function readProfile() {
+  if (!lineLog) return;
+  const res = await lineLog.state();
+  if (!res.ok) return; // 読めなくても、記録はできる（失敗の知らせは記録を読むほうで出す）
+  const d = res.dashboard || {};
+  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], quickRichMenu: res.quickRichMenu || null };
+  // 目標カロリーは、ボットのものにそろえる
+  const target = Number(profile.user.calorieTarget) || 0;
+  if (target > 0 && target !== state.targets.kcal) {
+    state.targets.kcal = Math.round(target);
+    persist();
+  }
+  $("botNotify").checked = profile.user.notify === true;
+  render();
+  renderPins();
+  if (link.mode === "quick" && !link.usedQuick) {
+    link.usedQuick = true;
+    $("quickFold").open = true;
+    $("quickFold").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  refreshRichMenuIfStale();
+}
+
+// 目標・お知らせを、ボットにも（送った項目だけ直る）
+async function saveProfile(patch, doneText) {
+  if (!lineLog) return;
+  const res = await lineLog.profile(patch);
+  if (!res.ok) return say(lineLogMessage(res.error));
+  if (res.dashboard) profile = { ...profile, user: res.dashboard.user || profile.user, quickMenus: res.dashboard.quickMenus || profile.quickMenus, popularMenus: res.dashboard.popularMenus || profile.popularMenus };
+  if (res.quickRichMenu) profile.quickRichMenu = res.quickRichMenu;
+  if (doneText) say(doneText);
+  return res;
+}
+$("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "🔔 20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));
+
+const savedPins = () => (profile ? profile.quickMenus.filter((m) => m.pinned && m.masterKey).map((m) => m.masterKey) : []);
+const byKey = () => new Map([...(profile?.menus || []), ...(profile?.quickMenus || [])].filter((m) => m.masterKey).map((m) => [m.masterKey, m]));
+
+// 「⚡ よく記録」に並べる品：固定した順 → あいたところは記録の多い順（カロリーがわからない品は出さない）
+function richItems(list = pins || savedPins()) {
+  const map = byKey();
+  const out = list.map((k) => map.get(k)).filter(Boolean).map((m) => ({ name: dn(m), kcal: m.kcal ?? null, pinned: true }));
+  const used = new Set(out.map((i) => i.name));
+  const popular = (profile?.popularMenus || []).map((m) => ({ ...m, kcal: m.kcal ?? (m.averageKcal || null) }));
+  [...popular, ...(profile?.quickMenus || [])]
+    .filter((m) => !(m.masterKey && list.includes(m.masterKey)) && m.kcal != null && !used.has(dn(m)))
+    .forEach((m) => {
+      used.add(dn(m));
+      out.push({ name: dn(m), kcal: m.kcal, pinned: false });
+    });
+  return out.slice(0, RICH_LAYOUT.quickCount);
+}
+const richKey = (items) => JSON.stringify(items.map((i) => [i.name, i.kcal, i.pinned ? 1 : 0]));
+
+// 開いたとき：LINE の「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る（まだなければ作る）
+let richRefreshing = false;
+async function refreshRichMenuIfStale() {
+  if (!lineLog || !profile?.quickRichMenu || !richOn() || richRefreshing) return;
+  const items = richItems(savedPins());
+  if (!items.length) return;
+  const key = richKey(items);
+  if (profile.quickRichMenu.key === key) return;
+  const existed = profile.quickRichMenu.has;
+  richRefreshing = true;
+  try {
+    const res = await saveProfile({ richMenu: { image: await drawQuickMenu(items), items: items.map((i) => i.name), key } });
+    if (res && res.richMenu && res.richMenu.ok && !existed) say("LINE のメニューの「⚡ よく記録」に、よく記録するものを並べました");
+  } catch (error) {
+    console.error(error);
+  }
+  richRefreshing = false;
+}
+
+// 📌 並べかえ（たたみ欄）
+function renderPins() {
+  if (!profile) return;
+  const list = pins || savedPins();
+  const map = byKey();
+  $("pinCount").textContent = String(list.length);
+  $("pinList").innerHTML = list.length
+    ? list
+        .map((k, i) => {
+          const m = map.get(k) || { menu: "（消えたメニュー）" };
+          return `<li class="pin-row"><span class="pin-name">📌 ${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+            <button type="button" data-pin-move="${esc(k)}" data-dir="-1" aria-label="上へ"${i === 0 ? " disabled" : ""}>↑</button>
+            <button type="button" data-pin-move="${esc(k)}" data-dir="1" aria-label="下へ"${i === list.length - 1 ? " disabled" : ""}>↓</button>
+            <button type="button" data-pin-del="${esc(k)}" aria-label="固定をやめる">✕</button></li>`;
+        })
+        .join("")
+    : '<li class="ls-hint">まだありません。下の欄でさがして、押すと固定できます。</li>';
+  const q = $("pinSearch").value.trim();
+  const cands = (profile.menus || []).filter((m) => m.masterKey && !list.includes(m.masterKey) && (!q || dn(m).includes(q))).slice(0, 12);
+  $("pinCands").innerHTML = cands.map((m) => `<button class="ls-chip is-small" type="button" data-pin-add="${esc(m.masterKey)}">＋ ${esc(dn(m))}</button>`).join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ固定できます。</p>' : "");
+  $("richOn").checked = richOn();
+  renderRichPreview();
+}
+
+let previewKey = "";
+async function renderRichPreview() {
+  if (!richOn() || !$("quickFold").open) {
+    $("richPreview").innerHTML = "";
+    previewKey = "";
+    return;
+  }
+  const items = richItems();
+  const key = richKey(items);
+  if (key === previewKey) return;
+  previewKey = key;
+  const url = await drawQuickMenu(items);
+  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="LINE のメニュー「⚡ よく記録」の見本">`;
+}
+
+$("quickFold").addEventListener("toggle", renderPins);
+$("pinSearch").addEventListener("input", renderPins);
+$("richOn").addEventListener("change", (e) => {
+  try {
+    localStorage.setItem(RICH_KEY, e.target.checked ? "1" : "0");
+  } catch {
+    // 残せなくても、いまはその設定で
+  }
+  renderPins();
+});
+$("quickFold").addEventListener("click", (e) => {
+  const list = [...(pins || savedPins())];
+  const add = e.target.closest("[data-pin-add]");
+  const del = e.target.closest("[data-pin-del]");
+  const move = e.target.closest("[data-pin-move]");
+  if (add) {
+    if (list.length >= 12) return say("固定できるのは 12 品までです");
+    list.push(add.dataset.pinAdd);
+  } else if (del) {
+    list.splice(list.indexOf(del.dataset.pinDel), 1);
+  } else if (move) {
+    const i = list.indexOf(move.dataset.pinMove);
+    const j = i + Number(move.dataset.dir);
+    if (i < 0 || j < 0 || j >= list.length) return;
+    [list[i], list[j]] = [list[j], list[i]];
+  } else return;
+  pins = list;
+  renderPins();
+});
+$("savePins").addEventListener("click", async () => {
+  if (!lineLog || !profile) return;
+  const list = pins || savedPins();
+  $("savePins").disabled = true;
+  $("savePins").textContent = "保存中…";
+  try {
+    const items = richOn() ? richItems(list) : [];
+    const richMenu = items.length ? { image: await drawQuickMenu(items), items: items.map((i) => i.name), key: richKey(items) } : null;
+    const res = await saveProfile({ favorites: list, ...(richMenu ? { richMenu } : {}) });
+    if (res) {
+      // 返事に新しい並びがないときも、画面は保存した並びに
+      if (!res.dashboard && profile) {
+        const map = byKey();
+        profile.quickMenus = [...list.map((k) => ({ ...map.get(k), pinned: true })), ...profile.quickMenus.filter((m) => !list.includes(m.masterKey)).map((m) => ({ ...m, pinned: false }))];
+      }
+      pins = null;
+      if (res.richMenu && !res.richMenu.ok) say("並びは保存しました。LINE のメニューは作れませんでした。少し待って、もう一度ためしてね");
+      else say(richMenu ? "📌 並びを保存して、LINE のメニューにも出しました" : "📌 よく記録するものの並びを保存しました");
+    }
+  } finally {
+    $("savePins").disabled = false;
+    $("savePins").textContent = "📌 この並びで保存";
+    renderPins();
+  }
+});
+
 // ---- 食事記録ボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…） ----
 // LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
 // 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
@@ -634,7 +892,7 @@ function openFromLink() {
   else if (link.mode === "summary") {
     $("lookback").open = true;
     $("lookback").scrollIntoView({ behavior: "smooth", block: "start" });
-  } else if (link.mode === "quick") say("よく記録するものの並べかえは、まだしょくじにありません。よく食べるものは、名前の欄の下に出ます");
+  } else if (link.mode === "quick" && !inLine) say("よく記録するものの並べかえは、LINE の中で開いたときにできます");
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
 }
 
