@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610241500">
+<link rel="stylesheet" href="style.css?v=202610241700">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -89,6 +89,66 @@
     </div>
   </section>
 
+  <!-- LINE で使う（最初だけ・閉じられる）：LINE で開く案内と、4コマの使い方（LINE の画面に似せた絵。明るいまま）。つづくと同じ作り。
+       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE の中では出さない（「⚙️ LINE とつなぐ」から見られる） -->
+  <section class="ls-panel" id="lineGuidePanel" aria-labelledby="lineGuideTitle" hidden>
+    <div class="guide-head">
+      <h2 id="lineGuideTitle" class="ls-panel-title">💬 LINE で使う</h2>
+      <button class="line-guide-close" type="button" data-close-line-guide aria-label="LINE の案内を閉じる">✕ 閉じる</button>
+    </div>
+    <!-- 「LINEで開く」は、おくるん（Q キット）の共通の案内（LineShareLiff.outsideHelp） -->
+    <div id="lineOutside"></div>
+    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ LINE とつなぐ」からまた見られます）。</p>
+    <div class="line-guide" role="list" aria-label="LINE での使い方">
+      <figure class="lg-panel" role="listitem">
+        <div class="lg-phone" aria-hidden="true">
+          <div class="lg-top">‹ 自分のトーク</div>
+          <div class="lg-talk">
+            <div class="lg-msg is-me">🍚 しょくじ<br><u>liff.line.me/…</u></div>
+            <div class="lg-tap">👆</div>
+          </div>
+        </div>
+        <figcaption><b>1. LINE で開く</b>リンクを押すと、LINE の中でしょくじが開きます（自分あてのトークに貼っておくと便利）。LINE の中はブラウザとは別の記録なので、いまの記録は「🔒 記録の控え」でうつせます</figcaption>
+      </figure>
+      <figure class="lg-panel" role="listitem">
+        <div class="lg-phone" aria-hidden="true">
+          <div class="lg-top">しょくじ</div>
+          <div class="lg-app">
+            <div class="lg-row"><span>朝　トースト</span><small>250 kcal</small></div>
+            <div class="lg-row"><span>昼　カレーライス</span><small>780 kcal</small></div>
+            <div class="lg-row is-pop"><span>夜　焼き魚定食</span><small>650 kcal</small></div>
+            <div class="lg-toast">💬 食事記録ボットにも入れました</div>
+          </div>
+        </div>
+        <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。LINE の中で開くと、食事記録ボットのシートにも入ります</figcaption>
+      </figure>
+      <figure class="lg-panel" role="listitem">
+        <div class="lg-phone" aria-hidden="true">
+          <div class="lg-top">‹ 家族</div>
+          <div class="lg-talk">
+            <div class="lg-card">
+              <div class="lg-card-head">🍚 しょくじの記録</div>
+              <div class="lg-card-body"><b>合計 1,680 kcal</b>朝：トースト<br>昼：カレーライス<br>夜：焼き魚定食</div>
+              <div class="lg-card-btn">🍚 しょくじで記録する</div>
+            </div>
+          </div>
+        </div>
+        <figcaption><b>3. カードで送る</b>「💬 LINEで送る」で、家族や友だちに、きょう食べたものを送れます</figcaption>
+      </figure>
+      <figure class="lg-panel" role="listitem">
+        <div class="lg-phone" aria-hidden="true">
+          <div class="lg-top">‹ 食事記録</div>
+          <div class="lg-talk">
+            <div class="lg-msg is-me">カレーライス</div>
+            <div class="lg-msg">カレーライス を記録（＋780 kcal）<br>きょう 1,680 kcal / 目標 2,000</div>
+          </div>
+        </div>
+        <figcaption><b>4. トークで送っても記録</b>食事記録ボットのトークに食べたものを送っても記録できます。しょくじにも「ボット」の札で出ます</figcaption>
+      </figure>
+    </div>
+    <p id="openInLineNote" class="ls-hint small">パソコンで見ているときは、スマホの LINE で同じリンク（https://liff.line.me/2010088825-CulmmaFc）を開いてね。</p>
+  </section>
+
   <div class="ls-folds">
     <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
     <details class="ls-fold" id="lookback">
@@ -116,7 +176,8 @@
           <p id="gasUrlError" class="ls-hint is-error" role="alert" hidden>GAS のウェブアプリの URL（…/exec）を入れてね</p>
           <p class="ls-hint small">配布用シートをコピーして作った、自分の GAS の URL です。空のときは、この LINE の食事記録ボットにつながります。この欄は LINE の中で開いたときに出ます。</p>
         </div>
-        <p class="ls-hint small"><a href="docs/linelog-setup.html" target="_blank" rel="noopener">つなぎ方（配布用シートのコピーから5手）</a></p>
+        <button class="ls-button is-block" type="button" data-show-line-guide>👀 LINE での使い方（4コマ）を見る</button>
+        <p class="ls-hint small"><a href="docs/linelog-setup.html" target="_blank" rel="noopener">自分の GAS につなぐ（配布用シートのコピーから5手）</a></p>
       </div>
     </details>
 
@@ -153,7 +214,9 @@
 <script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
 <!-- Q キットの動き（トーストなど） -->
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
-<script type="module" src="app.js?v=202610241500"></script>
+<!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
+<script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
+<script type="module" src="app.js?v=202610241700"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

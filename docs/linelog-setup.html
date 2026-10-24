@@ -7,7 +7,7 @@
 <title>しょくじ｜自分の食事記録ボットとつなぐ</title>
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="../style.css?v=202610241500">
+<link rel="stylesheet" href="../style.css?v=202610241700">
 <style>.doc h2 { margin: 1.4em 0 .4em; font-size: 18px; } .doc li { margin: .3em 0; } .doc code { overflow-wrap: anywhere; } .doc pre { overflow-x: auto; padding: 10px; border-radius: 10px; background: var(--ls-surface-sub); font-size: 13px; }</style>
 </head>
 <body>
@@ -25,11 +25,11 @@
   <section class="ls-panel">
     <h2>つなぎ方（はじめて）</h2>
     <ol>
-      <li><a id="sheetLink" href="#" target="_blank" rel="noopener">配布用シート（食事記録 しょくじ版）</a>を開き、「コピーを作成」（シートについた GAS も一緒にコピーされます。記録はこのシートに入ります）</li>
-      <li>コピーしたシートの「拡張機能」→「Apps Script」を開き、<code>setupShoquji</code> を実行（はじめは権限の確認が出ます）</li>
+      <li><a href="https://docs.google.com/spreadsheets/d/1xqNuE1aap43v6-pTt8TOhrITmmCc6JIGnk8ruJhWqRs/copy" target="_blank" rel="noopener">配布用シート（食事記録 しょくじ版）</a>を開き、「コピーを作成」（シートについた GAS も一緒にコピーされます。記録はこのシートに入ります）</li>
+      <li>コピーしたシートの「拡張機能」→「Apps Script」を開き、左の <code>gs/7_setup/7_setup</code> を開いて、上の関数の欄で <code>setupShoquji</code> をえらんで実行（はじめは権限の確認が出ます）</li>
       <li>「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」、実行するユーザー「自分」、アクセスできるユーザー「全員」→ 出てきた URL（<code>…/exec</code>）をコピー<br><small>（しょくじからの呼び出しは、確かめた本人のものだけ受けます）</small></li>
       <li>LINE の中でしょくじを開き、「⚙️ LINE とつなぐ（くわしい人向け）」に 3 の URL を入れる。「持ち主の登録を受けつけました」と出ます</li>
-      <li>10分以内に、同じ Apps Script で <code>adoptShoqujiOwner</code> を実行（実行ログに自分の名前が出ればよい）。しょくじを開きなおすと、記録がシートにも入ります</li>
+      <li>10分以内に、同じ <code>7_setup</code> で <code>adoptShoqujiOwner</code> を実行（実行ログに自分の名前が出ればよい）。しょくじを開きなおすと、記録がシートにも入ります</li>
     </ol>
     <p class="ls-hint">やめるときは、しょくじの URL の欄を空にし、GAS のデプロイをアーカイブします。</p>
     <p class="ls-hint">LINE のトークでも記録したいときは、同じ GAS を LINE の Messaging API のボットにつなぎます（くわしくは食事記録ボットの README）。</p>

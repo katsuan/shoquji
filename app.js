@@ -1,8 +1,8 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241500";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241500";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, startLineLog } from "./js/linelog.js?v=202610241500";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241500";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241700";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241700";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, startLineLog } from "./js/linelog.js?v=202610241700";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241700";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -585,6 +585,50 @@ $("gasUrl").addEventListener("change", () => {
 });
 openFromLink();
 connectLineLog();
+
+// ---- LINE で使う：ブラウザで開いたときの案内と、4コマ（最初だけ。閉じたら出さない）。つづくと同じ作り ----
+const BANNER_KEY = "shoquji:lineBannerOff"; // この端末で閉じたか（設定なので端末に残してよい）
+(function lineGuide() {
+  const inside = inLineApp();
+  let off = false;
+  try {
+    off = localStorage.getItem(BANNER_KEY) === "1";
+  } catch {
+    off = false;
+  }
+  const show = (open) => {
+    $("lineGuidePanel").hidden = inside || !open;
+  };
+  show(!off);
+  // 「LINEで開く」は、おくるんの共通の案内に（読みこめなければ、ふつうのリンク）
+  if (!inside) {
+    const shown = window.LineShareLiff?.outsideHelp?.($("lineOutside"), { appUrl: () => OPEN_URL, canLogin: false });
+    if (!shown) $("lineOutside").innerHTML = `<a class="ls-button line is-block" href="${esc(OPEN_URL)}">💬 LINEで開く</a>`;
+  }
+  const remember = (value) => {
+    try {
+      if (value) localStorage.setItem(BANNER_KEY, "1");
+      else localStorage.removeItem(BANNER_KEY);
+    } catch {
+      // 残せなくても、いまは閉じる・開く
+    }
+  };
+  document.querySelectorAll("[data-close-line-guide]").forEach((b) =>
+    b.addEventListener("click", () => {
+      show(false);
+      remember(true);
+      say("LINE の案内を閉じました（「⚙️ LINE とつなぐ」からまた見られます）");
+    })
+  );
+  document.querySelectorAll("[data-show-line-guide]").forEach((b) =>
+    b.addEventListener("click", () => {
+      remember(false);
+      show(true);
+      $("lineGuidePanel").hidden = false; // LINE の中でも見られるように
+      $("lineGuidePanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    })
+  );
+})();
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
 let shownToday = ymd();
