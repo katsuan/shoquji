@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250010";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250010";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250010";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250010";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610250010";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250030";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250030";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250030";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250030";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610250030";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -119,10 +119,15 @@ function asGuest(res) {
   lineLog = null;
   bot = [];
   profile = null;
-  ["whereNote", "lineLogNote", "quickFold", "botNotifyRow"].forEach((id) => ($(id).hidden = true));
-  $("lineIntro").hidden = false;
+  showConnected(false);
   render();
   return true;
+}
+
+// 食事記録ボットとつながっているときだけ出すもの（記録の置き場所の説明・つながっている説明・よく記録するもの・20時のお知らせ）
+function showConnected(on) {
+  ["whereNote", "lineLogNote", "quickFold", "botNotifyRow"].forEach((id) => ($(id).hidden = !on));
+  $("lineIntro").hidden = on;
 }
 
 // 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
@@ -198,20 +203,13 @@ function connectLineLog() {
   return startLineLog(gasTarget()).then(async (client) => {
     // つなぎ先がある人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
     $("reopenInLiff").hidden = !!client || !gasTarget() || !inLineApp();
-    $("lineLogNote").hidden = !client;
-    $("lineIntro").hidden = !!client;
-    $("quickFold").hidden = !client;
-    $("botNotifyRow").hidden = !client;
-    if (!client) {
-      $("whereNote").hidden = true;
-      return had && render();
-    }
+    showConnected(false);
+    if (!client) return had && render();
     lineLog = client;
-    // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う
+    // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う（つながった表示も出さない）
     const first = await client.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
     if (asGuest(first)) return;
-    $("whereNote").innerHTML = "📱 LINE で開いたしょくじの記録は、Safari などのブラウザで開いたときとは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。"; // qcheck-ok: W1 決まった文字だけ
-    $("whereNote").hidden = false;
+    showConnected(true);
     render();
     await readBot(true, first);
     await sendUnsent();
@@ -308,10 +306,7 @@ function renderSuggest() {
 
 // 前に食べたものを入れる（名前と、最後に入れたカロリー・PFC）
 function fillMenu(m) {
-  $("name").value = m.name;
-  hideNameError();
-  NUTRI.forEach((k) => ($(k).value = m[k] ?? ""));
-  if (NUTRI.some((k) => m[k] != null)) $("nutri").open = true;
+  fillEntry(m, { openOnly: true });
   renderSuggest();
 }
 
@@ -430,11 +425,13 @@ async function saveRemote(entry) {
   readBot(true);
 }
 
-function fillEntry(e) {
+// 名前とカロリー・PFC を入力欄に入れる。数字があれば「栄養も入れる」を開く（openOnly のときは、閉じはしない）
+function fillEntry(e, { openOnly = false } = {}) {
   $("name").value = e.name || "";
   hideNameError();
   NUTRI.forEach((k) => ($(k).value = e[k] ?? ""));
-  $("nutri").open = NUTRI.some((k) => e[k] != null);
+  const has = NUTRI.some((k) => e[k] != null);
+  if (has || !openOnly) $("nutri").open = has;
 }
 
 // MYメニューを入力欄に開いて直す（「📌 よく記録するもの・MYメニュー」から）
@@ -473,10 +470,7 @@ function startEdit(id) {
   if (!log) return;
   ui.editing = id;
   ui.meal = log.meal;
-  $("name").value = log.name;
-  hideNameError();
-  NUTRI.forEach((k) => ($(k).value = log[k] ?? ""));
-  $("nutri").open = NUTRI.some((k) => log[k] != null);
+  fillEntry(log);
   render();
   $("formTitle").scrollIntoView({ behavior: "smooth", block: "start" });
 }

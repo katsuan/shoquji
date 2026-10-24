@@ -1,13 +1,12 @@
 // 食事記録ボットのリッチメニューの画像を描く（2500×1686）。line-meal-project の html/js/richmenu.js を写したもの（そのリポジトリは非公開）。
 // ボタンの位置は、ボットの GAS（4_ui.richmenu.gs の RICH_MENU_LAYOUT）と同じ。描く字・色はボットの色（テラコッタ）のまま
-//   main：全員共通の「📝 記録」タブ（朝・昼・夜・間食／きょうの集計・一覧・ふりかえり）
-//   quick：その人の「⚡ よく記録」タブ（よく記録するもの 6 品／ほかを入力・並べかえ）
-import { fmt } from "./stats.js?v=202610250010";
+//   しょくじが描くのは、その人の「⚡ よく記録」タブだけ（よく記録するもの 6 品／ほかを入力・並べかえ）。
+//   全員共通の「📝 記録」の画像は、img/meal-richmenu-main.png（ボットの GAS が使う）
+import { fmt } from "./stats.js?v=202610250030";
 
 export const LAYOUT = { width: 2500, height: 1686, tabHeight: 250, quickRows: 2, quickCols: 3, quickFooterHeight: 236, quickCount: 6 };
 const C = { bg: "#FBF3EE", card: "#FFFFFF", accent: "#C8553D", accentSoft: "#FDEEE8", ink: "#2D211C", sub: "#6B5E57", line: "#EFE1D9" };
 const FONT = '"M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif';
-const MEAL_COLOR = { 朝: "#F5A623", 昼: "#4A90E2", 夜: "#7B61FF", 間食: "#3FAE7A" };
 
 async function ready() {
   try {
@@ -125,30 +124,6 @@ function exportImage(c) {
   let url = c.toDataURL("image/png");
   if (url.length > 1300000) url = c.toDataURL("image/jpeg", 0.88);
   return url;
-}
-
-// 全員共通の「📝 記録」
-export async function drawMainMenu() {
-  await ready();
-  const { c, ctx } = canvas();
-  drawTabs(ctx, "main");
-  const top = LAYOUT.tabHeight;
-  const rowH = (LAYOUT.height - top) / 2;
-  const meals = [
-    { icon: "🍞", label: "朝", key: "朝" },
-    { icon: "🍛", label: "昼", key: "昼" },
-    { icon: "🍲", label: "夜", key: "夜" },
-    { icon: "🍪", label: "間食", key: "間食" },
-  ];
-  const mw = LAYOUT.width / 4;
-  meals.forEach((m, i) => cell(ctx, i * mw, top, mw, rowH, { icon: m.icon, label: m.label, color: MEAL_COLOR[m.key] }));
-  const tw = LAYOUT.width / 3;
-  [
-    { icon: "📊", label: "きょうの集計" },
-    { icon: "📋", label: "一覧・直す" },
-    { icon: "📈", label: "ふりかえり" },
-  ].forEach((b, i) => cell(ctx, i * tw, top + rowH, tw, rowH, b));
-  return exportImage(c);
 }
 
 // その人の「⚡ よく記録」。items：[{ name, kcal, pinned }]（6品まで。足りないところは空き）

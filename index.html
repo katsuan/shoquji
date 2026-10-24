@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610250010">
+<link rel="stylesheet" href="style.css?v=202610250030">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -80,7 +80,7 @@
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
     <!-- LINE の中で食事記録ボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
-    <p class="where-note" id="whereNote" hidden></p>
+    <p class="where-note" id="whereNote" hidden>📱 LINE で開いたしょくじの記録は、Safari などのブラウザで開いたときとは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
     <p class="where-note" id="reopenInLiff" hidden>💬 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE のしょくじで開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
@@ -237,7 +237,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610250010"></script>
+<script type="module" src="app.js?v=202610250030"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
