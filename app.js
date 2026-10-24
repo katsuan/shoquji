@@ -1,13 +1,16 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250030";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250030";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250030";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250030";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610250030";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250100";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250100";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250100";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250100";
+import { cardUrl } from "./js/card.js?v=202610250100";
+import { writeDays } from "./js/days.js?v=202610250100";
+import { initLineGuide } from "./js/line-guide.js?v=202610250100";
+import { readLink } from "./js/link.js?v=202610250100";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250100";
 
 const $ = (id) => document.getElementById(id);
-const PAGE_URL = "https://katsuan.github.io/shoquji/";
-const CARD_COLOR = "#EC8A16"; // ロゴの玉子焼きの黄色
 
 let state = load();
 const ui = {
@@ -19,6 +22,8 @@ const ui = {
   justAdded: null // 記録したばかりの id（一覧で少し光らせる）
 };
 
+const link = readLink(); // ボットのカード・メニューから開いたときの指定（js/link.js）
+
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const NUTRI = ["kcal", "p", "f", "c"];
 
@@ -28,9 +33,6 @@ function persist() {
 
 // ---- 食事記録ボット（LINE の中で開いて、つないだときだけ。js/linelog.js） ----
 let lineLog = null; // startLineLog の返事（つなげないときは null）
-let profile = null; // ボットの { user, quickMenus, popularMenus, menus, quickRichMenu }（つないだあと、開いたときに読む）
-let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
-const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim(); // MYメニューの名前（種類・量つき）
 const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE の中で開いたときだけ出す
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -38,6 +40,7 @@ const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
 const gasTarget = () => state.gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
 let bot = loadBot();
 let lastRead = 0;
+const hiddenBot = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す。js/removals.js が待つ）
 
 function loadBot() {
   if (!inLine || !gasTarget()) return [];
@@ -55,29 +58,6 @@ function view() {
   const shown = bot.filter((b) => !hiddenBot.has(String(b.logId)));
   return { ...state, logs: [...state.logs, ...botLogsForView(shown, state.logs, state.deleted)] };
 }
-
-// ---- 消すのは「元に戻す」を押せるあいだ待ってから、ボットにも送る（閉じる・切りかえるときは、すぐ送る） ----
-const UNDO_MS = 6500;
-const pendingRemovals = new Map(); // key → { run, timer }
-const hiddenBot = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す）
-function queueRemoval(key, run) {
-  cancelRemoval(key);
-  pendingRemovals.set(key, { run, timer: setTimeout(() => flushRemoval(key), UNDO_MS) });
-}
-function cancelRemoval(key) {
-  const p = pendingRemovals.get(key);
-  if (p) clearTimeout(p.timer);
-  pendingRemovals.delete(key);
-}
-async function flushRemoval(key, keepalive = false) {
-  const p = pendingRemovals.get(key);
-  if (!p) return;
-  cancelRemoval(key);
-  await p.run(keepalive);
-}
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "hidden") [...pendingRemovals.keys()].forEach((key) => flushRemoval(key, true));
-});
 
 // しょくじで消した自分の記録：ボットに送ってあれば、ボットからも消す
 function removeOwnLater(log) {
@@ -118,7 +98,7 @@ function asGuest(res) {
   if (!res || res.error !== "guest") return false;
   lineLog = null;
   bot = [];
-  profile = null;
+  resetProfile();
   showConnected(false);
   render();
   return true;
@@ -181,7 +161,7 @@ async function readBot(force = false, given = null) {
 let syncing = false;
 async function syncWithBot() {
   if (!lineLog || syncing) return;
-  const waiting = new Set([...pendingRemovals.keys()].filter((k) => k.startsWith("own:")).map((k) => k.slice(4)));
+  const waiting = waitingOwnIds();
   const plan = planSync(bot, state.logs, state.deleted, waiting);
   if (!plan.push.length && !plan.pull.length && !plan.remove.length) return;
   syncing = true;
@@ -274,6 +254,7 @@ document.querySelector(".meals").addEventListener("click", (e) => {
 // 食べたものの候補：しょくじ・ボットの記録で食べたもの → つないでいるときは MYメニュー（ボットの栄養の表）も
 function allMenus() {
   const base = menus(view());
+  const profile = getProfile();
   if (!profile?.menus?.length) return base;
   const byName = new Map(base.map((m) => [m.name, m]));
   profile.menus.forEach((m) => {
@@ -412,7 +393,7 @@ async function saveRemote(entry) {
     say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
   } else {
     // 画面の MYメニューも、返事を待たずに直す（次に開いたときにそろう）
-    const m = profile?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
+    const m = getProfile()?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
     if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     const saved = `📒 MYメニューの「${e.name}」を保存しました`;
     say(`${window.QSeason ? window.QSeason.decorate(saved) : saved}。次からトークで名前を送るだけで記録できます`);
@@ -559,7 +540,7 @@ function renderDay() {
   // LINE で送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
   $("sendArea").hidden = !logs.length;
   $("sendTextNote").hidden = !state.sendText;
-  $("sendBtn").href = logs.length ? cardUrl(ui.date, logs, t) : "#";
+  $("sendBtn").href = logs.length ? cardUrl(ui.date, logs, t, { sendText: state.sendText }) : "#";
 }
 
 $("dayList").addEventListener("click", (e) => {
@@ -581,7 +562,7 @@ $("dayList").addEventListener("click", (e) => {
   removeOwnLater(log);
   say(`🗑 「${log.name}」を消しました`, () => {
     // もうボットから消してしまっていたら（閉じかけて送ったなど）、もう一度入れる
-    const already = !pendingRemovals.has(`own:${log.id}`);
+    const already = !isWaiting(`own:${log.id}`);
     cancelRemoval(`own:${log.id}`);
     restoreLog(state, log);
     persist();
@@ -589,41 +570,6 @@ $("dayList").addEventListener("click", (e) => {
     if (already && lineLog) sendToBot([log], { quiet: true });
   });
 });
-
-// おくるんのお知らせカード（line-share の shared/oqrn.js）。中身は食事ごとの名前と合計
-function cardUrl(date, logs, t) {
-  const lines = MEALS.map((meal) => {
-    const names = logs.filter((l) => l.meal === meal).map((l) => l.name);
-    return names.length ? `${meal}：${names.join("、")}` : "";
-  }).filter(Boolean);
-  if (t.withKcal) lines.push("", `P ${fmt(t.p)}g ・ F ${fmt(t.f)}g ・ C ${fmt(t.c)}g`);
-  const params = new URLSearchParams({
-    headerTitle: "🍚 しょくじの記録",
-    date: label(date),
-    showDate: "true",
-    title: t.withKcal ? `合計 ${fmt(t.kcal)} kcal` : `${logs.length} 品`,
-    detail: lines.join("\n").slice(0, 300),
-    theme: "custom",
-    customColor: CARD_COLOR,
-    showAction: "true",
-    actionLabel: "🍚 しょくじで記録する",
-    actionUrl: PAGE_URL,
-    from: "shoquji"
-  });
-  if (state.sendText) params.set("sendText", recordText(date, logs));
-  return window.OQRN ? window.OQRN.cardUrl(params) : "#";
-}
-
-// 記録用の文字（食事記録ボットが読む形。line-meal-project の 3_usecase.shoquji.gs）
-//   #しょくじ 2026/10/22
-//   朝 トースト 250kcal P8 F6 C40
-function recordText(date, logs) {
-  const lines = logs.map((l) => {
-    const nums = [l.kcal != null ? `${l.kcal}kcal` : "", l.p != null ? `P${l.p}` : "", l.f != null ? `F${l.f}` : "", l.c != null ? `C${l.c}` : ""].filter(Boolean);
-    return [l.meal, l.name.replace(/\s+/g, " "), ...nums].join(" ");
-  });
-  return [`#しょくじ ${date.replace(/-/g, "/")}`, ...lines].join("\n");
-}
 
 $("sendTextToggle").addEventListener("change", (e) => {
   state.sendText = e.target.checked;
@@ -721,27 +667,9 @@ $("resetBtn").addEventListener("click", async () => {
   say("記録をすべて消しました");
 });
 
-// ---- ほかの Q ツール（つづく）が読む、記録がある日の一覧 ----
-// 同じサイト（katsuan.github.io）の同じブラウザなら、つづくが読んで「しょくじ連動」の習慣に ○ を付ける。
-// 端末の記録に加えて、食事記録ボットで入れた記録の日も入れる（ボットの記録は端末の記録ではないので、shoquji:v1 だけでは見えない）
-// 形：{ v: 1, days: ["YYYY-MM-DD", …] }（古い日から。中身は日付だけ）
-const DAYS_KEY = "shoquji:days";
-let daysWritten = "";
-function writeDays() {
-  const days = [...new Set(view().logs.map((l) => l.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
-  const text = JSON.stringify({ v: 1, days });
-  if (text === daysWritten) return;
-  daysWritten = text;
-  try {
-    localStorage.setItem(DAYS_KEY, text);
-  } catch {
-    // 残せなくても、しょくじは使える
-  }
-}
-
 // ---- まとめて描く ----
 function render() {
-  writeDays();
+  writeDays(view().logs);
   renderDays();
   renderMeals();
   renderSuggest();
@@ -756,225 +684,9 @@ function render() {
 }
 
 render();
+initBotMenu({ lineLog: () => lineLog, state: () => state, ui, link, render, persist, say, startMasterEdit });
 
-// ---- 食事記録ボットの設定（目標・20時のお知らせ）と、よく記録するもの（📌 並べかえ・「⚡ よく記録」のメニュー） ----
-const RICH_KEY = "shoquji:richOn"; // 「LINE のメニューにも出す」（この端末の設定）
-const richOn = () => {
-  try {
-    return localStorage.getItem(RICH_KEY) !== "0";
-  } catch {
-    return true;
-  }
-};
-
-// 開いたときに1回：ボットの目標・お知らせ・よく記録するもの・MYメニューを読む
-async function readProfile() {
-  if (!lineLog) return;
-  const res = await lineLog.state();
-  if (!res.ok) return; // 読めなくても、記録はできる（失敗の知らせは記録を読むほうで出す）
-  const d = res.dashboard || {};
-  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], quickRichMenu: res.quickRichMenu || null };
-  // 目標カロリーは、ボットのものにそろえる
-  const target = Number(profile.user.calorieTarget) || 0;
-  if (target > 0 && target !== state.targets.kcal) {
-    state.targets.kcal = Math.round(target);
-    persist();
-  }
-  $("botNotify").checked = profile.user.notify === true;
-  render();
-  renderPins();
-  if (link.mode === "quick" && !link.usedQuick) {
-    link.usedQuick = true;
-    $("quickFold").open = true;
-    $("quickFold").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  refreshRichMenuIfStale();
-}
-
-// 目標・お知らせを、ボットにも（送った項目だけ直る）
-async function saveProfile(patch, doneText) {
-  if (!lineLog) return;
-  const res = await lineLog.profile(patch);
-  if (!res.ok) return say(lineLogMessage(res.error));
-  if (res.dashboard) profile = { ...profile, user: res.dashboard.user || profile.user, quickMenus: res.dashboard.quickMenus || profile.quickMenus, popularMenus: res.dashboard.popularMenus || profile.popularMenus };
-  if (res.quickRichMenu) profile.quickRichMenu = res.quickRichMenu;
-  if (doneText) say(doneText);
-  return res;
-}
-$("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "🔔 20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));
-
-const savedPins = () => (profile ? profile.quickMenus.filter((m) => m.pinned && m.masterKey).map((m) => m.masterKey) : []);
-const byKey = () => new Map([...(profile?.menus || []), ...(profile?.quickMenus || [])].filter((m) => m.masterKey).map((m) => [m.masterKey, m]));
-
-// 「⚡ よく記録」に並べる品：固定した順 → あいたところは記録の多い順（カロリーがわからない品は出さない）
-function richItems(list = pins || savedPins()) {
-  const map = byKey();
-  const out = list.map((k) => map.get(k)).filter(Boolean).map((m) => ({ name: dn(m), kcal: m.kcal ?? null, pinned: true }));
-  const used = new Set(out.map((i) => i.name));
-  const popular = (profile?.popularMenus || []).map((m) => ({ ...m, kcal: m.kcal ?? (m.averageKcal || null) }));
-  [...popular, ...(profile?.quickMenus || [])]
-    .filter((m) => !(m.masterKey && list.includes(m.masterKey)) && m.kcal != null && !used.has(dn(m)))
-    .forEach((m) => {
-      used.add(dn(m));
-      out.push({ name: dn(m), kcal: m.kcal, pinned: false });
-    });
-  return out.slice(0, RICH_LAYOUT.quickCount);
-}
-const richKey = (items) => JSON.stringify(items.map((i) => [i.name, i.kcal, i.pinned ? 1 : 0]));
-
-// 開いたとき：LINE の「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る（まだなければ作る）
-let richRefreshing = false;
-async function refreshRichMenuIfStale() {
-  if (!lineLog || !profile?.quickRichMenu || !richOn() || richRefreshing) return;
-  const items = richItems(savedPins());
-  if (!items.length) return;
-  const key = richKey(items);
-  if (profile.quickRichMenu.key === key) return;
-  const existed = profile.quickRichMenu.has;
-  richRefreshing = true;
-  try {
-    const res = await saveProfile({ richMenu: { image: await drawQuickMenu(items), items: items.map((i) => i.name), key } });
-    if (res && res.richMenu && res.richMenu.ok && !existed) say("LINE のメニューの「⚡ よく記録」に、よく記録するものを並べました");
-  } catch (error) {
-    console.error(error);
-  }
-  richRefreshing = false;
-}
-
-// 📌 並べかえ（たたみ欄）
-function renderPins() {
-  if (!profile) return;
-  const list = pins || savedPins();
-  const map = byKey();
-  $("pinCount").textContent = String(list.length);
-  $("pinList").innerHTML = list.length
-    ? list
-        .map((k, i) => {
-          const m = map.get(k) || { menu: "（消えたメニュー）" };
-          return `<li class="pin-row"><span class="pin-name">📌 ${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
-            <button type="button" data-pin-move="${esc(k)}" data-dir="-1" aria-label="上へ"${i === 0 ? " disabled" : ""}>↑</button>
-            <button type="button" data-pin-move="${esc(k)}" data-dir="1" aria-label="下へ"${i === list.length - 1 ? " disabled" : ""}>↓</button>
-            <button type="button" data-pin-del="${esc(k)}" aria-label="固定をやめる">✕</button></li>`;
-        })
-        .join("")
-    : '<li class="ls-hint">まだありません。下の欄でさがして、押すと固定できます。</li>';
-  const q = $("pinSearch").value.trim();
-  const cands = (profile.menus || []).filter((m) => m.masterKey && !list.includes(m.masterKey) && (!q || dn(m).includes(q))).slice(0, 12);
-  $("pinCands").innerHTML =
-    cands
-      .map(
-        (m) => `<div class="cand-row"><span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
-          <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">📌 固定</button>
-          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">✏️ 直す</button></div>`
-      )
-      .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
-  $("richOn").checked = richOn();
-  renderRichPreview();
-}
-
-let previewKey = "";
-async function renderRichPreview() {
-  if (!richOn() || !$("quickFold").open) {
-    $("richPreview").innerHTML = "";
-    previewKey = "";
-    return;
-  }
-  const items = richItems();
-  const key = richKey(items);
-  if (key === previewKey) return;
-  previewKey = key;
-  const url = await drawQuickMenu(items);
-  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="LINE のメニュー「⚡ よく記録」の見本">`;
-}
-
-$("quickFold").addEventListener("toggle", renderPins);
-$("pinSearch").addEventListener("input", renderPins);
-$("richOn").addEventListener("change", (e) => {
-  try {
-    localStorage.setItem(RICH_KEY, e.target.checked ? "1" : "0");
-  } catch {
-    // 残せなくても、いまはその設定で
-  }
-  renderPins();
-});
-$("quickFold").addEventListener("click", (e) => {
-  const edit = e.target.closest("[data-master-edit]");
-  if (edit) return startMasterEdit(edit.dataset.masterEdit);
-  const list = [...(pins || savedPins())];
-  const add = e.target.closest("[data-pin-add]");
-  const del = e.target.closest("[data-pin-del]");
-  const move = e.target.closest("[data-pin-move]");
-  if (add) {
-    if (list.length >= 12) return say("固定できるのは 12 品までです");
-    list.push(add.dataset.pinAdd);
-  } else if (del) {
-    list.splice(list.indexOf(del.dataset.pinDel), 1);
-  } else if (move) {
-    const i = list.indexOf(move.dataset.pinMove);
-    const j = i + Number(move.dataset.dir);
-    if (i < 0 || j < 0 || j >= list.length) return;
-    [list[i], list[j]] = [list[j], list[i]];
-  } else return;
-  pins = list;
-  renderPins();
-});
-$("savePins").addEventListener("click", async () => {
-  if (!lineLog || !profile) return;
-  const list = pins || savedPins();
-  $("savePins").disabled = true;
-  $("savePins").textContent = "保存中…";
-  try {
-    const items = richOn() ? richItems(list) : [];
-    const richMenu = items.length ? { image: await drawQuickMenu(items), items: items.map((i) => i.name), key: richKey(items) } : null;
-    const res = await saveProfile({ favorites: list, ...(richMenu ? { richMenu } : {}) });
-    if (res) {
-      // 返事に新しい並びがないときも、画面は保存した並びに
-      if (!res.dashboard && profile) {
-        const map = byKey();
-        profile.quickMenus = [...list.map((k) => ({ ...map.get(k), pinned: true })), ...profile.quickMenus.filter((m) => !list.includes(m.masterKey)).map((m) => ({ ...m, pinned: false }))];
-      }
-      pins = null;
-      if (res.richMenu && !res.richMenu.ok) say("並びは保存しました。LINE のメニューは作れませんでした。少し待って、もう一度ためしてね");
-      else say(richMenu ? "📌 並びを保存して、LINE のメニューにも出しました" : "📌 よく記録するものの並びを保存しました");
-    }
-  } finally {
-    $("savePins").disabled = false;
-    $("savePins").textContent = "📌 この並びで保存";
-    renderPins();
-  }
-});
-
-// ---- 食事記録ボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…） ----
-// LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
-// 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
-const link = readLink();
-function readLink() {
-  const url = new URL(location.href);
-  let q = url.searchParams;
-  if (!q.has("mode") && q.has("liff.state")) {
-    try {
-      q = new URLSearchParams(String(q.get("liff.state") || "").replace(/^[^?]*\?/, ""));
-    } catch {
-      q = new URLSearchParams();
-    }
-  }
-  const get = (k, n = 40) => String(q.get(k) || "").trim().slice(0, n);
-  const meal = get("meal", 4);
-  let date = /^\d{4}-\d{2}-\d{2}$/.test(get("mealDate", 10)) ? get("mealDate", 10) : get("datePreset") === "yesterday" ? addDays(ymd(), -1) : "";
-  if (date > ymd()) date = "";
-  return {
-    mode: ["input", "logs", "summary", "quick"].includes(get("mode")) ? get("mode") : "",
-    meal: meal === "その他" ? "間食" : MEALS.includes(meal) ? meal : "",
-    date,
-    menu: get("menu"),
-    nums: { kcal: num(q.get("kcal")), p: num(q.get("protein")), f: num(q.get("fat")), c: num(q.get("carb")) },
-    logId: /^[A-Za-z0-9-]{1,60}$/.test(get("logId", 60)) ? get("logId", 60) : "",
-    masterKey: /^[A-Za-z0-9_-]{1,64}$/.test(get("masterKey", 64)) ? get("masterKey", 64) : "",
-    // MYメニューを直すとき、しょくじにない項目はそのまま残す
-    keep: { flavor: get("flavor"), unit: get("unit"), note: get("note", 200), salt: num(q.get("salt")), fiber: num(q.get("fiber")) }
-  };
-}
-
+// ---- 食事記録ボットのカード・リッチメニューから開いたとき（指定の読みとりは js/link.js） ----
 function openFromLink() {
   if (!link.mode && !link.meal && !link.menu && !link.logId) return;
   // 一度読んだら、アドレスから消す（開きなおしで同じことをくり返さない）
@@ -1018,49 +730,8 @@ $("gasUrl").addEventListener("change", () => {
 openFromLink();
 connectLineLog();
 
-// ---- LINE で使う：ブラウザで開いたときの案内と、4コマ（最初だけ。閉じたら出さない）。つづくと同じ作り ----
-const BANNER_KEY = "shoquji:lineBannerOff"; // この端末で閉じたか（設定なので端末に残してよい）
-(function lineGuide() {
-  const inside = inLineApp();
-  let off = false;
-  try {
-    off = localStorage.getItem(BANNER_KEY) === "1";
-  } catch {
-    off = false;
-  }
-  const show = (open) => {
-    $("lineGuidePanel").hidden = inside || !open;
-  };
-  show(!off);
-  // 「LINEで開く」は、おくるんの共通の案内に（読みこめなければ、ふつうのリンク）
-  if (!inside) {
-    const shown = window.LineShareLiff?.outsideHelp?.($("lineOutside"), { appUrl: () => OPEN_URL, canLogin: false });
-    if (!shown) $("lineOutside").innerHTML = `<a class="ls-button line is-block" href="${esc(OPEN_URL)}">💬 LINEで開く</a>`;
-  }
-  const remember = (value) => {
-    try {
-      if (value) localStorage.setItem(BANNER_KEY, "1");
-      else localStorage.removeItem(BANNER_KEY);
-    } catch {
-      // 残せなくても、いまは閉じる・開く
-    }
-  };
-  document.querySelectorAll("[data-close-line-guide]").forEach((b) =>
-    b.addEventListener("click", () => {
-      show(false);
-      remember(true);
-      say("LINE の案内を閉じました（「⚙️ LINE とつなぐ」からまた見られます）");
-    })
-  );
-  document.querySelectorAll("[data-show-line-guide]").forEach((b) =>
-    b.addEventListener("click", () => {
-      remember(false);
-      show(true);
-      $("lineGuidePanel").hidden = false; // LINE の中でも見られるように
-      $("lineGuidePanel").scrollIntoView({ behavior: "smooth", block: "start" });
-    })
-  );
-})();
+// ---- LINE で使う：ブラウザで開いたときの案内と、4コマ（js/line-guide.js） ----
+initLineGuide({ inside: inLineApp(), openUrl: OPEN_URL, say });
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
 let shownToday = ymd();

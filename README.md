@@ -56,14 +56,20 @@ LINE の中（LIFF）で開いたしょくじだけ、自分の食事記録ボ�
 | ファイル | 中身 |
 |---|---|
 | `index.html`・`style.css` | 画面と見た目（スマホ前提。入力欄は 16px 以上、ページにも背景色）。部品（見出しの行・カード・チップ・入力欄・ボタン・開閉・トースト）はおくるんの Q キット（`https://katsuan.github.io/line-share/shared/ui.css`・`ui.js`。使い方はおくるんの README）。`style.css` には、しょくじの色と字（`:root` の `--ls-accent` など）と、しょくじにしかない見た目だけ |
-| `app.js` | 操作（記録・直す・消す・カード・ふりかえり・目標・控え） |
+| `app.js` | 画面の操作（記録・直す・消す・一覧・ふりかえり・目標・控え）と、食事記録ボットとのつなぎ（読む・送る・そろえる） |
+| `js/bot-menu.js` | 食事記録ボットの目標・20時のお知らせ、「📌 よく記録するもの・MYメニュー」の欄（並べかえ・LINE のメニューの作りなおし） |
+| `js/card.js` | 「💬 LINEで送る」のカードと、記録用の文字 |
+| `js/link.js` | ボットのカード・リッチメニューから開いたときの指定（`?mode=…&meal=…&logId=…`）を読む |
+| `js/removals.js` | 消すのを「元に戻す」の時間だけ待ってから、ボットにも送る |
+| `js/days.js` | つづくが読む、記録がある日の一覧（`shoquji:days`） |
+| `js/line-guide.js` | 「💬 LINE で使う」の案内と4コマ |
 | `js/store.js` | 記録の保存・控えの書き出しと読みこみ |
 | `js/stats.js` | 計算（日付・合計・よく食べるもの・1週間・続けた日数） |
 | `js/meal-richmenu.js` | 食事記録ボットのリッチメニュー「⚡ よく記録」の画像を描く（line-meal-project の html/js/richmenu.js の写し） |
 | `js/linelog.js`・`js/line-config.js` | LINE の中で開いたときの、食事記録ボットとのつなぎ（つづくの写し）と、その LIFF の ID |
 | `img/meal-richmenu-main.png` | 食事記録ボットの共通のリッチメニュー（「📝 記録」）の画像。ボットの GAS が、メニューを作りなおすときにここから取る |
 | `docs/linelog-setup.html` | 自分の食事記録ボットとつなぐ手順と、受け口の約束 |
-| `test/` | 控えの読みこみと計算・ボットとのつなぎのテスト（`node --test test/`。`package.json` は node に js/ を読ませるためだけ） |
+| `test/` | 控えの読みこみと計算・ボットとのつなぎ・読みこみの印（`?v=`）のそろえ忘れのテスト（`node --test test/`。`package.json` は node に js/ を読ませるためだけ） |
 | `tools/icon.py` | アイコン・ロゴ・OGP |
 
 ## アイコン・ロゴ・OGP
