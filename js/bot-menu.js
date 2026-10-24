@@ -3,9 +3,9 @@
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
-import { fmt } from "./stats.js?v=202610250100";
-import { lineLogMessage } from "./linelog.js?v=202610250100";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250100";
+import { fmt } from "./stats.js?v=202610250200";
+import { lineLogMessage } from "./linelog.js?v=202610250200";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250200";
 
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -38,7 +38,7 @@ export async function readProfile() {
   const res = await ctx.lineLog().state();
   if (!res.ok) return; // 読めなくても、記録はできる（失敗の知らせは記録を読むほうで出す）
   const d = res.dashboard || {};
-  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], quickRichMenu: res.quickRichMenu || null };
+  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], quickRichMenu: res.quickRichMenu || null, isAdmin: res.permission?.isAdmin === true };
   // 目標カロリーは、ボットのものにそろえる
   const target = Number(profile.user.calorieTarget) || 0;
   if (target > 0 && target !== ctx.state().targets.kcal) {
@@ -127,9 +127,9 @@ export function renderPins() {
   $("pinCands").innerHTML =
     cands
       .map(
-        (m) => `<div class="cand-row"><span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+        (m) => `<div class="cand-row"><span class="pin-name"><i class="scope-tag${m.scope === "common" ? " is-common" : ""}">${m.scope === "common" ? "共通" : "自分"}</i>${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
           <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">📌 固定</button>
-          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">✏️ 直す</button></div>`
+          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${m.scope === "common" && !profile.isAdmin ? "✏️ 自分用に" : "✏️ 直す"}</button></div>`
       )
       .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
   $("richOn").checked = richOn();

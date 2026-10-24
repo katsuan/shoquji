@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610250100";
+import { LINE_LOG } from "./line-config.js?v=202610250200";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;

@@ -1,14 +1,14 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250100";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250100";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250100";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250100";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250100";
-import { cardUrl } from "./js/card.js?v=202610250100";
-import { writeDays } from "./js/days.js?v=202610250100";
-import { initLineGuide } from "./js/line-guide.js?v=202610250100";
-import { readLink } from "./js/link.js?v=202610250100";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250100";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250200";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250200";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250200";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250200";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250200";
+import { cardUrl } from "./js/card.js?v=202610250200";
+import { writeDays } from "./js/days.js?v=202610250200";
+import { initLineGuide } from "./js/line-guide.js?v=202610250200";
+import { readLink } from "./js/link.js?v=202610250200";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250200";
 
 const $ = (id) => document.getElementById(id);
 
@@ -18,7 +18,9 @@ const ui = {
   meal: mealNow(),
   editing: null, // 直している記録の id
   botEdit: null, // 直している、食事記録ボットの記録の logId（LINE の中でつないだとき）
-  masterEdit: null, // 保存する MYメニュー { key }（ボットのカードの「MYメニューを直す」から）
+  masterEdit: null, // 保存する MYメニュー { key, keep, toMine }（ボットのカードの「MYメニューを直す」・MYメニューの欄から）
+  base: null, // MYメニュー・候補から入れた数字（量の倍率のもと）。{ kcal, p, f, c }
+  scale: 1, // いまの倍率
   justAdded: null // 記録したばかりの id（一覧で少し光らせる）
 };
 
@@ -325,6 +327,9 @@ function clearForm() {
   hideNameError();
   hideKcalError();
   NUTRI.forEach((k) => ($(k).value = ""));
+  ui.base = null;
+  ui.scale = 1;
+  renderScale();
   renderSuggest();
 }
 
@@ -392,10 +397,16 @@ async function saveRemote(entry) {
     if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
   } else {
-    // 画面の MYメニューも、返事を待たずに直す（次に開いたときにそろう）
-    const m = getProfile()?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
-    if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
-    const saved = `📒 MYメニューの「${e.name}」を保存しました`;
+    const toMine = ui.masterEdit.toMine;
+    if (toMine) {
+      // 共通から自分用の写しができた：MYメニューと固定を読みなおす（自分の品が先に出る）
+      readProfile();
+    } else {
+      // 画面の MYメニューも、返事を待たずに直す（次に開いたときにそろう）
+      const m = getProfile()?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
+      if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
+    }
+    const saved = toMine ? `📒 「${e.name}」を自分用の MYメニューにしました` : `📒 MYメニューの「${e.name}」を保存しました`;
     say(`${window.QSeason ? window.QSeason.decorate(saved) : saved}。次からトークで名前を送るだけで記録できます`);
   }
   savedAt = Date.now();
@@ -413,7 +424,25 @@ function fillEntry(e, { openOnly = false } = {}) {
   NUTRI.forEach((k) => ($(k).value = e[k] ?? ""));
   const has = NUTRI.some((k) => e[k] != null);
   if (has || !openOnly) $("nutri").open = has;
+  // 量の倍率のもと（数字があるときだけ）
+  ui.base = has ? Object.fromEntries(NUTRI.map((k) => [k, num(e[k])])) : null;
+  ui.scale = 1;
+  renderScale();
 }
+
+// 量の倍率：もとの数字に倍率をかけて入れなおす（大盛り・半分など）
+function renderScale() {
+  $("scaleRow").hidden = !ui.base;
+  document.querySelectorAll("[data-scale]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.scale) === ui.scale)));
+}
+$("scaleRow").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-scale]");
+  if (!b || !ui.base) return;
+  ui.scale = Number(b.dataset.scale);
+  NUTRI.forEach((k) => ($(k).value = ui.base[k] == null ? "" : Math.round(ui.base[k] * ui.scale * 10) / 10));
+  $("nutri").open = true;
+  renderScale();
+});
 
 // MYメニューを入力欄に開いて直す（「📌 よく記録するもの・MYメニュー」から）
 function startMasterEdit(key) {
@@ -421,7 +450,9 @@ function startMasterEdit(key) {
   if (!m) return;
   ui.editing = null;
   ui.botEdit = null;
-  ui.masterEdit = { key, keep: { flavor: m.flavor, unit: m.unit, note: m.note, salt: m.salt, fiber: m.fiber } };
+  // 共通の品は、管理者でなければ自分用の写しとして保存する（共通は変わらない。ボット側が写しを作る）
+  const toMine = m.scope === "common" && !getProfile()?.isAdmin;
+  ui.masterEdit = { key, toMine, keep: { flavor: m.flavor, unit: m.unit, note: m.note, salt: m.salt, fiber: m.fiber } };
   // 名前の欄は、種類・量をのぞいた名前（種類・量・メモは、そのまま残す）
   fillEntry({ name: m.menu || dn(m), kcal: m.kcal, p: m.protein, f: m.fat, c: m.carb });
   render();
@@ -677,8 +708,8 @@ function render() {
   renderLookback();
   renderTargets();
   $("sendTextToggle").checked = state.sendText;
-  $("formHeading").textContent = ui.botEdit ? "ボットの記録を直す" : ui.masterEdit ? "MYメニューを直す" : ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
-  $("saveBtn").textContent = ui.masterEdit ? "📒 MYメニューに保存" : ui.editing || ui.botEdit ? "✏️ 直す" : "＋ 記録する";
+  $("formHeading").textContent = ui.botEdit ? "ボットの記録を直す" : ui.masterEdit ? (ui.masterEdit.toMine ? "共通の MYメニューを自分用にする" : "MYメニューを直す") : ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
+  $("saveBtn").textContent = ui.masterEdit ? (ui.masterEdit.toMine ? "📒 自分用に保存" : "📒 MYメニューに保存") : ui.editing || ui.botEdit ? "✏️ 直す" : "＋ 記録する";
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
   document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない
 }

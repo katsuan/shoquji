@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610250100">
+<link rel="stylesheet" href="style.css?v=202610250200">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -66,6 +66,14 @@
         <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
       </div>
     </details>
+    <!-- MYメニュー・候補から数字を入れたとき：もとの値に倍率をかけて入れなおす（大盛り・半分など） -->
+    <div id="scaleRow" class="ls-chips scale-row" hidden aria-label="量の倍率">
+      <span class="scale-label">量</span>
+      <button class="ls-chip is-small" type="button" data-scale="0.5">×½</button>
+      <button class="ls-chip is-small" type="button" data-scale="1">×1</button>
+      <button class="ls-chip is-small" type="button" data-scale="1.5">×1.5</button>
+      <button class="ls-chip is-small" type="button" data-scale="2">×2</button>
+    </div>
     <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     <div class="form-actions">
       <button id="saveBtn" class="ls-button is-primary is-block" type="button">＋ 記録する</button>
@@ -169,7 +177,7 @@
         <p class="sub-title">固定した品（<span id="pinCount">0</span>/12）</p>
         <ol id="pinList" class="pin-list"></ol>
         <label class="ls-field">
-          <span class="ls-label">MYメニューをさがす（📌 固定・✏️ 直す）</span>
+          <span class="ls-label">MYメニューをさがす（📌 固定・✏️ 直す。共通の品は自分用にできます）</span>
           <input id="pinSearch" class="ls-input" maxlength="40" placeholder="例：カレー" autocomplete="off" enterkeyhint="search">
         </label>
         <div id="pinCands" class="cand-list"></div>
@@ -237,7 +245,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610250100"></script>
+<script type="module" src="app.js?v=202610250200"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

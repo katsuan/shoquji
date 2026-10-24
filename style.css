@@ -172,3 +172,10 @@ body {
 .cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .cand-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
 .cand-row .ls-button { flex: 0 0 auto; min-height: 44px; padding: 0 10px; }
+
+/* MYメニューの「共通／自分」の札と、量の倍率 */
+.scope-tag { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 999px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 11px; font-style: normal; font-weight: 700; vertical-align: 1px; }
+.scope-tag.is-common { background: var(--ls-surface-sub); color: var(--ls-subtext); }
+.scale-row { align-items: center; gap: 6px; }
+.scale-row .scale-label { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
+.scale-row .ls-chip { min-height: 44px; }
