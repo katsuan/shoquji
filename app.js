@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242330";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242330";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242330";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242330";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242330";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242345";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242345";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242345";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242345";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242345";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -706,8 +706,27 @@ $("resetBtn").addEventListener("click", async () => {
   say("記録をすべて消しました");
 });
 
+// ---- ほかの Q ツール（つづく）が読む、記録がある日の一覧 ----
+// 同じサイト（katsuan.github.io）の同じブラウザなら、つづくが読んで「しょくじ連動」の習慣に ○ を付ける。
+// 端末の記録に加えて、食事記録ボットで入れた記録の日も入れる（ボットの記録は端末の記録ではないので、shoquji:v1 だけでは見えない）
+// 形：{ v: 1, days: ["YYYY-MM-DD", …] }（古い日から。中身は日付だけ）
+const DAYS_KEY = "shoquji:days";
+let daysWritten = "";
+function writeDays() {
+  const days = [...new Set(view().logs.map((l) => l.date).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
+  const text = JSON.stringify({ v: 1, days });
+  if (text === daysWritten) return;
+  daysWritten = text;
+  try {
+    localStorage.setItem(DAYS_KEY, text);
+  } catch {
+    // 残せなくても、しょくじは使える
+  }
+}
+
 // ---- まとめて描く ----
 function render() {
+  writeDays();
   renderDays();
   renderMeals();
   renderSuggest();
