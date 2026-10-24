@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241328";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241328";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610241328";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241328";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610241328";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242330";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242330";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242330";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242330";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242330";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -113,10 +113,23 @@ function removeBot(logId) {
   });
 }
 
+// このボットをまだ使っていない人（公開ページから LINE で開いた人など）：知らせを出さず、つながない（端末の中だけ）
+function asGuest(res) {
+  if (!res || res.error !== "guest") return false;
+  lineLog = null;
+  bot = [];
+  profile = null;
+  ["whereNote", "lineLogNote", "quickFold", "botNotifyRow"].forEach((id) => ($(id).hidden = true));
+  $("lineIntro").hidden = false;
+  render();
+  return true;
+}
+
 // 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
 async function sendToBot(logs, { quiet = false } = {}) {
   if (!lineLog || !logs.length) return;
   const res = await lineLog.record(logs);
+  if (asGuest(res)) return;
   if (res.ok) {
     markSent(state, logs.map((l) => l.id));
     persist();
@@ -139,10 +152,11 @@ function sendUnsent() {
 }
 
 // ボットで入れた記録を読む（つながったとき・戻ってきたとき。1分に1回まで）
-async function readBot(force = false) {
+async function readBot(force = false, given = null) {
   if (!lineLog || (!force && Date.now() - lastRead < 60000)) return;
   lastRead = Date.now();
-  const res = await lineLog.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
+  const res = given || (await lineLog.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd()));
+  if (asGuest(res)) return;
   if (!res.ok) {
     if (res.error !== "net") say(lineLogMessage(res.error));
     return;
@@ -172,11 +186,14 @@ function connectLineLog() {
       return had && render();
     }
     lineLog = client;
+    // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う
+    const first = await client.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
+    if (asGuest(first)) return;
     $("whereNote").innerHTML = "📱 LINE で開いたしょくじの記録は、Safari などのブラウザで開いたときとは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。"; // qcheck-ok: W1 決まった文字だけ
     $("whereNote").hidden = false;
     render();
+    await readBot(true, first);
     await sendUnsent();
-    await readBot(true);
     await readProfile();
     if (link.logId && !link.used) {
       link.used = true;
@@ -381,7 +398,8 @@ async function saveRemote(entry) {
     // 画面の MYメニューも、返事を待たずに直す（次に開いたときにそろう）
     const m = profile?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
     if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
-    say(`📒 MYメニューの「${e.name}」を保存しました。次からトークで名前を送るだけで記録できます`);
+    const saved = `📒 MYメニューの「${e.name}」を保存しました`;
+    say(`${window.QSeason ? window.QSeason.decorate(saved) : saved}。次からトークで名前を送るだけで記録できます`);
   }
   savedAt = Date.now();
   ui.botEdit = null;
@@ -506,6 +524,7 @@ function dayListHtml(logs) {
   }).join("");
 }
 
+let emptyEmoji = null; // 記録がない日のあいさつに付ける季節の絵文字（"" は付けない）
 function renderDay() {
   const logs = logsOf(view(), ui.date);
   const t = totals(logs);
@@ -514,7 +533,9 @@ function renderDay() {
 
   if (!logs.length) {
     $("totals").innerHTML = "";
-    $("dayList").innerHTML = '<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう</div>';
+    // 季節の絵文字をときどき（Q キットの season.js が読めてから1回だけ決めて、描きなおしても変えない）
+    if (emptyEmoji === null && window.QSeason) emptyEmoji = window.QSeason.maybe();
+    $("dayList").innerHTML = `<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${emptyEmoji}` : ""}</div>`;
   } else {
     $("totals").innerHTML = totalsHtml(logs, t, state.targets);
     $("dayList").innerHTML = dayListHtml(logs);

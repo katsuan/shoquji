@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610241328";
+import { LINE_LOG } from "./line-config.js?v=202610242330";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -52,10 +52,11 @@ export async function startLineLog(gasUrl, config = LINE_LOG) {
   });
 }
 
-// ボットのやさしい文の失敗を、短い印に（claim：持ち主の登録を受けつけた／auth：開きなおす／denied：許可待ち・停止／fail：そのほか）
+// ボットのやさしい文の失敗を、短い印に（claim：持ち主の登録を受けつけた／guest：このボットをまだ使っていない人／auth：開きなおす／denied：許可待ち・停止／fail：そのほか）
 function errorCode(text) {
   const t = String(text || "");
   if (/adoptShoqujiOwner/.test(t)) return "claim";
+  if (/まだ使っていません/.test(t)) return "guest";
   if (/開きなおして|本人確認/.test(t)) return "auth";
   if (/許可待ち|停止|使えません/.test(t)) return "denied";
   return "fail";
@@ -67,7 +68,7 @@ export const fromBotMeal = (meal) => (["朝", "昼", "夜"].includes(meal) ? mea
 
 /**
  * ボットへの呼び出し（テストでは fetch と ID トークンを差しかえる）
- * 返事は { ok, ... } か { ok: false, error }（error：claim・auth・denied・fail・net）
+ * 返事は { ok, ... } か { ok: false, error }（error：claim・guest・auth・denied・fail・net）
  */
 export function makeClient(gasUrl, getIdToken, fetchImpl = (...a) => fetch(...a)) {
   async function post(body, keepalive = false) {
