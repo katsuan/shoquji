@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242345";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242345";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242345";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242345";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242345";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250010";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250010";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250010";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250010";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610250010";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -168,6 +168,27 @@ async function readBot(force = false, given = null) {
     // 残せなくても、開いているあいだは出る
   }
   render();
+  syncWithBot();
+}
+
+// しょくじの自分の記録とボットの行がずれていたら、そろえる（画面の合計とボットのカードの合計を同じに）。
+// 消した記録はボットからも消し、中身がちがえば、あとから直したほうに合わせる（js/linelog.js の planSync）
+let syncing = false;
+async function syncWithBot() {
+  if (!lineLog || syncing) return;
+  const waiting = new Set([...pendingRemovals.keys()].filter((k) => k.startsWith("own:")).map((k) => k.slice(4)));
+  const plan = planSync(bot, state.logs, state.deleted, waiting);
+  if (!plan.push.length && !plan.pull.length && !plan.remove.length) return;
+  syncing = true;
+  // ボットのほうが新しい（トークでカロリーを入れたなど）：しょくじの記録を直す（ボットには送りなおさない）
+  plan.pull.forEach(({ id, entry }) => updateLog(state, id, entry));
+  if (plan.pull.length) persist();
+  let changed = false;
+  for (const l of plan.push) changed = (await lineLog.updateOwn(l)).ok || changed;
+  for (const id of plan.remove) changed = (await lineLog.removeOwn(id)).ok || changed;
+  syncing = false;
+  render();
+  if (changed) readBot(true);
 }
 
 // つなぎ先を入れなおしたときも、ここからやりなおす

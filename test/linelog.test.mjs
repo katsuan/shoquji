@@ -122,3 +122,26 @@ test("直す・消す・設定の呼び出しの形（自分の記録は clientI
   await c.state();
   assert.deepEqual(seen[4].body, { idToken: TOKEN, action: "getLiffAppState", source: "shoquji" });
 });
+
+test("しょくじの記録とボットの行をそろえる：消した記録はボットからも、ちがうときは、あとから直したほうに", async () => {
+  const { planSync } = await import("../js/linelog.js");
+  const local = [
+    { id: "same1", date: "2026-10-24", meal: "朝", name: "パン", kcal: 200, p: null, f: null, c: null, upd: 100 },
+    { id: "mine2", date: "2026-10-24", meal: "昼", name: "そば", kcal: 500, p: null, f: null, c: null, upd: 300 },
+    { id: "talk3", date: "2026-10-24", meal: "間食", name: "プリン", kcal: null, p: null, f: null, c: null, upd: 100 },
+    { id: "wait5", date: "2026-10-24", meal: "夜", name: "カレー", kcal: 700, p: null, f: null, c: null, upd: 100 }
+  ];
+  const bot = [
+    { clientId: "same1", date: "2026-10-24", meal: "朝", menu: "パン", kcal: 200, updatedAt: 50 },
+    { clientId: "mine2", date: "2026-10-24", meal: "昼", menu: "そば", kcal: 450, updatedAt: 200 },
+    { clientId: "talk3", date: "2026-10-24", meal: "その他", menu: "プリン", kcal: 250, updatedAt: 900 },
+    { clientId: "gone4", date: "2026-10-24", meal: "夜", menu: "ラーメン", kcal: 800, updatedAt: 10 },
+    { clientId: "wait5", date: "2026-10-24", meal: "夜", menu: "カレー", kcal: 700, updatedAt: 10 },
+    { clientId: "", date: "2026-10-24", meal: "夜", menu: "トークの品", kcal: 300, updatedAt: 10 },
+    { clientId: "other6", date: "2026-10-24", meal: "夜", menu: "ほかの端末", kcal: 300, updatedAt: 10 }
+  ];
+  const plan = planSync(bot, local, ["gone4", "wait5x"], new Set(["wait5"]));
+  assert.deepEqual(plan.push.map((l) => l.id), ["mine2"], "しょくじで直したほうが新しい");
+  assert.deepEqual(plan.pull, [{ id: "talk3", entry: { date: "2026-10-24", meal: "間食", name: "プリン", kcal: 250, p: null, f: null, c: null } }], "トークで入れたほうが新しい");
+  assert.deepEqual(plan.remove, ["gone4"], "しょくじで消したものはボットからも");
+});

@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610242345";
+import { LINE_LOG } from "./line-config.js?v=202610250010";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -148,6 +148,33 @@ export function botLogsForView(botLogs, localLogs, deleted = []) {
       c: num(b.carb),
       bot: true
     }));
+}
+
+// しょくじから送った記録（clientId つき）と、ボットの行をくらべて、そろえ方を決める
+// - しょくじで消した記録がボットに残っていれば、ボットから消す（remove）
+// - 中身がちがえば、あとから直したほう（しょくじは upd、ボットは updatedAt）にそろえる：しょくじが新しければボットを直す（push）、
+//   ボットが新しければ（トークでカロリーを入れたなど）しょくじを直す（pull）
+// - skip：いま「元に戻す」を待っている記録の id（まだボットに送らない）
+export function planSync(botLogs, localLogs, deleted = [], skip = new Set()) {
+  const local = new Map(localLogs.map((l) => [l.id, l]));
+  const gone = new Set(deleted);
+  const n = (v) => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
+  const plan = { push: [], pull: [], remove: [] };
+  (Array.isArray(botLogs) ? botLogs : []).forEach((b) => {
+    const id = String(b?.clientId || "");
+    if (!id || skip.has(id)) return;
+    if (gone.has(id) && !local.has(id)) return void plan.remove.push(id);
+    const l = local.get(id);
+    if (!l) return; // ほかの端末のしょくじの記録など：さわらない
+    const fromBot = { date: b.date, meal: fromBotMeal(b.meal), name: String(b.menu || "").trim().slice(0, 40), kcal: n(b.kcal), p: n(b.protein), f: n(b.fat), c: n(b.carb) };
+    const same = fromBot.date === l.date && fromBot.meal === l.meal && fromBot.name === l.name && ["kcal", "p", "f", "c"].every((k) => fromBot[k] === n(l[k]));
+    if (same) return;
+    if (Number(b.updatedAt || 0) > Number(l.upd || 0)) plan.pull.push({ id, entry: fromBot });
+    else plan.push.push(l);
+  });
+  plan.push = plan.push.slice(0, 30);
+  plan.remove = plan.remove.slice(0, 30);
+  return plan;
 }
 
 // 失敗したときに出す、やさしい言葉（E2：仕組みの言葉は出さない）
