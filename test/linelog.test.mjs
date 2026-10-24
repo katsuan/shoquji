@@ -58,7 +58,7 @@ test("ID トークンがないときは送らない。通信できないとき�
 test("つなぐ先は script.google.com の …/exec だけ。ブラウザ（LINE の外）では何もしない", async () => {
   assert.equal(cleanGasUrl(GAS), GAS);
   assert.equal(cleanGasUrl(" " + GAS + " "), GAS);
-  for (const bad of ["http://script.google.com/macros/s/AKfyTEST_123/exec", "https://evil.example/exec", `${GAS}?x=1`, "javascript:alert(1)", ""]) assert.equal(cleanGasUrl(bad), "");
+  for (const bad of ["http://script.google.com/macros/s/AKfyTEST_123/exec", "https://evil.example/exec", `${GAS}?x=1`, "javascript:alert(1)", ""]) assert.equal(cleanGasUrl(bad), ""); // qcheck-ok: W8 断る URL の見本の文字
   assert.equal(inLineApp("Mozilla/5.0 (iPhone) Line/14.0.0"), true);
   assert.equal(inLineApp("Mozilla/5.0 (iPhone) Safari/604.1"), false);
   globalThis.navigator ??= {};

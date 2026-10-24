@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610250600">
-<link rel="stylesheet" href="style.css?v=202610250600">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610250700">
+<link rel="stylesheet" href="style.css?v=202610250700">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -82,7 +82,7 @@
     <p id="status" class="status" role="status"></p>
   </section>
 
-  <!-- この日のしょくじ：合計と目標、食事ごとの一覧（押すと直せる）、LINE で送る -->
+  <!-- この日のしょくじ：合計と目標、食事ごとの一覧（押すと直せる）、カードで送る -->
   <section class="ls-panel" aria-labelledby="dayTitle">
     <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
@@ -90,7 +90,7 @@
     <!-- LINE の中で食事記録ボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
     <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
-    <p class="where-note" id="reopenInLiff" hidden>💬 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
+    <p class="where-note" id="reopenInLiff" hidden>📱 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
       <a id="sendBtn" class="ls-button is-block line is-oqrn" href="#">カードで送る</a>
@@ -110,7 +110,7 @@
     <ul class="ls-hint line-merit">
       <li>💾 記録が食事記録ボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
       <li>📱 機種を変えても、ボットに入った記録が出ます（ここ60日分）</li>
-      <li>💬 ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</li>
+      <li>🤖 ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</li>
     </ul>
     <div id="lineOutside"></div>
     <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ 食事記録ボットとつなぐ」からまた見られます）。</p>
@@ -132,7 +132,7 @@
             <div class="lg-row"><span>朝　トースト</span><small>250 kcal</small></div>
             <div class="lg-row"><span>昼　カレーライス</span><small>780 kcal</small></div>
             <div class="lg-row is-pop"><span>夜　焼き魚定食</span><small>650 kcal</small></div>
-            <div class="lg-toast">💬 食事記録ボットにも入れました</div>
+            <div class="lg-toast">🤖 食事記録ボットにも入れました</div>
           </div>
         </div>
         <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。食事記録ボットのシートにも入ります</figcaption>
@@ -193,14 +193,14 @@
       </div>
     </details>
 
-    <!-- LINE とつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
+    <!-- 食事記録ボットとつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
     <details class="ls-fold" id="lineFold">
       <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>食事記録ボットとつなぐ（くわしい人向け）</summary>
       <div class="ls-fold-body">
         <!-- はじめだけ要る説明 -->
         <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、自分の食事記録ボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
         <!-- つながっているあいだの説明 -->
-        <p id="lineLogNote" class="ls-hint" hidden>💬 いまは食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
+        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまは食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
         <div id="gasField" hidden>
           <label class="ls-field">
             <span class="ls-label">記録を入れる、食事記録ボットの GAS の URL</span>
@@ -227,7 +227,7 @@
         </div>
         <!-- 食事記録ボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
         <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>食事記録ボットから届きます。目標カロリーもボットとそろえます</small></span></label>
-        <p class="sub-title">💬 カードで送るとき</p>
+        <p class="sub-title">📨 カードで送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
         <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
         <p class="sub-title">🔒 記録の控え</p>
@@ -251,7 +251,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610250600"></script>
+<script type="module" src="app.js?v=202610250700"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

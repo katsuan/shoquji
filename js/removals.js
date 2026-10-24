@@ -1,6 +1,6 @@
 // 消すのは「元に戻す」を押せるあいだ待ってから、ボットにも送る（閉じる・ほかのアプリに切りかえるときは、すぐ送る）
 //   key：「own:<しょくじの記録の id>」か「bot:<ボットの記録の logId>」。run(keepalive) が実際に消す
-export const UNDO_MS = 6500;
+const UNDO_MS = 6500;
 const pending = new Map(); // key → { run, timer }
 
 export function queueRemoval(key, run) {

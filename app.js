@@ -1,16 +1,16 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250600";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250600";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250600";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250600";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250600";
-import { cardUrl } from "./js/card.js?v=202610250600";
-import { writeDays } from "./js/days.js?v=202610250600";
-import { initLineGuide } from "./js/line-guide.js?v=202610250600";
-import { readLink } from "./js/link.js?v=202610250600";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250600";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250700";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250700";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250700";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250700";
+import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250700";
+import { cardUrl } from "./js/card.js?v=202610250700";
+import { writeDays } from "./js/days.js?v=202610250700";
+import { initLineGuide } from "./js/line-guide.js?v=202610250700";
+import { readLink } from "./js/link.js?v=202610250700";
+import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250700";
+import { $, esc } from "./js/dom.js?v=202610250700";
 
-const $ = (id) => document.getElementById(id);
 
 let state = load();
 const ui = {
@@ -26,7 +26,6 @@ const ui = {
 
 const link = readLink(); // ボットのカード・メニューから開いたときの指定（js/link.js）
 
-const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const NUTRI = ["kcal", "p", "f", "c"];
 
 function persist() {
@@ -35,7 +34,7 @@ function persist() {
 
 // ---- 食事記録ボット（LINE の中で開いて、つないだときだけ。js/linelog.js） ----
 let lineLog = null; // startLineLog の返事（つなげないときは null）
-const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE の中で開いたときだけ出す
+const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE 版のときだけ出す
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
 // つなぐ先：自分で入れた URL。なければ、この LIFF の食事記録ボット
@@ -121,7 +120,7 @@ async function sendToBot(logs, { quiet = false } = {}) {
   if (res.ok) {
     markSent(state, logs.map((l) => l.id));
     persist();
-    if (!quiet && res.added?.length) say(`💬 食事記録ボットにも入れました`);
+    if (!quiet && res.added?.length) say(`🤖 食事記録ボットにも入れました`);
     return;
   }
   if ((res.error === "net" || res.error === "fail") && window.LineShareUI?.toast) {
@@ -568,13 +567,13 @@ function renderDay() {
     $("totals").innerHTML = "";
     // 季節の絵文字をときどき（Q キットの season.js が読めてから1回だけ決めて、描きなおしても変えない）
     if (emptyEmoji === null && window.QSeason) emptyEmoji = window.QSeason.maybe();
-    $("dayList").innerHTML = `<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${emptyEmoji}` : ""}</div>`;
+    $("dayList").innerHTML = `<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${esc(emptyEmoji)}` : ""}</div>`;
   } else {
     $("totals").innerHTML = totalsHtml(logs, t, state.targets);
     $("dayList").innerHTML = dayListHtml(logs);
   }
   ui.justAdded = null;
-  // LINE で送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
+  // カードで送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
   $("sendArea").hidden = !logs.length;
   $("sendTextNote").hidden = !state.sendText;
   $("sendBtn").href = logs.length ? cardUrl(ui.date, logs, t, { sendText: state.sendText }) : "#";
@@ -748,7 +747,7 @@ function openFromLink() {
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
 }
 
-// ---- LINE とつなぐ（くわしい人向け）----
+// ---- 食事記録ボットとつなぐ（くわしい人向け）----
 $("gasField").hidden = !inLine;
 $("reopenLink").href = OPEN_URL;
 $("gasUrl").value = state.gasUrl;
@@ -761,7 +760,7 @@ $("gasUrl").addEventListener("change", () => {
   state.gasUrl = url;
   bot = [];
   persist();
-  say(url ? "💬 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとの食事記録ボットにもどしました" : "つなぎ先を消しました");
+  say(url ? "🔗 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとの食事記録ボットにもどしました" : "つなぎ先を消しました");
   connectLineLog();
 });
 openFromLink();

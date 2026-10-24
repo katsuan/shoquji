@@ -3,12 +3,11 @@
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
-import { fmt } from "./stats.js?v=202610250600";
-import { lineLogMessage } from "./linelog.js?v=202610250600";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250600";
+import { fmt } from "./stats.js?v=202610250700";
+import { lineLogMessage } from "./linelog.js?v=202610250700";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610250700";
+import { $, esc } from "./dom.js?v=202610250700";
 
-const $ = (id) => document.getElementById(id);
-const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 // MYメニューの名前（種類・量つき）
 export const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim();
@@ -88,7 +87,7 @@ const richKey = (items) => JSON.stringify(items.map((i) => [i.name, i.kcal, i.pi
 
 // 開いたとき：LINE の「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る（まだなければ作る）
 let richRefreshing = false;
-export async function refreshRichMenuIfStale() {
+async function refreshRichMenuIfStale() {
   if (!ctx.lineLog() || !profile?.quickRichMenu || !richOn() || richRefreshing) return;
   const items = richItems(savedPins());
   if (!items.length) return;
@@ -106,7 +105,7 @@ export async function refreshRichMenuIfStale() {
 }
 
 // 📌 並べかえ（たたみ欄）
-export function renderPins() {
+function renderPins() {
   if (!profile) return;
   const list = pins || savedPins();
   const map = byKey();
@@ -148,7 +147,7 @@ async function renderRichPreview() {
   if (key === previewKey) return;
   previewKey = key;
   const url = await drawQuickMenu(items);
-  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="トークのメニュー「⚡ よく記録」の見本">`;
+  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="トークのメニュー「⚡ よく記録」の見本">`; // qcheck-ok: W1 url は canvas.toDataURL で作った data: の URL
 }
 
 export function initBotMenu(context) {
