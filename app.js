@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242300";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242300";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242300";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242300";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242300";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241328";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241328";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610241328";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241328";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610241328";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -338,7 +338,9 @@ $("saveBtn").addEventListener("click", () => {
   } else {
     const log = addLog(state, entry);
     ui.justAdded = log.id;
-    say(`🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`);
+    // 季節の絵文字をときどき（Q キットの season.js。読めていなければ付けない）
+    const done = `🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`;
+    say(window.QSeason ? QSeason.decorate(done) : done);
     sendToBot([log], { quiet: true });
   }
   savedAt = Date.now();
