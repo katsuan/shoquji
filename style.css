@@ -168,3 +168,7 @@ body {
 .rich-preview img { display: block; width: 100%; border: 1.5px solid var(--ls-line); border-radius: 12px; }
 .rich-preview:empty { display: none; }
 .item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.cand-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px dashed var(--ls-line); }
+.cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.cand-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
+.cand-row .ls-button { flex: 0 0 auto; min-height: 44px; padding: 0 10px; }

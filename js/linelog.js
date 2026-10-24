@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610242100";
+import { LINE_LOG } from "./line-config.js?v=202610242300";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -123,7 +123,9 @@ export function makeClient(gasUrl, getIdToken, fetchImpl = (...a) => fetch(...a)
     // 目標・お知らせ・よく記録するものの固定（送った項目だけ直る）。richMenu：{ image, items, key } で「⚡ よく記録」を作りなおす
     profile: (patch) => post({ action: "updateProfile", source: "shoquji", ...patch }),
     // MYメニュー（ボットの栄養の表）だけを保存する。masterKey があればその品を直す
-    saveMaster: (masterKey, e) => post({ action: "saveNutritionMasterOnly", source: "shoquji", masterKey: masterKey || "", menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c })
+    //   keep：しょくじにない項目（種類・量・メモ・塩分・食物繊維）。前の値をそのまま送る（送らないと消える）
+    saveMaster: (masterKey, e, keep = {}) =>
+      post({ action: "saveNutritionMasterOnly", source: "shoquji", masterKey: masterKey || "", menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c, flavor: keep.flavor || "", unit: keep.unit || "", note: keep.note || "", salt: keep.salt ?? null, fiber: keep.fiber ?? null })
   };
 }
 

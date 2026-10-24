@@ -2,7 +2,7 @@
 // ボタンの位置は、ボットの GAS（4_ui.richmenu.gs の RICH_MENU_LAYOUT）と同じ。描く字・色はボットの色（テラコッタ）のまま
 //   main：全員共通の「📝 記録」タブ（朝・昼・夜・間食／きょうの集計・一覧・ふりかえり）
 //   quick：その人の「⚡ よく記録」タブ（よく記録するもの 6 品／ほかを入力・並べかえ）
-import { fmt } from "./stats.js?v=202610242100";
+import { fmt } from "./stats.js?v=202610242300";
 
 export const LAYOUT = { width: 2500, height: 1686, tabHeight: 250, quickRows: 2, quickCols: 3, quickFooterHeight: 236, quickCount: 6 };
 const C = { bg: "#FBF3EE", card: "#FFFFFF", accent: "#C8553D", accentSoft: "#FDEEE8", ink: "#2D211C", sub: "#6B5E57", line: "#EFE1D9" };

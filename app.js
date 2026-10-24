@@ -1,9 +1,9 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242100";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242100";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242100";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242100";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242100";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610242300";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610242300";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610242300";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610242300";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./js/meal-richmenu.js?v=202610242300";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -28,6 +28,9 @@ function persist() {
 
 // ---- 食事記録ボット（LINE の中で開いて、つないだときだけ。js/linelog.js） ----
 let lineLog = null; // startLineLog の返事（つなげないときは null）
+let profile = null; // ボットの { user, quickMenus, popularMenus, menus, quickRichMenu }（つないだあと、開いたときに読む）
+let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
+const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim(); // MYメニューの名前（種類・量つき）
 const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE の中で開いたときだけ出す
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -232,9 +235,28 @@ document.querySelector(".meals").addEventListener("click", (e) => {
 });
 
 // ---- 食べたもの・よく食べるもの ----
+// 食べたものの候補：しょくじ・ボットの記録で食べたもの → つないでいるときは MYメニュー（ボットの栄養の表）も
+function allMenus() {
+  const base = menus(view());
+  if (!profile?.menus?.length) return base;
+  const byName = new Map(base.map((m) => [m.name, m]));
+  profile.menus.forEach((m) => {
+    const name = dn(m);
+    const nums = { kcal: m.kcal ?? null, p: m.protein ?? null, f: m.fat ?? null, c: m.carb ?? null };
+    const had = byName.get(name);
+    if (had) NUTRI.forEach((k) => had[k] == null && nums[k] != null && (had[k] = nums[k]));
+    else {
+      const item = { name, count: 0, ...nums };
+      byName.set(name, item);
+      base.push(item);
+    }
+  });
+  return base;
+}
+
 function renderSuggest() {
   const q = $("name").value.trim();
-  const list = menus(view())
+  const list = allMenus()
     .filter((m) => !q || (m.name.includes(q) && m.name !== q))
     .slice(0, q ? 6 : 8);
   $("suggest").innerHTML = list
@@ -272,7 +294,7 @@ $("name").addEventListener("input", () => {
 });
 // 名前を入れ終えたとき、同じ名前を前に食べていれば栄養も入れる（空の欄だけ）
 $("name").addEventListener("change", () => {
-  const m = menus(view()).find((x) => x.name === $("name").value.trim());
+  const m = allMenus().find((x) => x.name === $("name").value.trim());
   if (!m) return;
   NUTRI.forEach((k) => {
     if ($(k).value === "" && m[k] != null) $(k).value = m[k];
@@ -341,7 +363,7 @@ async function saveRemote(entry) {
   savingRemote = true;
   $("saveBtn").disabled = true;
   $("saveBtn").textContent = "保存中…";
-  const res = ui.botEdit ? await lineLog.update(ui.botEdit, e) : await lineLog.saveMaster(ui.masterEdit.key, e);
+  const res = ui.botEdit ? await lineLog.update(ui.botEdit, e) : await lineLog.saveMaster(ui.masterEdit.key, e, ui.masterEdit.keep);
   savingRemote = false;
   $("saveBtn").disabled = false;
   if (!res.ok) {
@@ -354,6 +376,9 @@ async function saveRemote(entry) {
     if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
   } else {
+    // 画面の MYメニューも、返事を待たずに直す（次に開いたときにそろう）
+    const m = profile?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
+    if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     say(`📒 MYメニューの「${e.name}」を保存しました。次からトークで名前を送るだけで記録できます`);
   }
   savedAt = Date.now();
@@ -369,6 +394,19 @@ function fillEntry(e) {
   hideNameError();
   NUTRI.forEach((k) => ($(k).value = e[k] ?? ""));
   $("nutri").open = NUTRI.some((k) => e[k] != null);
+}
+
+// MYメニューを入力欄に開いて直す（「📌 よく記録するもの・MYメニュー」から）
+function startMasterEdit(key) {
+  const m = byKey().get(key);
+  if (!m) return;
+  ui.editing = null;
+  ui.botEdit = null;
+  ui.masterEdit = { key, keep: { flavor: m.flavor, unit: m.unit, note: m.note, salt: m.salt, fiber: m.fiber } };
+  // 名前の欄は、種類・量をのぞいた名前（種類・量・メモは、そのまま残す）
+  fillEntry({ name: m.menu || dn(m), kcal: m.kcal, p: m.protein, f: m.fat, c: m.carb });
+  render();
+  $("formTitle").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ボットの記録を、入力欄に開く（ボットのカードの「画面で詳しく」・一覧の「ボット」の記録を押したとき）
@@ -663,8 +701,6 @@ function render() {
 render();
 
 // ---- 食事記録ボットの設定（目標・20時のお知らせ）と、よく記録するもの（📌 並べかえ・「⚡ よく記録」のメニュー） ----
-let profile = null; // { user, quickMenus, popularMenus, menus, quickRichMenu }
-let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
 const RICH_KEY = "shoquji:richOn"; // 「LINE のメニューにも出す」（この端末の設定）
 const richOn = () => {
   try {
@@ -673,7 +709,6 @@ const richOn = () => {
     return true;
   }
 };
-const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim();
 
 // 開いたときに1回：ボットの目標・お知らせ・よく記録するもの・MYメニューを読む
 async function readProfile() {
@@ -768,7 +803,14 @@ function renderPins() {
     : '<li class="ls-hint">まだありません。下の欄でさがして、押すと固定できます。</li>';
   const q = $("pinSearch").value.trim();
   const cands = (profile.menus || []).filter((m) => m.masterKey && !list.includes(m.masterKey) && (!q || dn(m).includes(q))).slice(0, 12);
-  $("pinCands").innerHTML = cands.map((m) => `<button class="ls-chip is-small" type="button" data-pin-add="${esc(m.masterKey)}">＋ ${esc(dn(m))}</button>`).join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ固定できます。</p>' : "");
+  $("pinCands").innerHTML =
+    cands
+      .map(
+        (m) => `<div class="cand-row"><span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+          <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">📌 固定</button>
+          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">✏️ 直す</button></div>`
+      )
+      .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
   $("richOn").checked = richOn();
   renderRichPreview();
 }
@@ -799,6 +841,8 @@ $("richOn").addEventListener("change", (e) => {
   renderPins();
 });
 $("quickFold").addEventListener("click", (e) => {
+  const edit = e.target.closest("[data-master-edit]");
+  if (edit) return startMasterEdit(edit.dataset.masterEdit);
   const list = [...(pins || savedPins())];
   const add = e.target.closest("[data-pin-add]");
   const del = e.target.closest("[data-pin-del]");
@@ -868,7 +912,9 @@ function readLink() {
     menu: get("menu"),
     nums: { kcal: num(q.get("kcal")), p: num(q.get("protein")), f: num(q.get("fat")), c: num(q.get("carb")) },
     logId: /^[A-Za-z0-9-]{1,60}$/.test(get("logId", 60)) ? get("logId", 60) : "",
-    masterKey: /^[A-Za-z0-9_-]{1,64}$/.test(get("masterKey", 64)) ? get("masterKey", 64) : ""
+    masterKey: /^[A-Za-z0-9_-]{1,64}$/.test(get("masterKey", 64)) ? get("masterKey", 64) : "",
+    // MYメニューを直すとき、しょくじにない項目はそのまま残す
+    keep: { flavor: get("flavor"), unit: get("unit"), note: get("note", 200), salt: num(q.get("salt")), fiber: num(q.get("fiber")) }
   };
 }
 
@@ -885,7 +931,7 @@ function openFromLink() {
   if (link.menu && !link.logId) {
     fillEntry({ name: link.menu, ...link.nums });
     // よく食べるものの「MYメニューを直す」から：記録はふやさず、MYメニューだけ保存する
-    if (link.masterKey) ui.masterEdit = { key: link.masterKey };
+    if (link.masterKey) ui.masterEdit = { key: link.masterKey, keep: link.keep };
   }
   render();
   if (link.mode === "logs" || link.logId) $("dayTitle").scrollIntoView({ behavior: "smooth", block: "start" });
