@@ -1,8 +1,8 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241700";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241700";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, startLineLog } from "./js/linelog.js?v=202610241700";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241700";
+import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610241900";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610241900";
+import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, startLineLog, toBotMeal } from "./js/linelog.js?v=202610241900";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610241900";
 
 const $ = (id) => document.getElementById(id);
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
@@ -13,6 +13,8 @@ const ui = {
   date: ymd(), // 記録する日・見る日
   meal: mealNow(),
   editing: null, // 直している記録の id
+  botEdit: null, // 直している、食事記録ボットの記録の logId（LINE の中でつないだとき）
+  masterEdit: null, // 保存する MYメニュー { key }（ボットのカードの「MYメニューを直す」から）
   justAdded: null // 記録したばかりの id（一覧で少し光らせる）
 };
 
@@ -111,7 +113,10 @@ function connectLineLog() {
     render();
     await sendUnsent();
     await readBot(true);
-    if (link.logId) showLinkedLog(link.logId);
+    if (link.logId && !link.used) {
+      link.used = true;
+      startBotEdit(link.logId);
+    }
   });
 }
 
@@ -188,6 +193,12 @@ function fillMenu(m) {
   renderSuggest();
 }
 
+function hideKcalError() {
+  $("kcalError").hidden = true;
+  $("kcal").removeAttribute("aria-invalid");
+}
+$("kcal").addEventListener("input", hideKcalError);
+
 function hideNameError() {
   $("nameError").hidden = true;
   $("name").removeAttribute("aria-invalid");
@@ -214,6 +225,7 @@ function readForm() {
 function clearForm() {
   $("name").value = "";
   hideNameError();
+  hideKcalError();
   NUTRI.forEach((k) => ($(k).value = ""));
   renderSuggest();
 }
@@ -229,6 +241,7 @@ $("saveBtn").addEventListener("click", () => {
     $("name").focus();
     return;
   }
+  if (ui.botEdit || ui.masterEdit) return saveRemote(entry);
   if (ui.editing) {
     updateLog(state, ui.editing, entry);
     say(`✏️ 「${entry.name.trim()}」を直しました`);
@@ -245,6 +258,70 @@ $("saveBtn").addEventListener("click", () => {
   render();
 });
 
+// ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない）。カロリーは要る
+let savingRemote = false;
+async function saveRemote(entry) {
+  if (savingRemote) return;
+  if (!lineLog) return say("ボットの記録・MYメニューは、LINE の中で開いたときに直せます");
+  const e = { ...entry, name: entry.name.trim(), kcal: num(entry.kcal), p: num(entry.p), f: num(entry.f), c: num(entry.c) };
+  if (e.kcal == null) {
+    $("nutri").open = true;
+    $("kcalError").hidden = false;
+    $("kcal").setAttribute("aria-invalid", "true");
+    $("kcal").focus();
+    return;
+  }
+  savingRemote = true;
+  $("saveBtn").disabled = true;
+  $("saveBtn").textContent = "保存中…";
+  const res = ui.botEdit ? await lineLog.update(ui.botEdit, e) : await lineLog.saveMaster(ui.masterEdit.key, e);
+  savingRemote = false;
+  $("saveBtn").disabled = false;
+  if (!res.ok) {
+    render();
+    return say(lineLogMessage(res.error));
+  }
+  if (ui.botEdit) {
+    // 画面のボットの記録も、返事を待たずに直す（次に読んだときにそろう）
+    const b = bot.find((x) => String(x.logId) === ui.botEdit);
+    if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
+    say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
+  } else {
+    say(`📒 MYメニューの「${e.name}」を保存しました。次からトークで名前を送るだけで記録できます`);
+  }
+  savedAt = Date.now();
+  ui.botEdit = null;
+  ui.masterEdit = null;
+  clearForm();
+  render();
+  readBot(true);
+}
+
+function fillEntry(e) {
+  $("name").value = e.name || "";
+  hideNameError();
+  NUTRI.forEach((k) => ($(k).value = e[k] ?? ""));
+  $("nutri").open = NUTRI.some((k) => e[k] != null);
+}
+
+// ボットの記録を、入力欄に開く（ボットのカードの「画面で詳しく」・一覧の「ボット」の記録を押したとき）
+function startBotEdit(logId) {
+  const b = bot.find((x) => String(x.logId) === String(logId));
+  if (!b) return say("その記録は見つかりませんでした（消したかもしれません）");
+  ui.editing = null;
+  ui.masterEdit = null;
+  ui.botEdit = String(b.logId);
+  if (b.date) ui.date = b.date;
+  ui.meal = fromBotMeal(b.meal);
+  fillEntry({ name: b.menu, kcal: b.kcal, p: b.protein, f: b.fat, c: b.carb });
+  render();
+  $("formTitle").scrollIntoView({ behavior: "smooth", block: "start" });
+  if (b.kcal == null) {
+    $("nutri").open = true;
+    setTimeout(() => $("kcal").focus(), 350);
+  }
+}
+
 function startEdit(id) {
   const log = state.logs.find((l) => l.id === id);
   if (!log) return;
@@ -259,8 +336,10 @@ function startEdit(id) {
 }
 
 function cancelEdit() {
-  if (!ui.editing) return;
+  if (!ui.editing && !ui.botEdit && !ui.masterEdit) return;
   ui.editing = null;
+  ui.botEdit = null;
+  ui.masterEdit = null;
   clearForm();
 }
 $("cancelEdit").addEventListener("click", () => {
@@ -292,10 +371,14 @@ function totalsHtml(logs, t, g) {
 
 // 食事ごとの一覧（名前を押すと直す、✕ で消す）
 function itemHtml(l) {
-  // ボットで入れた記録：見るだけ（直す・消すはボットのトークか食事記録の画面で）
+  // ボットで入れた記録：消すのはトークで。直すのは、つないでいるときだけ
   if (l.bot) {
-    return `<div class="item is-bot">
-            <span class="bot-name">${esc(l.name)}</span>
+    // LINE の中でつないでいるときは、押すと直せる（ボットの記録を直す）
+    const name = lineLog
+      ? `<button class="name" type="button" data-bot-edit="${esc(l.logId)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>`
+      : `<span class="bot-name">${esc(l.name)}</span>`;
+    return `<div class="item is-bot${l.logId === ui.botEdit ? " is-editing" : ""}">
+            ${name}
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
             <span class="bot-tag" title="食事記録ボットで入れた記録">ボット</span>
           </div>`;
@@ -336,6 +419,8 @@ function renderDay() {
 }
 
 $("dayList").addEventListener("click", (e) => {
+  const botEdit = e.target.closest("[data-bot-edit]");
+  if (botEdit) return startBotEdit(botEdit.dataset.botEdit);
   const edit = e.target.closest("[data-edit]");
   if (edit) return startEdit(edit.dataset.edit);
   const del = e.target.closest("[data-del]");
@@ -492,9 +577,10 @@ function render() {
   renderLookback();
   renderTargets();
   $("sendTextToggle").checked = state.sendText;
-  $("formHeading").textContent = ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
-  $("saveBtn").textContent = ui.editing ? "✏️ 直す" : "＋ 記録する";
-  $("cancelEdit").hidden = !ui.editing;
+  $("formHeading").textContent = ui.botEdit ? "ボットの記録を直す" : ui.masterEdit ? "MYメニューを直す" : ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
+  $("saveBtn").textContent = ui.masterEdit ? "📒 MYメニューに保存" : ui.editing || ui.botEdit ? "✏️ 直す" : "＋ 記録する";
+  $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
+  document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない
 }
 
 render();
@@ -523,7 +609,8 @@ function readLink() {
     date,
     menu: get("menu"),
     nums: { kcal: num(q.get("kcal")), p: num(q.get("protein")), f: num(q.get("fat")), c: num(q.get("carb")) },
-    logId: /^[A-Za-z0-9-]{1,60}$/.test(get("logId", 60)) ? get("logId", 60) : ""
+    logId: /^[A-Za-z0-9-]{1,60}$/.test(get("logId", 60)) ? get("logId", 60) : "",
+    masterKey: /^[A-Za-z0-9_-]{1,64}$/.test(get("masterKey", 64)) ? get("masterKey", 64) : ""
   };
 }
 
@@ -538,9 +625,9 @@ function openFromLink() {
   if (link.date) ui.date = link.date;
   if (link.meal) ui.meal = link.meal;
   if (link.menu && !link.logId) {
-    $("name").value = link.menu;
-    NUTRI.forEach((k) => ($(k).value = link.nums[k] ?? ""));
-    if (NUTRI.some((k) => link.nums[k] != null)) $("nutri").open = true;
+    fillEntry({ name: link.menu, ...link.nums });
+    // よく食べるものの「MYメニューを直す」から：記録はふやさず、MYメニューだけ保存する
+    if (link.masterKey) ui.masterEdit = { key: link.masterKey };
   }
   render();
   if (link.mode === "logs" || link.logId) $("dayTitle").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -549,22 +636,6 @@ function openFromLink() {
     $("lookback").scrollIntoView({ behavior: "smooth", block: "start" });
   } else if (link.mode === "quick") say("よく記録するものの並べかえは、まだしょくじにありません。よく食べるものは、名前の欄の下に出ます");
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
-}
-
-// カードの「画面で詳しく」から、ボットの記録（logId）を開いたとき：その日を出し、直し方を知らせる
-function showLinkedLog(logId) {
-  const b = bot.find((x) => String(x.logId) === logId);
-  if (!b) return;
-  if (b.date && b.date !== ui.date) {
-    ui.date = b.date;
-    render();
-  }
-  if (b.kcal == null) {
-    // カロリーがまだの品：名前を入れて、カロリーから入れられるように（記録はしょくじに1件ふえる。ボットの記録はトークで直す）
-    say(`「${b.menu}」のカロリーは、トークで数字を送ると入ります（例：350）`);
-  } else {
-    say(`「${b.menu}」はボットで入れた記録です。しょくじでは、まだ直せません`);
-  }
 }
 
 // ---- LINE とつなぐ（くわしい人向け）----

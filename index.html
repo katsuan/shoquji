@@ -28,7 +28,7 @@
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
 <link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css">
-<link rel="stylesheet" href="style.css?v=202610241700">
+<link rel="stylesheet" href="style.css?v=202610241900">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -66,6 +66,7 @@
         <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
       </div>
     </details>
+    <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     <div class="form-actions">
       <button id="saveBtn" class="ls-button is-primary is-block" type="button">＋ 記録する</button>
       <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>
@@ -216,7 +217,7 @@
 <script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
-<script type="module" src="app.js?v=202610241700"></script>
+<script type="module" src="app.js?v=202610241900"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

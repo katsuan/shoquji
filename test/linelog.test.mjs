@@ -79,7 +79,7 @@ test("ボットの記録を出すとき：しょくじから送った記録・�
     local,
     ["gone1"]
   );
-  assert.deepEqual(out, [{ id: "bot-L3", date: "2026-10-24", meal: "間食", name: "チョコ", kcal: null, p: 2, f: null, c: null, bot: true }]);
+  assert.deepEqual(out, [{ id: "bot-L3", logId: "L3", date: "2026-10-24", meal: "間食", name: "チョコ", kcal: null, p: 2, f: null, c: null, bot: true }]);
   assert.equal(toBotMeal("間食"), "その他");
   assert.equal(fromBotMeal("その他"), "間食");
 });

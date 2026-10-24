@@ -5,7 +5,7 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610241700";
+import { LINE_LOG } from "./line-config.js?v=202610241900";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -107,7 +107,12 @@ export function makeClient(gasUrl, getIdToken, fetchImpl = (...a) => fetch(...a)
         keepalive
       ),
     // from〜to（YYYY-MM-DD）にボットに入っている記録
-    list: (from, to) => post({ action: "listMealLogs", from, to })
+    list: (from, to) => post({ action: "listMealLogs", from, to }),
+    // ボットに入っている記録（logId）を直す（カロリーは要る）。MYメニューにも保存する（前の食事記録の画面と同じ）
+    update: (logId, e) =>
+      post({ action: "updateMealLog", source: "shoquji", logId, mealDate: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c, saveToMaster: true, sendLineSummary: false }),
+    // MYメニュー（ボットの栄養の表）だけを保存する。masterKey があればその品を直す
+    saveMaster: (masterKey, e) => post({ action: "saveNutritionMasterOnly", source: "shoquji", masterKey: masterKey || "", menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c })
   };
 }
 
@@ -119,6 +124,7 @@ export function botLogsForView(botLogs, localLogs, deleted = []) {
     .filter((b) => b && /^\d{4}-\d{2}-\d{2}$/.test(String(b.date || "")) && String(b.menu || "").trim() && !(b.clientId && mine.has(b.clientId)))
     .map((b) => ({
       id: `bot-${String(b.logId || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 40)}`,
+      logId: String(b.logId || "").replace(/[^A-Za-z0-9-]/g, "").slice(0, 60),
       date: b.date,
       meal: fromBotMeal(b.meal),
       name: String(b.menu).trim().slice(0, 40),
