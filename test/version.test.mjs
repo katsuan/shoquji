@@ -27,4 +27,5 @@ test("部品を変えたら、読みこみの印も変える", () => {
   const now = versions(readFileSync(new URL("../index.html", import.meta.url), "utf8"))[0];
   const before = versions(sh("git show HEAD:index.html"))[0];
   assert.notEqual(now, before, `変えたファイル（${changed.replace(/\n/g, "・")}）があるのに、印が前と同じ（?v=${now}）。index.html・app.js・js/*.js の ?v= をそろえて新しくする`);
+  assert.ok(Number(now) > Number(before), `読みこみの印が前（?v=${before}）より小さい（?v=${now}）。前より大きい値にする`);
 });
