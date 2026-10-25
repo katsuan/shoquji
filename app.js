@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
-// 食事記録ボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251500";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251500";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251500";
-import { createBotLink } from "./js/botlink.js?v=202610251500";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251500";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251500";
-import { cardUrl } from "./js/card.js?v=202610251500";
-import { writeDays } from "./js/days.js?v=202610251500";
-import { readLink } from "./js/link.js?v=202610251500";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251500";
-import { $, esc } from "./js/dom.js?v=202610251500";
+// くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610252200";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610252200";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610252200";
+import { createBotLink } from "./js/botlink.js?v=202610252200";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610252200";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610252200";
+import { cardUrl } from "./js/card.js?v=202610252200";
+import { writeDays } from "./js/days.js?v=202610252200";
+import { readLink } from "./js/link.js?v=202610252200";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610252200";
+import { $, esc } from "./js/dom.js?v=202610252200";
 
 
 let state = load();
@@ -19,7 +19,7 @@ const ui = {
   date: ymd(), // 記録する日・見る日
   meal: mealNow(),
   editing: null, // 直している記録の id
-  botEdit: null, // 直している、食事記録ボットの記録の logId（LINE の中でつないだとき）
+  botEdit: null, // 直している、くらぶボットの記録の logId（LINE の中でつないだとき）
   masterEdit: null, // 保存する MYメニュー { key, keep, toMine }（ボットのカードの「MYメニューを直す」・MYメニューの欄から）
   base: null, // MYメニュー・候補から入れた数字（量の倍率のもと）。{ kcal, p, f, c }
   scale: 1, // いまの倍率
@@ -35,9 +35,9 @@ function persist() {
   if (!save(state)) say("この端末に残せませんでした（プライベートブラウズでは、閉じると消えます）");
 }
 
-// ---- 食事記録ボット（LINE 版で、つないだときだけ。js/botlink.js） ----
+// ---- くらぶボット（LINE 版で、つないだときだけ。js/botlink.js） ----
 const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit });
-// 食事記録ボットへの呼び出し口（js/linelog.js。つないでいなければ null）
+// くらぶボットへの呼び出し口（js/linelog.js。つないでいなければ null）
 const lineLog = () => botLink.client(); // つないでいなければ null
 // 画面に出す中身：この端末の記録＋ボットで入れた記録
 const view = () => botLink.view(); // 画面に出す中身：この端末の記録＋ボットで入れた記録
@@ -238,7 +238,7 @@ async function saveRemote(entry) {
     // 画面のボットの記録も、返事を待たずに直す（次に読んだときにそろう）
     const b = botLink.find(ui.botEdit);
     if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
-    say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
+    say(`✏️ 「${e.name}」を直しました（くらぶボットにも）`);
   } else {
     const toMine = ui.masterEdit.toMine;
     if (toMine) {
@@ -377,7 +377,7 @@ function itemHtml(l) {
     return `<div class="item is-bot${l.logId === ui.botEdit ? " is-editing" : ""}">
             ${name}
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <span class="bot-tag" title="食事記録ボットで入れた記録">ボット</span>
+            <span class="bot-tag" title="くらぶボットで入れた記録">ボット</span>
             ${lineLog() ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">✕</button>` : ""}
           </div>`;
   }
@@ -493,7 +493,7 @@ Object.entries(TARGET_INPUTS).forEach(([id, k]) =>
     persist();
     render();
     // つないでいるときは、目標カロリーをボットにもそろえる（集計カード・20時のお知らせで使う）
-    if (k === "kcal" && v > 0 && lineLog()) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、食事記録ボットにもそろえました");
+    if (k === "kcal" && v > 0 && lineLog()) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、くらぶボットにもそろえました");
   })
 );
 
@@ -565,7 +565,7 @@ function render() {
 render();
 initBotMenu({ lineLog, state: () => state, ui, link, render, persist, say, startMasterEdit });
 
-// ---- 食事記録ボットのカード・リッチメニューから開いたとき（指定の読みとりは js/link.js） ----
+// ---- くらぶボットのカード・リッチメニューから開いたとき（指定の読みとりは js/link.js） ----
 function openFromLink() {
   if (!link.mode && !link.meal && !link.menu && !link.logId) return;
   // 一度読んだら、アドレスから消す（開きなおしで同じことをくり返さない）
@@ -590,7 +590,7 @@ function openFromLink() {
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
 }
 
-// ---- 食事記録ボットとつなぐ（くわしい人向け）----
+// ---- くらぶボットとつなぐ（くわしい人向け）----
 $("gasField").hidden = !botLink.inLine;
 $("reopenLink").href = OPEN_URL;
 $("gasUrl").value = state.gasUrl;
@@ -603,7 +603,7 @@ $("gasUrl").addEventListener("change", () => {
   state.gasUrl = url;
   botLink.forget();
   persist();
-  say(url ? "🔗 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとの食事記録ボットにもどしました" : "つなぎ先を消しました");
+  say(url ? "🔗 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとのくらぶボットにもどしました" : "つなぎ先を消しました");
   botLink.connect();
 });
 openFromLink();
@@ -614,7 +614,7 @@ window.QBotLink?.guide({
   key: "shoquji:lineBannerOff", // この端末で閉じたか（設定なので端末に残してよい）
   openUrl: OPEN_URL,
   say,
-  closedText: "案内を閉じました（「⚙️ 食事記録ボットとつなぐ」からまた見られます）"
+  closedText: "案内を閉じました（「⚙️ くらぶボットとつなぐ」からまた見られます）"
 });
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
@@ -635,6 +635,6 @@ document.addEventListener("visibilitychange", () => {
 // はじめての人にだけ、使い方を3つ（「わかった」で消え、二度と出さない）
 window.LineShareUI?.firstTip(
   "shoquji",
-  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "ブラウザ版の記録はこの端末の中だけ。LINE 版なら、食事記録ボットのシートにも残ります"],
+  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "ブラウザ版の記録はこの端末の中だけ。LINE 版なら、くらぶボットのシートにも残ります"],
   document.querySelector(".days")
 );

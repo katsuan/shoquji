@@ -2,10 +2,10 @@
 // 記録 1件 = { id, date: "YYYY-MM-DD", meal: "朝"|"昼"|"夜"|"間食", name, kcal, p, f, c, at, upd }
 //   kcal・p（たんぱく質）・f（脂質）・c（炭水化物）は数字か null（入れなかった）
 //   at は記録した時刻、upd は最後に直した時刻（あとで自分のサーバーとそろえるときに使う）
-// sendText：カードで送るとき、カードと一緒に「記録用の文字」も送るか（食事記録ボットに読ませる用。はじめはオフ）
+// sendText：カードで送るとき、カードと一緒に「記録用の文字」も送るか（くらぶボットに読ませる用。はじめはオフ）
 // 消した記録の id は deleted に残す（同じく、あとでそろえるとき用。古いものから 500 件まで）
-// gasUrl：LINE 版のときに、記録を入れる食事記録ボットの GAS の URL（使う人が自分で入れる。秘密ではない。js/linelog.js と同じ形）
-// sent：食事記録ボットに入れた記録の id（もう一度送らないため。古いものから 2000 件まで）
+// gasUrl：LINE 版のときに、記録を入れるくらぶボットの GAS の URL（使う人が自分で入れる。秘密ではない。js/linelog.js と同じ形）
+// sent：くらぶボットに入れた記録の id（もう一度送らないため。古いものから 2000 件まで）
 // app.js と js/ の部品（botlink・card・link・stats）が読む
 
 const KEY = "shoquji:v1";
@@ -166,7 +166,7 @@ export function importJson(state, text) {
   return added;
 }
 
-// 食事記録ボットに入れた記録の id を覚える
+// くらぶボットに入れた記録の id を覚える
 export function markSent(state, ids) {
   const set = new Set(state.sent);
   ids.forEach((id) => ID_RE.test(String(id)) && set.add(String(id)));

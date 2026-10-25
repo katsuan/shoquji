@@ -1,4 +1,4 @@
-// 食事記録ボットとのつなぎ（LINE 版で、つないだときだけ。送る・読む・そろえるの中身は js/linelog.js）
+// くらぶボットとのつなぎ（LINE 版で、つないだときだけ。送る・読む・そろえるの中身は js/linelog.js）
 //   - つなぐ：まず読んでみて、このボットを使っていない人なら何も出さずに端末の中だけ（asGuest）
 //   - 送る：しょくじの記録をボットにも入れる（同じ id は何度送っても1回だけ）。まだ送っていない、ここ7日の分も
 //   - 読む：ボットで入れた記録（60日分）を読み、端末に控える（開いてすぐ出すため。shoquji:bot）
@@ -6,13 +6,13 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610251500";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610251500";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610251500";
-import { LINE_LOG } from "./line-config.js?v=202610251500";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610251500";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610251500";
-import { $ } from "./dom.js?v=202610251500";
+import { addDays, ymd } from "./stats.js?v=202610252200";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610252200";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610252200";
+import { LINE_LOG } from "./line-config.js?v=202610252200";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610252200";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610252200";
+import { $ } from "./dom.js?v=202610252200";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -22,7 +22,7 @@ const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
  */
 export function createBotLink(ctx) {
   const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE 版のときだけ出す
-  // つなぐ先：自分で入れた URL。なければ、この LIFF の食事記録ボット
+  // つなぐ先：自分で入れた URL。なければ、この LIFF のくらぶボット
   const gasTarget = () => ctx.state().gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
   let client = null; // startLineLog の返事（つなげないときは null）
   let bot = loadBot();
@@ -49,7 +49,7 @@ export function createBotLink(ctx) {
     return { ...state, logs: [...state.logs, ...botLogsForView(shown, state.logs, state.deleted)] };
   }
 
-  // 食事記録ボットとつながっているときだけ出すもの（記録の置き場所の説明・つながっている説明・よく記録するもの・20時のお知らせ）
+  // くらぶボットとつながっているときだけ出すもの（記録の置き場所の説明・つながっている説明・よく記録するもの・20時のお知らせ）
   function showConnected(on) {
     ["whereNote", "lineLogNote", "quickFold", "botNotifyRow"].forEach((id) => ($(id).hidden = !on));
     $("lineIntro").hidden = on;
@@ -74,7 +74,7 @@ export function createBotLink(ctx) {
     if (res.ok) {
       markSent(ctx.state(), logs.map((l) => l.id));
       ctx.persist();
-      if (!quiet && res.added?.length) ctx.say(`🤖 食事記録ボットにも入れました`);
+      if (!quiet && res.added?.length) ctx.say(`🤖 くらぶボットにも入れました`);
       return;
     }
     if ((res.error === "net" || res.error === "fail") && window.LineShareUI?.toast) {
@@ -172,7 +172,7 @@ export function createBotLink(ctx) {
       }
       ctx.render();
     });
-    ctx.say(`🗑 「${b.menu}」を消しました（食事記録ボットからも）`, () => {
+    ctx.say(`🗑 「${b.menu}」を消しました（くらぶボットからも）`, () => {
       cancelRemoval(`bot:${id}`);
       hidden.delete(id);
       ctx.render();

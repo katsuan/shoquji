@@ -1,4 +1,4 @@
-// しょくじ：LINE の中（LIFF）で開いたときの、食事記録ボットとのつなぎのテスト（画面に触らない部分）
+// しょくじ：LINE の中（LIFF）で開いたときの、くらぶボットとのつなぎのテスト（画面に触らない部分）
 //   node --test test/
 // つくりは、つづく（q-tuzuq）の test/linelog.test.mjs を写したもの
 import "./_botlink.mjs";

@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610251500">
-<link rel="stylesheet" href="style.css?v=202610251500">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610252200">
+<link rel="stylesheet" href="style.css?v=202610252200">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -87,10 +87,10 @@
     <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
-    <!-- LINE の中で食事記録ボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
-    <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、食事記録ボットにも入ります。</p>
+    <!-- LINE の中でくらぶボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
+    <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、くらぶボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
-    <p class="where-note" id="reopenInLiff" hidden>📱 この開き方だと、記録が食事記録ボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
+    <p class="where-note" id="reopenInLiff" hidden>📱 この開き方だと、記録がくらぶボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
       <a id="sendBtn" class="ls-button is-block line is-oqrn" href="#">カードで送る</a>
@@ -99,7 +99,7 @@
   </section>
 
   <!-- LINE で使う（最初だけ・閉じられる）：LINE で開く案内と、4コマの使い方（LINE の画面に似せた絵。明るいまま）。つづくと同じ作り。
-       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE 版では出さない（「⚙️ 食事記録ボットとつなぐ」から見られる） -->
+       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE 版では出さない（「⚙️ くらぶボットとつなぐ」から見られる） -->
   <section class="ls-panel" id="lineGuidePanel" aria-labelledby="lineGuideTitle" hidden>
     <div class="guide-head">
       <h2 id="lineGuideTitle" class="ls-panel-title">📱 LINE 版で使う</h2>
@@ -108,12 +108,12 @@
     <!-- 「LINEで開く」は、おくるん（Q キット）の共通の案内（LineShareLiff.outsideHelp） -->
     <!-- LINE で開く良さ（言い切れることだけ） -->
     <ul class="ls-hint line-merit">
-      <li>💾 記録が食事記録ボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
+      <li>💾 記録がくらぶボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
       <li>📱 機種を変えても、ボットに入った記録が出ます（ここ60日分）</li>
       <li>🤖 ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</li>
     </ul>
     <div id="lineOutside"></div>
-    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ 食事記録ボットとつなぐ」からまた見られます）。</p>
+    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「⚙️ くらぶボットとつなぐ」からまた見られます）。</p>
     <div class="line-guide" role="list" aria-label="4コマの使い方">
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -132,10 +132,10 @@
             <div class="lg-row"><span>朝　トースト</span><small>250 kcal</small></div>
             <div class="lg-row"><span>昼　カレーライス</span><small>780 kcal</small></div>
             <div class="lg-row is-pop"><span>夜　焼き魚定食</span><small>650 kcal</small></div>
-            <div class="lg-toast">🤖 食事記録ボットにも入れました</div>
+            <div class="lg-toast">🤖 くらぶボットにも入れました</div>
           </div>
         </div>
-        <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。食事記録ボットのシートにも入ります</figcaption>
+        <figcaption><b>2. 食べたものを記録</b>名前を入れて「＋ 記録する」。くらぶボットのシートにも入ります</figcaption>
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -158,7 +158,7 @@
             <div class="lg-msg">カレーライス を記録（＋780 kcal）<br>きょう 1,680 kcal / 目標 2,000</div>
           </div>
         </div>
-        <figcaption><b>4. トークで送っても記録</b>食事記録ボットのトークに食べたものを送っても記録できます。しょくじにも「ボット」の札で出ます</figcaption>
+        <figcaption><b>4. トークで送っても記録</b>くらぶボットのトークに食べたものを送っても記録できます。しょくじにも「ボット」の札で出ます</figcaption>
       </figure>
     </div>
     <p id="openInLineNote" class="ls-hint small">パソコンで見ているときは、スマホで同じリンク（https://liff.line.me/2010088825-CulmmaFc）を開いてね。</p>
@@ -175,7 +175,7 @@
       </div>
     </details>
 
-    <!-- よく記録するもの（食事記録ボットとつないでいるときだけ）：📌 固定と並べかえ、LINE のリッチメニュー「⚡ よく記録」 -->
+    <!-- よく記録するもの（くらぶボットとつないでいるときだけ）：📌 固定と並べかえ、LINE のリッチメニュー「⚡ よく記録」 -->
     <details class="ls-fold" id="quickFold" hidden>
       <summary><span class="ls-fold-icon" aria-hidden="true">📌</span>よく記録するもの・MYメニュー</summary>
       <div class="ls-fold-body">
@@ -193,24 +193,24 @@
       </div>
     </details>
 
-    <!-- 食事記録ボットとつなぐ（くわしい人向け）：自分の食事記録ボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
+    <!-- くらぶボットとつなぐ（くわしい人向け）：自分のくらぶボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
     <details class="ls-fold" id="lineFold">
-      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span><span><span class="nw">食事記録ボットと</span><span class="nw">つなぐ</span></span> <span class="ls-fold-meta">くわしい人向け</span></summary>
+      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span><span><span class="nw">くらぶボットと</span><span class="nw">つなぐ</span></span> <span class="ls-fold-meta">くわしい人向け</span></summary>
       <div class="ls-fold-body">
         <!-- はじめだけ要る説明 -->
-        <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、自分の食事記録ボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
+        <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、くらぶボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
         <!-- つながっているあいだの説明 -->
-        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまは食事記録ボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
+        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまはくらぶボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
         <div id="gasField" hidden>
           <label class="ls-field">
-            <span class="ls-label">記録を入れる、食事記録ボットの GAS の URL</span>
+            <span class="ls-label">記録を入れる、くらぶボットの URL</span>
             <input id="gasUrl" class="ls-input" type="url" inputmode="url" maxlength="200" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done">
           </label>
           <p id="gasUrlError" class="ls-hint is-error" role="alert" hidden>GAS のウェブアプリの URL（…/exec）を入れてね</p>
-          <p class="ls-hint small">配布用シートをコピーして作った、自分の GAS の URL です。空のときは、いつもの食事記録ボットにつながります。</p>
+          <p class="ls-hint small">自分のくらぶボットの GAS エディタで <code>showWebhookUrl</code> を実行して出る ② の URL（合言葉なし）です。空のときは、いつものくらぶボットにつながります。</p>
         </div>
         <button class="ls-button is-block" type="button" data-show-line-guide>👀 使い方（4コマ）を見る</button>
-        <p class="ls-hint small">① <a href="https://docs.google.com/spreadsheets/d/1xqNuE1aap43v6-pTt8TOhrITmmCc6JIGnk8ruJhWqRs/copy" target="_blank" rel="noopener">配布用シートをコピーする</a>（Google にログインして「コピーを作成」）<br>② <a href="docs/linelog-setup.html" target="_blank" rel="noopener">そのあとの手順（全部で5手）</a></p>
+        <p class="ls-hint small">自分のボットを持つとき：<a href="https://katsuan.github.io/qlove-bot/docs/setup.html" target="_blank" rel="noopener">くらぶボットの作り方</a>（自分の LINE の公式アカウントと、配布用シートのコピー。30分くらい）</p>
       </div>
     </details>
 
@@ -225,11 +225,11 @@
           <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="tF" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
           <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
         </div>
-        <!-- 食事記録ボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
-        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>食事記録ボットから届きます。目標カロリーもボットとそろえます</small></span></label>
+        <!-- くらぶボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
+        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>くらぶボットから届きます。目標カロリーもボットとそろえます</small></span></label>
         <p class="sub-title">📨 カードで送るとき</p>
-        <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE の食事記録ボットに送ると、ボットが読んで記録できる -->
-        <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>食事記録ボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
+        <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE のくらぶボットに送ると、ボットが読んで記録できる -->
+        <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>くらぶボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
         <p class="sub-title">🔒 記録の控え</p>
         <p class="ls-hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておくと安心です。</p>
         <div class="form-actions">
@@ -253,8 +253,8 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610251500" defer></script>
-<script type="module" src="app.js?v=202610251500"></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610252200" defer></script>
+<script type="module" src="app.js?v=202610252200"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

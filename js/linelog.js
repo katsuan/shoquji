@@ -1,4 +1,4 @@
-// LINE の中（LIFF）で開いたときだけ、食事記録ボット（line-meal-project の GAS）とつなぐ
+// LINE の中（LIFF）で開いたときだけ、くらぶボット（katsuan/qlove-bot の 🍚 しょくじ）とつなぐ
 // - 記録した品を、ボットのシートにも1行ずつ入れる。開いたときに、ボットで入れた記録（トークで送ったものなど）を読む
 // - ボットに送るのは LIFF の ID トークンだけ（だれかはボット側が LINE に確かめる）。トークンは端末に残さない（W7）
 // - つなぐ先は、使う人が自分で入れた GAS の URL だけ（URL の ?〜 からは受けとらない。W5・W9）
@@ -6,9 +6,9 @@
 // - つなぐ・送るの中身は Q キットの共通の部品（q-oqrn の shared/botlink.js。window.QBotLink。つづくと同じ）。
 //   ここはしょくじの分だけ（送る中身・ボットの言葉の読みかえ）。ボット側の受け口は line-meal-project の 07_web
 //   （submitMealBatch・listMealLogs など）。送る形はくらぶボットの形 { app: "qlove", v: 1, tool: "shoquji", action, … }
-//   （食事記録ボットは action で受けるので、前の形と同じように受けられる）
+//   （くらぶボットは action で受けるので、前の形と同じように受けられる）
 // js/botlink.js・js/bot-menu.js・app.js が読む
-import { LINE_LOG } from "./line-config.js?v=202610251500";
+import { LINE_LOG } from "./line-config.js?v=202610252200";
 
 const Q = () => globalThis.QBotLink;
 const TOOL = "shoquji";
@@ -22,7 +22,7 @@ export const inLineApp = (ua) => (Q() ? Q().inLineApp(ua) : false);
 /**
  * つなげるときは { record, list, … } を、つなげないときは null を返す
  * - LINE のアプリの中で、LIFF として開き、ログインしているときだけ
- * - つなぎ先：自分で入れた URL（なければ、この LIFF の食事記録ボット）。どちらもなければ、くらぶボットに「しょくじ」の機能があるとき
+ * - つなぎ先：自分で入れた URL（なければ、この LIFF のくらぶボット）。どちらもなければ、くらぶボットに「しょくじ」の機能があるとき
  */
 export async function startLineLog(gasUrl, config = LINE_LOG) {
   const B = Q();
@@ -152,8 +152,8 @@ export function planSync(botLogs, localLogs, deleted = [], skip = new Set(), { s
 
 // 失敗したときに出す、やさしい言葉（E2：仕組みの言葉は出さない）
 export function lineLogMessage(error) {
-  if (error === "auth") return "食事記録ボットに入れられませんでした。LINE で、しょくじを開きなおしてね";
+  if (error === "auth") return "くらぶボットに入れられませんでした。LINE で、しょくじを開きなおしてね";
   if (error === "claim") return "つなぎ先の GAS に、持ち主の登録を受けつけました。10分以内に、GAS エディタで adoptShoqujiOwner を実行してね";
-  if (error === "denied") return "食事記録ボットに入れられませんでした。つなぎ先の持ち主の許可が要ります（記録はこの端末に残っています）";
-  return "食事記録ボットに入れられませんでした。記録はこの端末に残っています";
+  if (error === "denied") return "くらぶボットに入れられませんでした。つなぎ先の持ち主の許可が要ります（記録はこの端末に残っています）";
+  return "くらぶボットに入れられませんでした。記録はこの端末に残っています";
 }

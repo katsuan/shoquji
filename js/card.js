@@ -1,7 +1,7 @@
-// 「カードで送る」のカード（おくるんのお知らせカード。line-share の shared/oqrn.js）と、食事記録ボットが読む記録用の文字
+// 「カードで送る」のカード（おくるんのお知らせカード。line-share の shared/oqrn.js）と、くらぶボットが読む記録用の文字
 // app.js が読む（「カードで送る」のリンクを作るとき）
-import { MEALS } from "./store.js?v=202610251500";
-import { fmt, label } from "./stats.js?v=202610251500";
+import { MEALS } from "./store.js?v=202610252200";
+import { fmt, label } from "./stats.js?v=202610252200";
 
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
 const CARD_COLOR = "#EC8A16"; // ロゴの玉子焼きの黄色
@@ -30,7 +30,7 @@ export function cardUrl(date, logs, t, { sendText = false } = {}) {
   return window.OQRN ? window.OQRN.cardUrl(params) : "#";
 }
 
-// 記録用の文字（食事記録ボットが読む形。line-meal-project の 3_usecase.shoquji.gs）
+// 記録用の文字（くらぶボットが読む形。line-meal-project の 3_usecase.shoquji.gs）
 //   #しょくじ 2026/10/22
 //   朝 トースト 250kcal P8 F6 C40
 function recordText(date, logs) {

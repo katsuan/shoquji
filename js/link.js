@@ -1,9 +1,9 @@
-// 食事記録ボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…）の指定を読む
+// くらぶボットのカード・リッチメニューから開いたとき（?mode=input|logs|summary|quick&meal=…&menu=…&mealDate=…&logId=…）の指定を読む
 // LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
 // 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
 // app.js が読む（開いたときに1回）
-import { MEALS, num } from "./store.js?v=202610251500";
-import { addDays, ymd } from "./stats.js?v=202610251500";
+import { MEALS, num } from "./store.js?v=202610252200";
+import { addDays, ymd } from "./stats.js?v=202610252200";
 
 // 開いた URL（LINE では liff.state の中）から、ボットのカード・メニューの指定を読む
 export function readLink(href = location.href) {
