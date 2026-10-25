@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251900";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251900";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251900";
-import { createBotLink } from "./js/botlink.js?v=202610251900";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251900";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251900";
-import { cardUrl } from "./js/card.js?v=202610251900";
-import { writeDays } from "./js/days.js?v=202610251900";
-import { readLink } from "./js/link.js?v=202610251900";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251900";
-import { $, esc } from "./js/dom.js?v=202610251900";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610252330";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610252330";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610252330";
+import { createBotLink } from "./js/botlink.js?v=202610252330";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610252330";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610252330";
+import { cardUrl } from "./js/card.js?v=202610252330";
+import { writeDays } from "./js/days.js?v=202610252330";
+import { readLink } from "./js/link.js?v=202610252330";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610252330";
+import { $, esc } from "./js/dom.js?v=202610252330";
 
 
 let state = load();
