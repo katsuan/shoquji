@@ -5,7 +5,8 @@
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
-import { LINE_LOG } from "./line-config.js?v=202610251100";
+// js/botlink.js・js/bot-menu.js・app.js が読む
+import { LINE_LOG } from "./line-config.js?v=202610251200";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;
@@ -16,6 +17,7 @@ export const cleanGasUrl = (v) => (GAS.test(String(v ?? "").trim()) ? String(v).
 // LINE のアプリの中か（ブラウザでは LIFF の SDK も読まない）
 export const inLineApp = (ua = globalThis.navigator?.userAgent || "") => /\bLine\//i.test(ua);
 
+// LIFF の SDK を読みこむ（もう読んでいればそのまま）
 function loadSdk() {
   if (window.liff) return Promise.resolve();
   return new Promise((resolve, reject) => {
@@ -64,6 +66,7 @@ function errorCode(text) {
 
 // しょくじの食事の名前 ⇄ ボットの食事の名前（ボットは「間食」を「その他」と書く）
 export const toBotMeal = (meal) => (meal === "間食" ? "その他" : meal);
+// ボットの食事の種類を、しょくじの種類にする（その他 → 間食）
 export const fromBotMeal = (meal) => (["朝", "昼", "夜"].includes(meal) ? meal : "間食");
 
 /**

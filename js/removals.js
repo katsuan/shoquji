@@ -1,13 +1,16 @@
 // 消すのは「元に戻す」を押せるあいだ待ってから、ボットにも送る（閉じる・ほかのアプリに切りかえるときは、すぐ送る）
 //   key：「own:<しょくじの記録の id>」か「bot:<ボットの記録の logId>」。run(keepalive) が実際に消す
+// app.js と js/botlink.js が読む
 const UNDO_MS = 6500;
 const pending = new Map(); // key → { run, timer }
 
+// 消すのを「元に戻す」の時間だけ待ってから run する（同じ key は前のを取り消す）
 export function queueRemoval(key, run) {
   cancelRemoval(key);
   pending.set(key, { run, timer: setTimeout(() => flushRemoval(key), UNDO_MS) });
 }
 
+// 待っている消すのをやめる（「元に戻す」を押したとき）
 export function cancelRemoval(key) {
   const p = pending.get(key);
   if (p) clearTimeout(p.timer);
@@ -20,6 +23,7 @@ export const isWaiting = (key) => pending.has(key);
 // 待っている「しょくじの記録」の id
 export const waitingOwnIds = () => new Set([...pending.keys()].filter((k) => k.startsWith("own:")).map((k) => k.slice(4)));
 
+// 待っている消すを、すぐ送る（閉じるときは keepalive で）
 async function flushRemoval(key, keepalive = false) {
   const p = pending.get(key);
   if (!p) return;

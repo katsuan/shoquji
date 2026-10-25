@@ -1,13 +1,14 @@
-// 食事記録ボットのリッチメニューの画像を描く（2500×1686）。line-meal-project の html/js/richmenu.js を写したもの（そのリポジトリは非公開）。
-// ボタンの位置は、ボットの GAS（4_ui.richmenu.gs の RICH_MENU_LAYOUT）と同じ。描く字・色はボットの色（テラコッタ）のまま
+// 食事記録ボットのリッチメニューの画像を描く（2500×1686）。js/bot-menu.js が読む（見本の画像と、ボットへ送る画像）。
+// ボタンの位置は、ボットの GAS（05_ui.richmenu.gs の RICH_MENU_LAYOUT）と同じ。描く字・色はボットの色（テラコッタ）のまま
 //   しょくじが描くのは、その人の「⚡ よく記録」タブだけ（よく記録するもの 6 品／ほかを入力・並べかえ）。
 //   全員共通の「📝 記録」の画像は、img/meal-richmenu-main.png（ボットの GAS が使う）
-import { fmt } from "./stats.js?v=202610251100";
+import { fmt } from "./stats.js?v=202610251200";
 
 export const LAYOUT = { width: 2500, height: 1686, tabHeight: 250, quickRows: 2, quickCols: 3, quickFooterHeight: 236, quickCount: 6 };
 const C = { bg: "#FBF3EE", card: "#FFFFFF", accent: "#C8553D", accentSoft: "#FDEEE8", ink: "#2D211C", sub: "#6B5E57", line: "#EFE1D9" };
 const FONT = '"M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif';
 
+// リッチメニューの字の書体を読みこむ（読めなくても描く）
 async function ready() {
   try {
     await Promise.all([document.fonts.load(`800 80px ${FONT}`), document.fonts.load(`700 60px ${FONT}`)]);
@@ -16,6 +17,7 @@ async function ready() {
   }
 }
 
+// リッチメニューの大きさ（2500×1686）の canvas を作る
 function canvas() {
   const c = document.createElement("canvas");
   c.width = LAYOUT.width;
@@ -28,6 +30,7 @@ function canvas() {
   return { c, ctx };
 }
 
+// 角の丸い四角を描く（塗り・線は渡したものだけ）
 function roundRect(ctx, x, y, w, h, r, fill, stroke) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
@@ -75,6 +78,7 @@ function fitText(ctx, text, maxWidth, size, weight = 800) {
   return { lines: out, size: s };
 }
 
+// 上の2つのタブ（「📝 記録」「⚡ よく記録」）を描く。active が選ばれている形
 function drawTabs(ctx, active) {
   const half = LAYOUT.width / 2;
   const tabs = [
@@ -93,6 +97,7 @@ function drawTabs(ctx, active) {
   ctx.fillRect(half - 2, 30, 4, LAYOUT.tabHeight - 60);
 }
 
+// ボタン1つ（絵文字・名前・小さい字・左の色）を描く
 function cell(ctx, x, y, w, h, { icon, label, sub, color, pad = 18 }) {
   roundRect(ctx, x + pad, y + pad, w - pad * 2, h - pad * 2, 48, C.card, C.line);
   if (color) {
@@ -119,6 +124,7 @@ function cell(ctx, x, y, w, h, { icon, label, sub, color, pad = 18 }) {
   }
 }
 
+// canvas を画像の data URL にする（1MB をこえそうなら JPEG に）
 function exportImage(c) {
   // LINE は 1MB まで。PNG が大きいときは JPEG に
   let url = c.toDataURL("image/png");

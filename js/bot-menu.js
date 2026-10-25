@@ -3,10 +3,11 @@
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
-import { fmt } from "./stats.js?v=202610251100";
-import { lineLogMessage } from "./linelog.js?v=202610251100";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610251100";
-import { $, esc } from "./dom.js?v=202610251100";
+// app.js が読む（initBotMenu を1回）。js/botlink.js も、つないだときに readProfile・resetProfile を使う
+import { fmt } from "./stats.js?v=202610251200";
+import { lineLogMessage } from "./linelog.js?v=202610251200";
+import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610251200";
+import { $, esc } from "./dom.js?v=202610251200";
 
 
 // MYメニューの名前（種類・量つき）
@@ -16,13 +17,16 @@ let ctx = null; // { lineLog(), state(), ui, link, render, persist, say, startMa
 let profile = null; // ボットの { user, quickMenus, popularMenus, menus, quickRichMenu }（つないだあと、開いたときに読む）
 let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
 
+// ボットから読んだ設定（目標・お知らせ・よく記録するもの・MYメニュー。まだなら null）
 export const getProfile = () => profile;
+// ボットの設定を忘れる（つなげなかった・まだ使っていない人のとき）
 export const resetProfile = () => {
   profile = null;
   pins = null;
 };
 
 const RICH_KEY = "shoquji:richOn"; // 「トークのメニューにも出す」（この端末の設定）
+// 「トークのメニューにも出す」がオンか（この端末の設定。はじめはオン）
 const richOn = () => {
   try {
     return localStorage.getItem(RICH_KEY) !== "0";
@@ -66,7 +70,9 @@ export async function saveProfile(patch, doneText) {
   return res;
 }
 
+// ボットに保存してある固定の並び（masterKey の一覧）
 const savedPins = () => (profile ? profile.quickMenus.filter((m) => m.pinned && m.masterKey).map((m) => m.masterKey) : []);
+// masterKey から MYメニュー・よく記録するものを引ける Map
 export const byKey = () => new Map([...(profile?.menus || []), ...(profile?.quickMenus || [])].filter((m) => m.masterKey).map((m) => [m.masterKey, m]));
 
 // 「⚡ よく記録」に並べる品：固定した順 → あいたところは記録の多い順（カロリーがわからない品は出さない）
@@ -83,10 +89,12 @@ function richItems(list = pins || savedPins()) {
     });
   return out.slice(0, RICH_LAYOUT.quickCount);
 }
+// 「⚡ よく記録」に描いた並びの印（品・カロリー・固定。くらべて描きなおすかを決める）
 const richKey = (items) => JSON.stringify(items.map((i) => [i.name, i.kcal, i.pinned ? 1 : 0]));
 
 // 開いたとき：LINE の「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る（まだなければ作る）
 let richRefreshing = false;
+// 開いたとき：トークの「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る
 async function refreshRichMenuIfStale() {
   if (!ctx.lineLog() || !profile?.quickRichMenu || !richOn() || richRefreshing) return;
   const items = richItems(savedPins());
@@ -136,6 +144,7 @@ function renderPins() {
 }
 
 let previewKey = "";
+// 「⚡ よく記録」の見本の画像を、今の並びで描いて出す（たたみ欄が開いているときだけ）
 async function renderRichPreview() {
   if (!richOn() || !$("quickFold").open) {
     $("richPreview").innerHTML = "";
@@ -150,6 +159,7 @@ async function renderRichPreview() {
   if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="トークのメニュー「⚡ よく記録」の見本">`; // qcheck-ok: W1 url は canvas.toDataURL で作った data: の URL
 }
 
+// ボットの設定と、よく記録するもの・MYメニューの欄のボタンをつなぐ（app.js から1回）
 export function initBotMenu(context) {
   ctx = context;
   $("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "🔔 20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));

@@ -1,16 +1,18 @@
-// しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251100";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251100";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251100";
-import { createBotLink } from "./js/botlink.js?v=202610251100";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251100";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251100";
-import { cardUrl } from "./js/card.js?v=202610251100";
-import { writeDays } from "./js/days.js?v=202610251100";
-import { initLineGuide } from "./js/line-guide.js?v=202610251100";
-import { readLink } from "./js/link.js?v=202610251100";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251100";
-import { $, esc } from "./js/dom.js?v=202610251100";
+// しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
+// index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
+// 食事記録ボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251200";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251200";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251200";
+import { createBotLink } from "./js/botlink.js?v=202610251200";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251200";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251200";
+import { cardUrl } from "./js/card.js?v=202610251200";
+import { writeDays } from "./js/days.js?v=202610251200";
+import { initLineGuide } from "./js/line-guide.js?v=202610251200";
+import { readLink } from "./js/link.js?v=202610251200";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251200";
+import { $, esc } from "./js/dom.js?v=202610251200";
 
 
 let state = load();
@@ -29,13 +31,16 @@ const link = readLink(); // ボットのカード・メニューから開いた�
 
 const NUTRI = ["kcal", "p", "f", "c"];
 
+// いまの記録を端末に残す。残せなければ（プライベートブラウズなど）知らせる
 function persist() {
   if (!save(state)) say("この端末に残せませんでした（プライベートブラウズでは、閉じると消えます）");
 }
 
 // ---- 食事記録ボット（LINE 版で、つないだときだけ。js/botlink.js） ----
 const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit });
+// 食事記録ボットへの呼び出し口（js/linelog.js。つないでいなければ null）
 const lineLog = () => botLink.client(); // つないでいなければ null
+// 画面に出す中身：この端末の記録＋ボットで入れた記録
 const view = () => botLink.view(); // 画面に出す中身：この端末の記録＋ボットで入れた記録
 
 // 知らせは Q キットのトースト（下に数秒）。取り消せるものは「元に戻す」を付ける。読めないときは下の文字で
@@ -56,6 +61,7 @@ function dayOffset() {
   return null;
 }
 
+// 「きょう・きのう・日付」のボタンと日付の欄を、いま見ている日に合わせる
 function renderDays() {
   const off = dayOffset();
   document.querySelectorAll("[data-day]").forEach((b) => b.classList.toggle("is-active", Number(b.dataset.day) === off));
@@ -66,6 +72,7 @@ function renderDays() {
   $("datePick").max = ymd();
 }
 
+// 見る日・記録する日を変えて、直している途中ならやめて描きなおす
 function setDate(date) {
   ui.date = date;
   cancelEdit();
@@ -108,6 +115,7 @@ function allMenus() {
   return base;
 }
 
+// 入力中の名前に合う「よく食べるもの」のボタンを出す
 function renderSuggest() {
   const q = $("name").value.trim();
   const list = allMenus()
@@ -128,12 +136,14 @@ function fillMenu(m) {
   renderSuggest();
 }
 
+// カロリーの欄の赤い文字を消す
 function hideKcalError() {
   $("kcalError").hidden = true;
   $("kcal").removeAttribute("aria-invalid");
 }
 $("kcal").addEventListener("input", hideKcalError);
 
+// 名前の欄の赤い文字を消す
 function hideNameError() {
   $("nameError").hidden = true;
   $("name").removeAttribute("aria-invalid");
@@ -157,6 +167,7 @@ function readForm() {
   return { date: ui.date, meal: ui.meal, name: $("name").value, ...Object.fromEntries(NUTRI.map((k) => [k, $(k).value])) };
 }
 
+// 入力欄を空にもどす（名前・数字・倍率・赤い文字）
 function clearForm() {
   $("name").value = "";
   hideNameError();
@@ -202,6 +213,7 @@ $("saveBtn").addEventListener("click", () => {
 
 // ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない）。カロリーは要る
 let savingRemote = false;
+// ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない。カロリーは要る）
 async function saveRemote(entry) {
   if (savingRemote) return;
   if (!lineLog()) return say("ボットの記録・MYメニューは、LINE 版で直せます");
@@ -309,6 +321,7 @@ function startBotEdit(logId) {
   }
 }
 
+// この端末の記録を、入力欄に開いて直せるようにする
 function startEdit(id) {
   const log = state.logs.find((l) => l.id === id);
   if (!log) return;
@@ -319,6 +332,7 @@ function startEdit(id) {
   $("formTitle").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+// 直している途中ならやめて、入力欄を空にもどす
 function cancelEdit() {
   if (!ui.editing && !ui.botEdit && !ui.masterEdit) return;
   ui.editing = null;
@@ -375,6 +389,7 @@ function itemHtml(l) {
           </div>`;
 }
 
+// その日の記録を、食事ごとのまとまりの HTML にする
 function dayListHtml(logs) {
   return MEALS.map((meal) => {
     const items = logs.filter((l) => l.meal === meal);
@@ -384,6 +399,7 @@ function dayListHtml(logs) {
 }
 
 let emptyEmoji = null; // 記録がない日のあいさつに付ける季節の絵文字（"" は付けない）
+// 「この日のしょくじ」（合計と目標・食事ごとの一覧・カードで送る）を描く
 function renderDay() {
   const logs = logsOf(view(), ui.date);
   const t = totals(logs);
@@ -466,6 +482,7 @@ function renderLookback() {
 
 // ---- 目標・控え ----
 const TARGET_INPUTS = { tKcal: "kcal", tP: "p", tF: "f", tC: "c" };
+// 目標の欄に、いまの目標を入れる
 function renderTargets() {
   Object.entries(TARGET_INPUTS).forEach(([id, k]) => ($(id).value = state.targets[k]));
 }

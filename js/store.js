@@ -6,11 +6,13 @@
 // 消した記録の id は deleted に残す（同じく、あとでそろえるとき用。古いものから 500 件まで）
 // gasUrl：LINE 版のときに、記録を入れる食事記録ボットの GAS の URL（使う人が自分で入れる。秘密ではない。js/linelog.js と同じ形）
 // sent：食事記録ボットに入れた記録の id（もう一度送らないため。古いものから 2000 件まで）
+// app.js と js/ の部品（botlink・card・link・stats）が読む
 
 const KEY = "shoquji:v1";
 export const MEALS = ["朝", "昼", "夜", "間食"];
 const DEFAULT_TARGETS = { kcal: 2000, p: 65, f: 60, c: 280 };
 
+// 空の記録（はじめて開いたとき・全部消したとき）
 function blank() {
   return { v: 1, logs: [], targets: { ...DEFAULT_TARGETS }, deleted: [], sendText: false, gasUrl: "", sent: [] };
 }
@@ -71,10 +73,12 @@ function clean(raw) {
   return s;
 }
 
+// 記録の id を作る（時刻＋でたらめな文字）
 function newId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+// 端末から記録を読む（読めなければ空）。形を確かめてそろえる
 export function load() {
   try {
     return clean(JSON.parse(localStorage.getItem(KEY) || "null"));
@@ -83,6 +87,7 @@ export function load() {
   }
 }
 
+// 記録を端末に残す。残せなければ false
 export function save(state) {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
@@ -92,6 +97,7 @@ export function save(state) {
   }
 }
 
+// 記録を1件足して、足した記録を返す
 export function addLog(state, entry) {
   const now = Date.now();
   const log = { id: newId(), ...normalize(entry), at: now, upd: now };
@@ -99,6 +105,7 @@ export function addLog(state, entry) {
   return log;
 }
 
+// 記録を直して、直した記録を返す（なければ null）
 export function updateLog(state, id, entry) {
   const log = state.logs.find((l) => l.id === id);
   if (!log) return null;
@@ -106,6 +113,7 @@ export function updateLog(state, id, entry) {
   return log;
 }
 
+// 記録を消し、消した印を残す（あとで生き返らないように）
 export function removeLog(state, id) {
   const before = state.logs.length;
   state.logs = state.logs.filter((l) => l.id !== id);
@@ -119,6 +127,7 @@ export function restoreLog(state, log) {
   state.deleted = state.deleted.filter((id) => id !== log.id);
 }
 
+// 入力の中身を、記録の形にそろえる（食事の種類・名前の長さ・数）
 function normalize(e) {
   return {
     date: e.date,
@@ -164,6 +173,7 @@ export function markSent(state, ids) {
   state.sent = [...set].slice(-2000);
 }
 
+// 記録を全部消して、空の記録を返す
 export function reset() {
   const s = blank();
   save(s);

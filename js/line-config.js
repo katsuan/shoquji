@@ -6,6 +6,7 @@
 // liffId が空のあいだは、LINE の中で開いても今までどおり（端末の中だけ）。
 //   gasUrl：この LIFF で開いたときに、何も入れなくてもつながる食事記録ボットの GAS（ボットの持ち主のもの。秘密ではない）。
 //          「⚙️ 食事記録ボットとつなぐ」に自分の GAS の URL を入れた人は、そちらにつながる
+// js/botlink.js・js/linelog.js・app.js が読む
 export const LINE_LOG = {
   liffId: "2010088825-CulmmaFc",
   gasUrl: "https://script.google.com/macros/s/AKfycby44a0PmVW3aaTUOw-hWEkOZQzCcvQqOTFAx4uchy5WcQK1K2WjkvCof90VK7ADSqIc/exec"

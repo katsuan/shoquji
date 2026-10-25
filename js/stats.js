@@ -1,13 +1,16 @@
-// しょくじ：集計（画面に関係しない計算だけ）
-import { MEALS } from "./store.js?v=202610251100";
+// しょくじ：日付と集計の計算（合計・よく食べるもの・1週間・続けた日数）。画面にはさわらない。
+// app.js と js/ のほかの部品が読む
+import { MEALS } from "./store.js?v=202610251200";
 
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 
+// 日付を「2026-10-25」の形にする（端末の時刻で）
 export function ymd(d = new Date()) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// 「2026-10-25」の n 日あと（マイナスなら前）を返す
 export function addDays(date, n) {
   const [y, m, d] = date.split("-").map(Number);
   return ymd(new Date(y, m - 1, d + n));
@@ -28,6 +31,7 @@ export function mealNow(d = new Date()) {
   return "間食";
 }
 
+// その日の記録を、朝・昼・夜・間食、記録した順に並べて返す
 export function logsOf(state, date) {
   return state.logs.filter((l) => l.date === date).sort((a, b) => MEALS.indexOf(a.meal) - MEALS.indexOf(b.meal) || a.at - b.at);
 }
@@ -81,6 +85,7 @@ export function streak(state, today) {
   return n;
 }
 
+// 数を「1,234.5」の形にする（null なら ""）
 export function fmt(n) {
   return n == null ? "" : Number(n).toLocaleString("ja-JP", { maximumFractionDigits: 1 });
 }

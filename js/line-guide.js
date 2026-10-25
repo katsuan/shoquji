@@ -1,9 +1,11 @@
 // 「📱 LINE 版で使う」：ブラウザで開いたときの「LINEで開く」の案内と、4コマの使い方（最初だけ。閉じたら出さない）。つづくと同じ作り
 //   「⚙️ 食事記録ボットとつなぐ」の「👀 使い方（4コマ）を見る」で、また出る（LINE 版でも）
-import { $, esc } from "./dom.js?v=202610251100";
+// app.js が読む（開いたときに1回 initLineGuide）
+import { $, esc } from "./dom.js?v=202610251200";
 
 const BANNER_KEY = "shoquji:lineBannerOff"; // この端末で閉じたか（設定なので端末に残してよい）
 
+// 「📱 LINE 版で使う」の案内と4コマを出す（ブラウザ版で、閉じていなければ）
 export function initLineGuide({ inside, openUrl, say }) {
   let off = false;
   try {
