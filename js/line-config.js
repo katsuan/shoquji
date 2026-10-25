@@ -9,7 +9,7 @@
 //          「⚙️ くらぶボットとつなぐ」に自分の GAS の URL を入れた人は、そちらにつながる
 // js/botlink.js・js/linelog.js・app.js が読む
 export const LINE_LOG = {
-  liffId: "2010088825-CulmmaFc",
+  liffId: "2012187502-BVvVhWZM",
   gasUrl: "https://script.google.com/macros/s/AKfycbyZwDlGzlZzy35czwMM5kB7gRiZZC3_CslS8JYo6BD_sBPYRoevADmwCwTQzZaJnYeraw/exec"
 };
 
