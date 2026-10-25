@@ -6,7 +6,7 @@
 // - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
 //   （submitMealBatch・listMealLogs）
 // js/botlink.js・js/bot-menu.js・app.js が読む
-import { LINE_LOG } from "./line-config.js?v=202610251200";
+import { LINE_LOG } from "./line-config.js?v=202610251300";
 
 const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
 const TIMEOUT_MS = 15000;

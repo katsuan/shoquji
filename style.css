@@ -182,3 +182,7 @@ body {
 
 /* LINE で開く良さ（「📱 LINE 版で使う」の上。つづくと同じ形） */
 .line-merit { display: grid; gap: 4px; margin: 0 0 8px; padding-left: 0; list-style: none; }
+
+/* 見出しを、ことばの途中で折り返さない（「つな／ぐ」にしない）。折り返すなら .nw のまとまりの間で */
+.nw { display: inline-block; }
+.ls-fold > summary .ls-fold-meta { white-space: nowrap; }
