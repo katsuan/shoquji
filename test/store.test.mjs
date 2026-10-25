@@ -1,5 +1,6 @@
 // しょくじ：控えの読みこみ・集計のテスト（画面に触らない部分）
 //   node --test test/
+import "./_botlink.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { addLog, exportJson, importJson } from "../js/store.js";

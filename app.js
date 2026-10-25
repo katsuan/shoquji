@@ -1,18 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // 食事記録ボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251300";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251300";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251300";
-import { createBotLink } from "./js/botlink.js?v=202610251300";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251300";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251300";
-import { cardUrl } from "./js/card.js?v=202610251300";
-import { writeDays } from "./js/days.js?v=202610251300";
-import { initLineGuide } from "./js/line-guide.js?v=202610251300";
-import { readLink } from "./js/link.js?v=202610251300";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251300";
-import { $, esc } from "./js/dom.js?v=202610251300";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251500";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251500";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251500";
+import { createBotLink } from "./js/botlink.js?v=202610251500";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251500";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251500";
+import { cardUrl } from "./js/card.js?v=202610251500";
+import { writeDays } from "./js/days.js?v=202610251500";
+import { readLink } from "./js/link.js?v=202610251500";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251500";
+import { $, esc } from "./js/dom.js?v=202610251500";
 
 
 let state = load();
@@ -610,8 +609,13 @@ $("gasUrl").addEventListener("change", () => {
 openFromLink();
 botLink.connect();
 
-// ---- LINE で使う：ブラウザで開いたときの案内と、4コマ（js/line-guide.js） ----
-initLineGuide({ inside: inLineApp(), openUrl: OPEN_URL, say });
+// ---- LINE 版で使う：ブラウザで開いたときの案内と、4コマ（最初だけ。閉じたら出さない。Q キットの shared/botlink.js の guide） ----
+window.QBotLink?.guide({
+  key: "shoquji:lineBannerOff", // この端末で閉じたか（設定なので端末に残してよい）
+  openUrl: OPEN_URL,
+  say,
+  closedText: "案内を閉じました（「⚙️ 食事記録ボットとつなぐ」からまた見られます）"
+});
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
 let shownToday = ymd();

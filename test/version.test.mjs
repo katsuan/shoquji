@@ -1,6 +1,7 @@
 // 読みこみの印（?v=…）を変え忘れていないか
 //   app.js・style.css・js/*.js を変えたのに印が前のコミットと同じだと、ブラウザが古い部品と新しい部品をまぜて読み、
 //   「〇〇という名前はない」で止まって、画面がまるごと出なくなる（2026-10-24 に起きた）
+import "./_botlink.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execSync } from "node:child_process";

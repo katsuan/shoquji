@@ -3,55 +3,35 @@
 // - ボットに送るのは LIFF の ID トークンだけ（だれかはボット側が LINE に確かめる）。トークンは端末に残さない（W7）
 // - つなぐ先は、使う人が自分で入れた GAS の URL だけ（URL の ?〜 からは受けとらない。W5・W9）
 // - ブラウザで開いたとき・設定が空のときは何もしない（しょくじは今までどおり端末の中だけ）
-// - つくりは、つづく（q-tuzuq）の js/linelog.js を写したもの。ボット側の受け口は line-meal-project の 6_web/6_webapp.gs
-//   （submitMealBatch・listMealLogs）
+// - つなぐ・送るの中身は Q キットの共通の部品（q-oqrn の shared/botlink.js。window.QBotLink。つづくと同じ）。
+//   ここはしょくじの分だけ（送る中身・ボットの言葉の読みかえ）。ボット側の受け口は line-meal-project の 07_web
+//   （submitMealBatch・listMealLogs など）。送る形はくらぶボットの形 { app: "qlove", v: 1, tool: "shoquji", action, … }
+//   （食事記録ボットは action で受けるので、前の形と同じように受けられる）
 // js/botlink.js・js/bot-menu.js・app.js が読む
-import { LINE_LOG } from "./line-config.js?v=202610251300";
+import { LINE_LOG } from "./line-config.js?v=202610251500";
 
-const SDK = "https://static.line-scdn.net/liff/edge/2/sdk.js";
-const TIMEOUT_MS = 15000;
+const Q = () => globalThis.QBotLink;
+const TOOL = "shoquji";
+// つなぐ GAS の URL の形（ちがえば ""）。共通の部品が読めなかったときも、入れてある URL を消さないよう同じ形で確かめる
 const GAS = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,120}\/exec$/;
-// つなぐ GAS の URL の形（ちがえば ""）
-export const cleanGasUrl = (v) => (GAS.test(String(v ?? "").trim()) ? String(v).trim() : "");
+export const cleanGasUrl = (v) => (Q() ? Q().cleanUrl(v) : GAS.test(String(v ?? "").trim()) ? String(v).trim() : "");
 
 // LINE のアプリの中か（ブラウザでは LIFF の SDK も読まない）
-export const inLineApp = (ua = globalThis.navigator?.userAgent || "") => /\bLine\//i.test(ua);
-
-// LIFF の SDK を読みこむ（もう読んでいればそのまま）
-function loadSdk() {
-  if (window.liff) return Promise.resolve();
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = SDK;
-    s.charset = "utf-8";
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("sdk"));
-    document.head.append(s);
-  });
-}
+export const inLineApp = (ua) => (Q() ? Q().inLineApp(ua) : false);
 
 /**
- * つなげるときは { record, list } を、つなげないときは null を返す
+ * つなげるときは { record, list, … } を、つなげないときは null を返す
  * - LINE のアプリの中で、LIFF として開き、ログインしているときだけ
+ * - つなぎ先：自分で入れた URL（なければ、この LIFF の食事記録ボット）。どちらもなければ、くらぶボットに「しょくじ」の機能があるとき
  */
 export async function startLineLog(gasUrl, config = LINE_LOG) {
+  const B = Q();
   const liffId = String(config?.liffId || "");
-  if (!liffId || !cleanGasUrl(gasUrl) || !inLineApp()) return null;
-  try {
-    await loadSdk();
-    await Promise.race([liff.init({ liffId }), new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 10000))]);
-    if (!liff.isInClient() || !liff.isLoggedIn()) return null;
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-  return makeClient(gasUrl, () => {
-    try {
-      return liff.getIDToken() || "";
-    } catch {
-      return "";
-    }
-  });
+  if (!B || !liffId || !B.inLineApp()) return null;
+  const to = await B.target({ own: gasUrl, tool: TOOL });
+  if (!to) return null;
+  const client = await B.start({ liffId, url: to.url, tool: TOOL, mapError: errorCode });
+  return client ? ops(client) : null;
 }
 
 // ボットのやさしい文の失敗を、短い印に（claim：持ち主の登録を受けつけた／guest：このボットをまだ使っていない人／auth：開きなおす／denied：許可待ち・停止／fail：そのほか）
@@ -73,30 +53,13 @@ export const fromBotMeal = (meal) => (["朝", "昼", "夜"].includes(meal) ? mea
  * ボットへの呼び出し（テストでは fetch と ID トークンを差しかえる）
  * 返事は { ok, ... } か { ok: false, error }（error：claim・guest・auth・denied・fail・net）
  */
-export function makeClient(gasUrl, getIdToken, fetchImpl = (...a) => fetch(...a)) {
-  async function post(body, keepalive = false) {
-    const idToken = getIdToken();
-    if (!idToken) return { ok: false, error: "auth" };
-    const ctrl = typeof AbortController === "function" ? new AbortController() : null;
-    const timer = ctrl && setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-    try {
-      // text/plain なら、GAS に前もっての問い合わせ（preflight）がいらない
-      const res = await fetchImpl(gasUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ idToken, ...body }),
-        keepalive,
-        signal: ctrl?.signal
-      });
-      const json = await res.json();
-      if (!json || typeof json !== "object") return { ok: false, error: "net" };
-      return json.ok ? json : { ok: false, error: errorCode(json.error) };
-    } catch {
-      return { ok: false, error: "net" };
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-  }
+export function makeClient(gasUrl, getIdToken, fetchImpl, { liffId = LINE_LOG.liffId } = {}) {
+  return ops(Q().makeClient(gasUrl, getIdToken, { tool: TOOL, liffId, fetch: fetchImpl, mapError: errorCode }));
+}
+
+// しょくじがボットに頼むこと（body.action がボットの action。keepalive は閉じるとき）
+function ops(client) {
+  const post = ({ action, ...rest }, keepalive = false) => client.call(action, rest, { keepalive });
   return {
     // しょくじの記録（{ id, date, meal, name, kcal, p, f, c }）を、ボットに入れる。同じ id は何度送っても1回だけ入る
     record: (logs, keepalive) =>

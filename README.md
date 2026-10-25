@@ -65,12 +65,11 @@ LINE の中（LIFF）で開いたしょくじだけ、自分の食事記録ボ�
 | `js/link.js` | ボットのカード・リッチメニューから開いたときの指定（`?mode=…&meal=…&logId=…`）を読む |
 | `js/removals.js` | 消すのを「元に戻す」の時間だけ待ってから、ボットにも送る |
 | `js/days.js` | つづくが読む、記録がある日の一覧（`shoquji:days`） |
-| `js/line-guide.js` | 「📱 LINE 版で使う」の案内と4コマ |
 | `js/store.js` | 記録の保存・控えの書き出しと読みこみ |
 | `js/stats.js` | 計算（日付・合計・よく食べるもの・1週間・続けた日数） |
 | `js/dom.js` | 画面の部品を id で取る（`$`）と、HTML に入れる文字を安全にする（`esc`） |
 | `js/meal-richmenu.js` | 食事記録ボットのリッチメニュー「⚡ よく記録」の画像を描く（もとは line-meal-project の前の画面の `richmenu.js`。いまはここが元） |
-| `js/linelog.js`・`js/line-config.js` | LINE 版のときの、食事記録ボットとのつなぎ（つづくの写し）と、その LIFF の ID |
+| `js/linelog.js`・`js/line-config.js` | LINE 版のときの、食事記録ボットに頼むこと（送る・読む・直す・消す・MYメニューなど）と、その LIFF の ID。つなぐ・送る・LINE 版の案内（4コマ）は、Q キットの共通の部品 `shared/botlink.js`（`window.QBotLink`。index.html で読む。テストは `test/_botlink.mjs` で q-oqrn から読む）。送る形はくらぶボットの `{ app: "qlove", v: 1, tool: "shoquji", action, … }`（食事記録ボットは action で受ける） |
 | `img/meal-richmenu-main.png` | 食事記録ボットの共通のリッチメニュー（「📝 記録」）の画像。ボットの GAS が、メニューを作りなおすときにここから取る |
 | `docs/linelog-setup.html` | 自分の食事記録ボットとつなぐ手順と、受け口の約束 |
 | `test/` | 控えの読みこみと計算・ボットとのつなぎ・読みこみの印（`?v=`）のそろえ忘れのテスト（`node --test test/`。`package.json` は node に js/ を読ませるためだけ） |

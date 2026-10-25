@@ -6,13 +6,13 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610251300";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610251300";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610251300";
-import { LINE_LOG } from "./line-config.js?v=202610251300";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610251300";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610251300";
-import { $ } from "./dom.js?v=202610251300";
+import { addDays, ymd } from "./stats.js?v=202610251500";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610251500";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610251500";
+import { LINE_LOG } from "./line-config.js?v=202610251500";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610251500";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610251500";
+import { $ } from "./dom.js?v=202610251500";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -189,7 +189,7 @@ export function createBotLink(ctx) {
     client = null;
     return startLineLog(gasTarget()).then(async (next) => {
       // つなぎ先がある人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
-      $("reopenInLiff").hidden = !!next || !gasTarget() || !inLineApp();
+      $("reopenInLiff").hidden = window.QBotLink ? window.QBotLink.reopenHidden({ client: next, url: gasTarget() }) : true;
       showConnected(false);
       if (!next) return had && ctx.render();
       client = next;

@@ -1,6 +1,7 @@
 // しょくじ：LINE の中（LIFF）で開いたときの、食事記録ボットとのつなぎのテスト（画面に触らない部分）
 //   node --test test/
 // つくりは、つづく（q-tuzuq）の test/linelog.test.mjs を写したもの
+import "./_botlink.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -12,6 +13,9 @@ globalThis.localStorage = {
 };
 const { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, makeClient, startLineLog, toBotMeal } = await import("../js/linelog.js");
 const store = await import("../js/store.js");
+const { LINE_LOG } = await import("../js/line-config.js");
+// くらぶボットの形の、決まった項目（tool は shoquji。liffId は LINE 版の ID）
+const head = (action) => ({ app: "qlove", v: 1, tool: "shoquji", action, liffId: LINE_LOG.liffId, idToken: TOKEN });
 
 const GAS = "https://script.google.com/macros/s/AKfyTEST_123/exec";
 const TOKEN = "head.payload.sign";
@@ -29,8 +33,7 @@ test("ボットに送るのは ID トークンと記録だけ（userId は送ら
   assert.equal(seen[0].opt.method, "POST");
   assert.match(seen[0].opt.headers["Content-Type"], /^text\/plain/);
   assert.deepEqual(seen[0].body, {
-    idToken: TOKEN,
-    action: "submitMealBatch",
+    ...head("submitMealBatch"),
     source: "shoquji",
     dedupe: false,
     sendLineSummary: false,
@@ -38,7 +41,7 @@ test("ボットに送るのは ID トークンと記録だけ（userId は送ら
   });
   assert.ok(!("userId" in seen[0].body));
   await c.list("2026-09-01", "2026-10-24");
-  assert.deepEqual(seen[1].body, { idToken: TOKEN, action: "listMealLogs", from: "2026-09-01", to: "2026-10-24" });
+  assert.deepEqual(seen[1].body, { ...head("listMealLogs"), from: "2026-09-01", to: "2026-10-24" });
 });
 
 test("ID トークンがないときは送らない。通信できないときは net。ボットのやさしい文は短い印に", async () => {
@@ -112,15 +115,15 @@ test("直す・消す・設定の呼び出しの形（自分の記録は clientI
   const seen = [];
   const c = makeClient(GAS, () => TOKEN, okFetch({ ok: true }, seen));
   await c.updateOwn({ id: "abc123", date: "2026-10-24", meal: "夜", name: "そば", kcal: null, p: null, f: null, c: null });
-  assert.deepEqual(seen[0].body, { idToken: TOKEN, action: "updateMealLog", source: "shoquji", clientId: "abc123", allowPending: true, mealDate: "2026-10-24", meal: "夜", menu: "そば", kcal: null, protein: null, fat: null, carb: null, saveToMaster: false, sendLineSummary: false });
+  assert.deepEqual(seen[0].body, { ...head("updateMealLog"), source: "shoquji", clientId: "abc123", allowPending: true, mealDate: "2026-10-24", meal: "夜", menu: "そば", kcal: null, protein: null, fat: null, carb: null, saveToMaster: false, sendLineSummary: false });
   await c.removeOwn("abc123");
-  assert.deepEqual(seen[1].body, { idToken: TOKEN, action: "deleteMealLog", source: "shoquji", clientId: "abc123" });
+  assert.deepEqual(seen[1].body, { ...head("deleteMealLog"), source: "shoquji", clientId: "abc123" });
   await c.removeBot("L9");
-  assert.deepEqual(seen[2].body, { idToken: TOKEN, action: "deleteMealLog", source: "shoquji", logId: "L9" });
+  assert.deepEqual(seen[2].body, { ...head("deleteMealLog"), source: "shoquji", logId: "L9" });
   await c.profile({ notify: true });
-  assert.deepEqual(seen[3].body, { idToken: TOKEN, action: "updateProfile", source: "shoquji", notify: true });
+  assert.deepEqual(seen[3].body, { ...head("updateProfile"), source: "shoquji", notify: true });
   await c.state();
-  assert.deepEqual(seen[4].body, { idToken: TOKEN, action: "getLiffAppState", source: "shoquji" });
+  assert.deepEqual(seen[4].body, { ...head("getLiffAppState"), source: "shoquji" });
 });
 
 test("しょくじの記録とボットの行をそろえる：消した記録はボットからも、ちがうときは、あとから直したほうに", async () => {
