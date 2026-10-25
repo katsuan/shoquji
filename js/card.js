@@ -1,6 +1,6 @@
 // 「カードで送る」のカード（おくるんのお知らせカード。line-share の shared/oqrn.js）と、食事記録ボットが読む記録用の文字
-import { MEALS } from "./store.js?v=202610250700";
-import { fmt, label } from "./stats.js?v=202610250700";
+import { MEALS } from "./store.js?v=202610251100";
+import { fmt, label } from "./stats.js?v=202610251100";
 
 const PAGE_URL = "https://katsuan.github.io/shoquji/";
 const CARD_COLOR = "#EC8A16"; // ロゴの玉子焼きの黄色

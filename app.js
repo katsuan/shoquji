@@ -1,15 +1,16 @@
 // しょくじ（ShoQuji）：画面の操作。記録はこの端末の中だけ（js/store.js）、計算は js/stats.js
-import { MEALS, addLog, exportJson, importJson, load, markSent, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610250700";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610250700";
-import { botLogsForView, cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, planSync, startLineLog, toBotMeal } from "./js/linelog.js?v=202610250700";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610250700";
-import { byKey, dn, getProfile, initBotMenu, readProfile, resetProfile, saveProfile } from "./js/bot-menu.js?v=202610250700";
-import { cardUrl } from "./js/card.js?v=202610250700";
-import { writeDays } from "./js/days.js?v=202610250700";
-import { initLineGuide } from "./js/line-guide.js?v=202610250700";
-import { readLink } from "./js/link.js?v=202610250700";
-import { cancelRemoval, isWaiting, queueRemoval, waitingOwnIds } from "./js/removals.js?v=202610250700";
-import { $, esc } from "./js/dom.js?v=202610250700";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610251100";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610251100";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610251100";
+import { createBotLink } from "./js/botlink.js?v=202610251100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610251100";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610251100";
+import { cardUrl } from "./js/card.js?v=202610251100";
+import { writeDays } from "./js/days.js?v=202610251100";
+import { initLineGuide } from "./js/line-guide.js?v=202610251100";
+import { readLink } from "./js/link.js?v=202610251100";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610251100";
+import { $, esc } from "./js/dom.js?v=202610251100";
 
 
 let state = load();
@@ -32,181 +33,10 @@ function persist() {
   if (!save(state)) say("この端末に残せませんでした（プライベートブラウズでは、閉じると消えます）");
 }
 
-// ---- 食事記録ボット（LINE の中で開いて、つないだときだけ。js/linelog.js） ----
-let lineLog = null; // startLineLog の返事（つなげないときは null）
-const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE 版のときだけ出す
-const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（開いてすぐ出すため。LINE の中でつないだときだけ）
-const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
-// つなぐ先：自分で入れた URL。なければ、この LIFF の食事記録ボット
-const gasTarget = () => state.gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
-let bot = loadBot();
-let lastRead = 0;
-let botRange = null; // ボットの記録を読んだ期間 { from, to }
-const hiddenBot = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す。js/removals.js が待つ）
-
-function loadBot() {
-  if (!inLine || !gasTarget()) return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(BOT_KEY) || "null");
-    return raw && raw.gasUrl === gasTarget() && Array.isArray(raw.logs) ? raw.logs : [];
-  } catch {
-    return [];
-  }
-}
-
-// 画面に出す中身：この端末の記録＋ボットで入れた記録（しょくじから送ったもの・消したものは除く）。ボットの記録は端末には足さない
-function view() {
-  if (!bot.length) return state;
-  const shown = bot.filter((b) => !hiddenBot.has(String(b.logId)));
-  return { ...state, logs: [...state.logs, ...botLogsForView(shown, state.logs, state.deleted)] };
-}
-
-// しょくじで消した自分の記録：ボットに送ってあれば、ボットからも消す
-function removeOwnLater(log) {
-  if (!lineLog || !state.sent.includes(log.id)) return;
-  queueRemoval(`own:${log.id}`, async (keepalive) => {
-    const res = await lineLog.removeOwn(log.id, keepalive);
-    if (!res.ok && !keepalive) say(lineLogMessage(res.error));
-  });
-}
-
-// ボットの記録を消す（画面からは先に消し、「元に戻す」を押せるあいだは待つ）
-function removeBot(logId) {
-  const b = bot.find((x) => String(x.logId) === String(logId));
-  if (!b || !lineLog) return;
-  if (ui.botEdit === String(logId)) cancelEdit();
-  hiddenBot.add(String(logId));
-  render();
-  queueRemoval(`bot:${logId}`, async (keepalive) => {
-    const res = await lineLog.removeBot(String(logId), keepalive);
-    if (res.ok) {
-      bot = bot.filter((x) => String(x.logId) !== String(logId));
-      hiddenBot.delete(String(logId));
-    } else if (!keepalive) {
-      hiddenBot.delete(String(logId));
-      say(lineLogMessage(res.error));
-    }
-    render();
-  });
-  say(`🗑 「${b.menu}」を消しました（食事記録ボットからも）`, () => {
-    cancelRemoval(`bot:${logId}`);
-    hiddenBot.delete(String(logId));
-    render();
-  });
-}
-
-// このボットをまだ使っていない人（公開ページから LINE で開いた人など）：知らせを出さず、つながない（端末の中だけ）
-function asGuest(res) {
-  if (!res || res.error !== "guest") return false;
-  lineLog = null;
-  bot = [];
-  resetProfile();
-  showConnected(false);
-  render();
-  return true;
-}
-
-// 食事記録ボットとつながっているときだけ出すもの（記録の置き場所の説明・つながっている説明・よく記録するもの・20時のお知らせ）
-function showConnected(on) {
-  ["whereNote", "lineLogNote", "quickFold", "botNotifyRow"].forEach((id) => ($(id).hidden = !on));
-  $("lineIntro").hidden = on;
-}
-
-// 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
-async function sendToBot(logs, { quiet = false } = {}) {
-  if (!lineLog || !logs.length) return;
-  const res = await lineLog.record(logs);
-  if (asGuest(res)) return;
-  if (res.ok) {
-    markSent(state, logs.map((l) => l.id));
-    persist();
-    if (!quiet && res.added?.length) say(`🤖 食事記録ボットにも入れました`);
-    return;
-  }
-  if ((res.error === "net" || res.error === "fail") && window.LineShareUI?.toast) {
-    window.LineShareUI.toast(lineLogMessage(res.error), { actionLabel: "もう一度", onAction: () => sendToBot(logs), ms: 8000 });
-  } else {
-    say(lineLogMessage(res.error));
-  }
-}
-
-// まだボットに入れていない、ここ7日の記録を入れる（つながったとき。電波がなかったときの分など）
-function sendUnsent() {
-  const from = addDays(ymd(), -6);
-  const sent = new Set(state.sent);
-  const todo = state.logs.filter((l) => l.date >= from && !sent.has(l.id)).slice(0, 30);
-  return sendToBot(todo, { quiet: true });
-}
-
-// ボットで入れた記録を読む（つながったとき・戻ってきたとき。1分に1回まで）
-async function readBot(force = false, given = null) {
-  if (!lineLog || (!force && Date.now() - lastRead < 60000)) return;
-  lastRead = Date.now();
-  const res = given || (await lineLog.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd()));
-  if (asGuest(res)) return;
-  if (!res.ok) {
-    if (res.error !== "net") say(lineLogMessage(res.error));
-    return;
-  }
-  bot = Array.isArray(res.logs) ? res.logs : [];
-  // 読んだ期間（全部読めたときだけ。この中でだけ、ないものを「ほかで消された」とみなす）
-  botRange = res.from && res.to && res.complete === true ? { from: res.from, to: res.to } : null;
-  try {
-    localStorage.setItem(BOT_KEY, JSON.stringify({ gasUrl: gasTarget(), logs: bot }));
-  } catch {
-    // 残せなくても、開いているあいだは出る
-  }
-  render();
-  syncWithBot();
-}
-
-// しょくじの自分の記録とボットの行がずれていたら、そろえる（画面の合計とボットのカードの合計を同じに）。
-// 消した記録はボットからも消し、中身がちがえば、あとから直したほうに合わせる（js/linelog.js の planSync）
-let syncing = false;
-async function syncWithBot() {
-  if (!lineLog || syncing) return;
-  const waiting = waitingOwnIds();
-  const plan = planSync(bot, state.logs, state.deleted, waiting, { sent: state.sent, range: botRange });
-  if (!plan.push.length && !plan.pull.length && !plan.remove.length && !plan.drop.length) return;
-  syncing = true;
-  // ほかの端末（LINE 版）で消された自分の記録：手元からも消す（消した印も残すので、あとで生き返らない）
-  plan.drop.forEach((id) => removeLog(state, id));
-  if (plan.drop.length) persist();
-  // ボットのほうが新しい（トークでカロリーを入れたなど）：しょくじの記録を直す（ボットには送りなおさない）
-  plan.pull.forEach(({ id, entry }) => updateLog(state, id, entry));
-  if (plan.pull.length) persist();
-  let changed = false;
-  for (const l of plan.push) changed = (await lineLog.updateOwn(l)).ok || changed;
-  for (const id of plan.remove) changed = (await lineLog.removeOwn(id)).ok || changed;
-  syncing = false;
-  render();
-  if (changed) readBot(true);
-}
-
-// つなぎ先を入れなおしたときも、ここからやりなおす
-function connectLineLog() {
-  const had = !!lineLog;
-  lineLog = null;
-  return startLineLog(gasTarget()).then(async (client) => {
-    // つなぎ先がある人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
-    $("reopenInLiff").hidden = !!client || !gasTarget() || !inLineApp();
-    showConnected(false);
-    if (!client) return had && render();
-    lineLog = client;
-    // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う（つながった表示も出さない）
-    const first = await client.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
-    if (asGuest(first)) return;
-    showConnected(true);
-    render();
-    await readBot(true, first);
-    await sendUnsent();
-    await readProfile();
-    if (link.logId && !link.used) {
-      link.used = true;
-      startBotEdit(link.logId);
-    }
-  });
-}
+// ---- 食事記録ボット（LINE 版で、つないだときだけ。js/botlink.js） ----
+const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit });
+const lineLog = () => botLink.client(); // つないでいなければ null
+const view = () => botLink.view(); // 画面に出す中身：この端末の記録＋ボットで入れた記録
 
 // 知らせは Q キットのトースト（下に数秒）。取り消せるものは「元に戻す」を付ける。読めないときは下の文字で
 function say(text, undo) {
@@ -355,17 +185,14 @@ $("saveBtn").addEventListener("click", () => {
     say(`✏️ 「${entry.name.trim()}」を直しました`);
     ui.editing = null;
     // ボットにも：送ってあれば直す、まだなら送る
-    if (edited && lineLog) {
-      if (state.sent.includes(edited.id)) lineLog.updateOwn(edited).then((res) => !res.ok && say(lineLogMessage(res.error)));
-      else sendToBot([edited], { quiet: true });
-    }
+    if (edited) botLink.sendSaved(edited, { edited: true });
   } else {
     const log = addLog(state, entry);
     ui.justAdded = log.id;
     // 季節の絵文字をときどき（Q キットの season.js。読めていなければ付けない）
     const done = `🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`;
     say(window.QSeason ? QSeason.decorate(done) : done);
-    sendToBot([log], { quiet: true });
+    botLink.sendSaved(log);
   }
   savedAt = Date.now();
   persist();
@@ -377,7 +204,7 @@ $("saveBtn").addEventListener("click", () => {
 let savingRemote = false;
 async function saveRemote(entry) {
   if (savingRemote) return;
-  if (!lineLog) return say("ボットの記録・MYメニューは、LINE 版で直せます");
+  if (!lineLog()) return say("ボットの記録・MYメニューは、LINE 版で直せます");
   const e = { ...entry, name: entry.name.trim(), kcal: num(entry.kcal), p: num(entry.p), f: num(entry.f), c: num(entry.c) };
   if (e.kcal == null) {
     $("nutri").open = true;
@@ -389,7 +216,7 @@ async function saveRemote(entry) {
   savingRemote = true;
   $("saveBtn").disabled = true;
   $("saveBtn").textContent = "保存中…";
-  const res = ui.botEdit ? await lineLog.update(ui.botEdit, e) : await lineLog.saveMaster(ui.masterEdit.key, e, ui.masterEdit.keep);
+  const res = ui.botEdit ? await lineLog().update(ui.botEdit, e) : await lineLog().saveMaster(ui.masterEdit.key, e, ui.masterEdit.keep);
   savingRemote = false;
   $("saveBtn").disabled = false;
   if (!res.ok) {
@@ -398,7 +225,7 @@ async function saveRemote(entry) {
   }
   if (ui.botEdit) {
     // 画面のボットの記録も、返事を待たずに直す（次に読んだときにそろう）
-    const b = bot.find((x) => String(x.logId) === ui.botEdit);
+    const b = botLink.find(ui.botEdit);
     if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     say(`✏️ 「${e.name}」を直しました（食事記録ボットにも）`);
   } else {
@@ -419,7 +246,7 @@ async function saveRemote(entry) {
   ui.masterEdit = null;
   clearForm();
   render();
-  readBot(true);
+  botLink.read(true);
 }
 
 // 名前とカロリー・PFC を入力欄に入れる。数字があれば「栄養も入れる」を開く（openOnly のときは、閉じはしない）
@@ -466,7 +293,7 @@ function startMasterEdit(key) {
 
 // ボットの記録を、入力欄に開く（ボットのカードの「画面で詳しく」・一覧の「ボット」の記録を押したとき）
 function startBotEdit(logId) {
-  const b = bot.find((x) => String(x.logId) === String(logId));
+  const b = botLink.find(logId);
   if (!b) return say("その記録は見つかりませんでした（消したかもしれません）");
   ui.editing = null;
   ui.masterEdit = null;
@@ -531,14 +358,14 @@ function itemHtml(l) {
   // ボットで入れた記録：消すのはトークで。直すのは、つないでいるときだけ
   if (l.bot) {
     // LINE の中でつないでいるときは、押すと直せる（ボットの記録を直す）
-    const name = lineLog
+    const name = lineLog()
       ? `<button class="name" type="button" data-bot-edit="${esc(l.logId)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>`
       : `<span class="bot-name">${esc(l.name)}</span>`;
     return `<div class="item is-bot${l.logId === ui.botEdit ? " is-editing" : ""}">
             ${name}
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
             <span class="bot-tag" title="食事記録ボットで入れた記録">ボット</span>
-            ${lineLog ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">✕</button>` : ""}
+            ${lineLog() ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">✕</button>` : ""}
           </div>`;
   }
   return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
@@ -583,7 +410,7 @@ $("dayList").addEventListener("click", (e) => {
   const botEdit = e.target.closest("[data-bot-edit]");
   if (botEdit) return startBotEdit(botEdit.dataset.botEdit);
   const botDel = e.target.closest("[data-bot-del]");
-  if (botDel) return removeBot(botDel.dataset.botDel);
+  if (botDel) return botLink.removeBot(botDel.dataset.botDel);
   const edit = e.target.closest("[data-edit]");
   if (edit) return startEdit(edit.dataset.edit);
   const del = e.target.closest("[data-del]");
@@ -595,7 +422,7 @@ $("dayList").addEventListener("click", (e) => {
   if (ui.editing === log.id) cancelEdit();
   persist();
   render();
-  removeOwnLater(log);
+  botLink.removeOwnLater(log);
   say(`🗑 「${log.name}」を消しました`, () => {
     // もうボットから消してしまっていたら（閉じかけて送ったなど）、もう一度入れる
     const already = !isWaiting(`own:${log.id}`);
@@ -603,7 +430,7 @@ $("dayList").addEventListener("click", (e) => {
     restoreLog(state, log);
     persist();
     render();
-    if (already && lineLog) sendToBot([log], { quiet: true });
+    if (already) botLink.sendSaved(log);
   });
 });
 
@@ -650,7 +477,7 @@ Object.entries(TARGET_INPUTS).forEach(([id, k]) =>
     persist();
     render();
     // つないでいるときは、目標カロリーをボットにもそろえる（集計カード・20時のお知らせで使う）
-    if (k === "kcal" && v > 0 && lineLog) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、食事記録ボットにもそろえました");
+    if (k === "kcal" && v > 0 && lineLog()) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、食事記録ボットにもそろえました");
   })
 );
 
@@ -720,7 +547,7 @@ function render() {
 }
 
 render();
-initBotMenu({ lineLog: () => lineLog, state: () => state, ui, link, render, persist, say, startMasterEdit });
+initBotMenu({ lineLog, state: () => state, ui, link, render, persist, say, startMasterEdit });
 
 // ---- 食事記録ボットのカード・リッチメニューから開いたとき（指定の読みとりは js/link.js） ----
 function openFromLink() {
@@ -743,12 +570,12 @@ function openFromLink() {
   else if (link.mode === "summary") {
     $("lookback").open = true;
     $("lookback").scrollIntoView({ behavior: "smooth", block: "start" });
-  } else if (link.mode === "quick" && !inLine) say("よく記録するものの並べかえは、LINE 版でできます");
+  } else if (link.mode === "quick" && !botLink.inLine) say("よく記録するものの並べかえは、LINE 版でできます");
   else if (link.mode === "input" && !link.menu) setTimeout(() => $("name").focus(), 300);
 }
 
 // ---- 食事記録ボットとつなぐ（くわしい人向け）----
-$("gasField").hidden = !inLine;
+$("gasField").hidden = !botLink.inLine;
 $("reopenLink").href = OPEN_URL;
 $("gasUrl").value = state.gasUrl;
 // つなぐ GAS の URL（自分で入れたものだけ。URL の ?〜 からは受けとらない）
@@ -758,13 +585,13 @@ $("gasUrl").addEventListener("change", () => {
   $("gasUrlError").hidden = !raw || !!url;
   if (raw && !url) return;
   state.gasUrl = url;
-  bot = [];
+  botLink.forget();
   persist();
   say(url ? "🔗 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとの食事記録ボットにもどしました" : "つなぎ先を消しました");
-  connectLineLog();
+  botLink.connect();
 });
 openFromLink();
-connectLineLog();
+botLink.connect();
 
 // ---- LINE で使う：ブラウザで開いたときの案内と、4コマ（js/line-guide.js） ----
 initLineGuide({ inside: inLineApp(), openUrl: OPEN_URL, say });
@@ -773,7 +600,7 @@ initLineGuide({ inside: inLineApp(), openUrl: OPEN_URL, say });
 let shownToday = ymd();
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
-  readBot();
+  botLink.read();
   const today = ymd();
   if (today === shownToday) return;
   const wasToday = ui.date === shownToday;
