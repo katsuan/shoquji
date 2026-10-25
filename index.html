@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610252300">
-<link rel="stylesheet" href="style.css?v=202610252300">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610251900">
+<link rel="stylesheet" href="style.css?v=202610251900">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -152,7 +152,7 @@
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
-          <div class="lg-top">‹ 食事記録</div>
+          <div class="lg-top">‹ くらぶボット</div>
           <div class="lg-talk">
             <div class="lg-msg is-me">カレーライス</div>
             <div class="lg-msg">カレーライス を記録（＋780 kcal）<br>きょう 1,680 kcal / 目標 2,000</div>
@@ -193,14 +193,14 @@
       </div>
     </details>
 
-    <!-- くらぶボットとつなぐ（くわしい人向け）：自分のくらぶボット（配布用シートのコピー）とつなぐ設定。つなぎ方は docs/linelog-setup.html -->
+    <!-- くらぶボットとつなぐ（くわしい人向け）：自分のくらぶボットにつなぐときの URL の欄。作り方は くらぶボット（qlove-bot）の docs/setup.html -->
     <details class="ls-fold" id="lineFold">
       <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span><span><span class="nw">くらぶボットと</span><span class="nw">つなぐ</span></span> <span class="ls-fold-meta">くわしい人向け</span></summary>
       <div class="ls-fold-body">
         <!-- はじめだけ要る説明 -->
         <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、くらぶボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
         <!-- つながっているあいだの説明 -->
-        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまはくらぶボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（ここでは直せません）。</p>
+        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまはくらぶボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（名前を押すと直せます）。</p>
         <div id="gasField" hidden>
           <label class="ls-field">
             <span class="ls-label">記録を入れる、くらぶボットの URL</span>
@@ -253,8 +253,8 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610252300" defer></script>
-<script type="module" src="app.js?v=202610252300"></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610251900" defer></script>
+<script type="module" src="app.js?v=202610251900"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
