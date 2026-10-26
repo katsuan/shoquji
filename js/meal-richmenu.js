@@ -2,7 +2,7 @@
 // ボタンの位置は、ボットの GAS（05_ui.richmenu.gs の RICH_MENU_LAYOUT）と同じ。描く字・色はボットの色（テラコッタ）のまま
 //   しょくじが描くのは、その人の「⚡ よく記録」タブだけ（よく記録するもの 6 品／ほかを入力・並べかえ）。
 //   全員共通の「📝 記録」の画像は、img/meal-richmenu-main.png（ボットの GAS が使う）
-import { fmt } from "./stats.js?v=202610252330";
+import { fmt } from "./stats.js?v=202610261100";
 
 export const LAYOUT = { width: 2500, height: 1686, tabHeight: 250, quickRows: 2, quickCols: 3, quickFooterHeight: 236, quickCount: 6 };
 const C = { bg: "#FBF3EE", card: "#FFFFFF", accent: "#C8553D", accentSoft: "#FDEEE8", ink: "#2D211C", sub: "#6B5E57", line: "#EFE1D9" };

@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610252330";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610252330";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610252330";
-import { createBotLink } from "./js/botlink.js?v=202610252330";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610252330";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610252330";
-import { cardUrl } from "./js/card.js?v=202610252330";
-import { writeDays } from "./js/days.js?v=202610252330";
-import { readLink } from "./js/link.js?v=202610252330";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610252330";
-import { $, esc } from "./js/dom.js?v=202610252330";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610261100";
+import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610261100";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610261100";
+import { createBotLink } from "./js/botlink.js?v=202610261100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610261100";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610261100";
+import { cardUrl } from "./js/card.js?v=202610261100";
+import { writeDays } from "./js/days.js?v=202610261100";
+import { readLink } from "./js/link.js?v=202610261100";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610261100";
+import { $, esc } from "./js/dom.js?v=202610261100";
 
 
 let state = load();
@@ -36,7 +36,8 @@ function persist() {
 }
 
 // ---- くらぶボット（LINE 版で、つないだときだけ。js/botlink.js） ----
-const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit });
+let me = null; // 見出しの右の本人のアイコン（shared/line-me.js。ブラウザ版では null）
+const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit, changed: () => me?.update() });
 // くらぶボットへの呼び出し口（js/linelog.js。つないでいなければ null）
 const lineLog = () => botLink.client(); // つないでいなければ null
 // 画面に出す中身：この端末の記録＋ボットで入れた記録
@@ -607,6 +608,18 @@ $("gasUrl").addEventListener("change", () => {
   botLink.connect();
 });
 openFromLink();
+// ---- LINE 版の「わたし」：見出しの右に本人のアイコン。押すと、ログイン・くらぶボットとのつながり・まだ送っていない記録（Q キットの shared/line-me.js） ----
+me = window.QLineMe?.mount({
+  liffId: LINE_LOG.liffId,
+  botName: "くらぶボット",
+  connected: () => !!botLink.client(),
+  pending: () => botLink.pending(),
+  retry: () => botLink.retry(),
+  onSettings: () => {
+    $("lineFold").open = true;
+    $("lineFold").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
 botLink.connect();
 
 // ---- LINE 版で使う：ブラウザで開いたときの案内と、4コマ（最初だけ。閉じたら出さない。Q キットの shared/botlink.js の guide） ----

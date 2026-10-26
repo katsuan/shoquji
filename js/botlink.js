@@ -6,19 +6,19 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610252330";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610252330";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610252330";
-import { LINE_LOG } from "./line-config.js?v=202610252330";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610252330";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610252330";
-import { $ } from "./dom.js?v=202610252330";
+import { addDays, ymd } from "./stats.js?v=202610261100";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610261100";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610261100";
+import { LINE_LOG } from "./line-config.js?v=202610261100";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610261100";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610261100";
+import { $ } from "./dom.js?v=202610261100";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
 
 /**
- * ctx: { state() いまの記録, ui, link, render(), persist(), say(text, undo), cancelEdit(), startBotEdit(logId) }
+ * ctx: { state() いまの記録, ui, link, render(), persist(), say(text, undo), cancelEdit(), startBotEdit(logId), changed()（送った・つながったときに、見出しのアイコンの印を描きなおす） }
  */
 export function createBotLink(ctx) {
   const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE 版のときだけ出す
@@ -74,6 +74,7 @@ export function createBotLink(ctx) {
     if (res.ok) {
       markSent(ctx.state(), logs.map((l) => l.id));
       ctx.persist();
+      ctx.changed?.();
       if (!quiet && res.added?.length) ctx.say(`🤖 くらぶボットにも入れました`);
       return;
     }
@@ -91,13 +92,30 @@ export function createBotLink(ctx) {
     else send([log], { quiet: true });
   }
 
-  // まだボットに入れていない、ここ7日の記録を入れる（つながったとき。電波がなかったときの分など）
-  function sendUnsent() {
+  // まだボットに入れていない、ここ7日の記録（電波がなかった・ログインしていなかった・つながる前に入れた分）
+  function unsent() {
     const state = ctx.state();
     const from = addDays(ymd(), -6);
     const sent = new Set(state.sent);
-    const todo = state.logs.filter((l) => l.date >= from && !sent.has(l.id)).slice(0, 30);
-    return send(todo, { quiet: true });
+    return state.logs.filter((l) => l.date >= from && !sent.has(l.id));
+  }
+
+  // まだボットに入れていない、ここ7日の記録を入れる（つながったとき・電波がもどったとき）
+  function sendUnsent() {
+    return send(unsent().slice(0, 30), { quiet: true });
+  }
+
+  // まだボットに送っていない記録の数（見出しの右のアイコンの印。LINE 版でボットにつなぐ人だけ）
+  function pending() {
+    return inLine && gasTarget() ? unsent().length : 0;
+  }
+
+  // 電波がもどったとき・「いま送る」：つながっていれば送って読みなおし、まだならつなぎなおす（つなぐと送る）
+  async function retry() {
+    if (!client) return connect();
+    await sendUnsent();
+    await read(true);
+    ctx.changed?.();
   }
 
   // ボットで入れた記録を読む（つながったとき・戻ってきたとき。1分に1回まで）
@@ -198,6 +216,7 @@ export function createBotLink(ctx) {
       if (asGuest(first)) return;
       showConnected(true);
       ctx.render();
+      ctx.changed?.();
       await read(true, first);
       await sendUnsent();
       await readProfile();
@@ -213,5 +232,5 @@ export function createBotLink(ctx) {
     bot = [];
   }
 
-  return { inLine, client: () => client, view, find, send, sendSaved, read, removeOwnLater, removeBot, connect, forget };
+  return { inLine, client: () => client, view, find, send, sendSaved, read, removeOwnLater, removeBot, connect, forget, pending, retry };
 }
