@@ -1,6 +1,6 @@
-// しょくじ：日付と集計の計算（合計・よく食べるもの・1週間・続けた日数）。画面にはさわらない。
+// しょくじ：日付と集計の計算（合計・食事ごとの割合・よく食べるもの・1週間・続けた日数）。画面にはさわらない。
 // app.js と js/ のほかの部品が読む
-import { MEALS } from "./store.js?v=202610261100";
+import { MEALS } from "./store.js?v=202610261900";
 
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -47,6 +47,28 @@ export function totals(logs) {
   return t;
 }
 
+// 食事ごと（朝・昼・夜・間食）のカロリーと、合計にしめる割合（%）。割合は足して 100 になるように丸める
+//   [{ meal: "朝", kcal: 450, pct: 30 }, …]（MEALS の順。カロリーのない食事は kcal 0・pct 0）
+export function byMeal(logs) {
+  const rows = MEALS.map((meal) => ({ meal, kcal: Math.round(logs.filter((l) => l.meal === meal).reduce((n, l) => n + (l.kcal || 0), 0) * 10) / 10, pct: 0 }));
+  const sum = rows.reduce((n, r) => n + r.kcal, 0);
+  if (sum <= 0) return rows;
+  // 切り捨ててから、端数の大きい順に 1 ずつ足す（四捨五入だと 99・101 になることがある）
+  const raw = rows.map((r) => (r.kcal / sum) * 100);
+  rows.forEach((r, i) => (r.pct = Math.floor(raw[i])));
+  let left = 100 - rows.reduce((n, r) => n + r.pct, 0);
+  raw
+    .map((v, i) => [v - Math.floor(v), i])
+    .sort((x, y) => y[0] - x[0])
+    .forEach(([, i]) => {
+      if (left > 0 && rows[i].kcal > 0) {
+        rows[i].pct++;
+        left--;
+      }
+    });
+  return rows;
+}
+
 // 食べたものの一覧（名前ごと）：回数・最後の栄養。よく食べる順
 export function menus(state) {
   const map = new Map();
@@ -64,12 +86,13 @@ export function menus(state) {
   return [...map.values()].sort((a, b) => b.count - a.count || b.last - a.last);
 }
 
-// 今日までの7日（古い順）の合計カロリー
+// 今日までの7日（古い順）の合計カロリーと、食事ごとのカロリー（meals）
 export function week(state, today) {
   return Array.from({ length: 7 }, (_, i) => {
     const date = addDays(today, i - 6);
-    const t = totals(logsOf(state, date));
-    return { date, kcal: t.kcal, count: t.count };
+    const logs = logsOf(state, date);
+    const t = totals(logs);
+    return { date, kcal: t.kcal, count: t.count, meals: byMeal(logs) };
   });
 }
 

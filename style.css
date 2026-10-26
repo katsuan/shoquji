@@ -21,7 +21,16 @@
   --pc: #e0573f;
   --fc: #e8a317;
   --cc: #4a9be0;
+  /* 朝・昼・夜・間食の色（バー・札・ふりかえり。PFC の赤・黄土・青と見分けやすい色） */
+  --meal0: #f5bf26;
+  --meal1: #36a55a;
+  --meal2: #5a55d2;
+  --meal3: #e3609a;
 }
+.m0 { --m: var(--meal0); }
+.m1 { --m: var(--meal1); }
+.m2 { --m: var(--meal2); }
+.m3 { --m: var(--meal3); }
 
 body {
   background: radial-gradient(circle at top right, #ffe2ad, transparent 40%), var(--ls-bg);
@@ -36,6 +45,8 @@ body {
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .days .ls-chip, .meals .ls-chip { min-height: 44px; font-size: 15px; font-weight: 800; }
+/* 食事のボタンにも、その食事の色の点 */
+.meals .ls-chip::before { content: ""; display: inline-block; flex: none; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: var(--m); }
 /* 日付の欄は丸いボタンの上に透明で重ねる（押すと端末の日付えらびが開く） */
 .date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 
@@ -79,6 +90,18 @@ body {
 .bar { position: relative; height: 10px; overflow: hidden; border-radius: 999px; background: #f6ead6; }
 .bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--ls-accent); }
 .bar.over i { background: var(--ume); }
+/* 食事ごとの色を横に積んだバー（区切りに細いすき間）。目標をこえた日は、目標のところに線と赤いふち */
+.bar.stack { display: flex; }
+.bar.stack i, .bar.stack.over i { position: static; flex: none; border-radius: 0; background: var(--m); }
+.bar.stack i + i { box-shadow: inset 2px 0 0 var(--ls-surface); }
+.bar.stack.over { box-shadow: 0 0 0 2px var(--ume); }
+.bar .goal-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ls-text); }
+/* 食事ごとのカロリーと割合 */
+.meal-split { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 13px; font-weight: 700; color: var(--ls-subtext); }
+.meal-split li { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.meal-split .dot { align-self: center; width: 10px; height: 10px; border-radius: 50%; background: var(--m); }
+.meal-split b { color: var(--ls-text); font-size: 15px; }
+.meal-split small { font-size: 11px; }
 .pfc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .pfc div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
 .pfc b { color: var(--ls-text); font-size: 14px; }
@@ -91,7 +114,7 @@ body {
 /* 食事ごとの一覧：横に「朝」などの札、押すと直せる */
 .day-list { display: grid; gap: 10px; }
 .meal-group { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: start; }
-.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 10px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 13px; font-weight: 800; }
+.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 10px; background: color-mix(in srgb, var(--m, var(--ls-accent)) 22%, var(--ls-surface)); color: color-mix(in srgb, var(--m, var(--ls-accent)) 50%, var(--ls-text)); box-shadow: inset 0 -3px 0 var(--m, var(--ls-accent)); font-size: 13px; font-weight: 800; }
 .items { display: grid; gap: 6px; }
 .item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 6px 4px 6px 10px; border: 1.5px solid var(--ls-line); border-radius: 12px; }
 .item.is-editing { border-color: var(--ls-accent); background: var(--ls-accent-soft); }
@@ -112,7 +135,13 @@ body {
 .day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 2px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
 .day-col .v { font-size: 10px; line-height: 14px; white-space: nowrap; }
 .day-col .col { display: flex; align-items: flex-end; justify-content: center; }
-.day-col .col i { width: 70%; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(#ffc45a, var(--ls-accent)); }
+/* 棒は、朝・昼・夜・間食の色を下から積む（高さの割合は flex-grow＝カロリー） */
+.day-col .stack { display: flex; flex-direction: column-reverse; width: 70%; min-height: 2px; overflow: hidden; border-radius: 6px 6px 2px 2px; background: var(--ls-line); }
+.day-col .stack i { flex: 1 1 0; min-height: 0; background: var(--m); }
+.day-col .stack i + i { box-shadow: inset 0 -2px 0 var(--ls-surface); }
+.week-split { display: grid; gap: 8px; }
+.week-split:empty { display: none; }
+.week-split .ranking-title { margin: 0; }
 .day-col.today { color: var(--ls-accent-ink); }
 .ranking { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--ls-line); font-size: 14px; }

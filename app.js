@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610261100";
-import { addDays, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610261100";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610261100";
-import { createBotLink } from "./js/botlink.js?v=202610261100";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610261100";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610261100";
-import { cardUrl } from "./js/card.js?v=202610261100";
-import { writeDays } from "./js/days.js?v=202610261100";
-import { readLink } from "./js/link.js?v=202610261100";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610261100";
-import { $, esc } from "./js/dom.js?v=202610261100";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610261900";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610261900";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610261900";
+import { createBotLink } from "./js/botlink.js?v=202610261900";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610261900";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610261900";
+import { cardUrl } from "./js/card.js?v=202610261900";
+import { writeDays } from "./js/days.js?v=202610261900";
+import { readLink } from "./js/link.js?v=202610261900";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610261900";
+import { $, esc } from "./js/dom.js?v=202610261900";
 
 
 let state = load();
@@ -85,7 +85,7 @@ $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.targ
 // ---- 朝・昼・夜・間食 ----
 function renderMeals() {
   const box = document.querySelector(".meals");
-  box.innerHTML = MEALS.map((m) => `<button class="ls-chip" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
+  box.innerHTML = MEALS.map((m) => `<button class="ls-chip ${mealClass(m)}" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
 }
 document.querySelector(".meals").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");
@@ -346,11 +346,39 @@ $("cancelEdit").addEventListener("click", () => {
 });
 
 // ---- この日のしょくじ ----
+// 朝・昼・夜・間食の色（style.css の .m0〜.m3。朝＝黄・昼＝緑・夜＝藍・間食＝ピンク）
+function mealClass(meal) {
+  return `m${Math.max(0, MEALS.indexOf(meal))}`;
+}
+
+// 食事ごとの色のバー（横）。rows は byMeal の形。scale はバーの右はしにあたるカロリー
+function mealBarHtml(rows, scale, { over = false, goal = 0 } = {}) {
+  const segs = rows
+    .filter((r) => r.kcal > 0)
+    .map((r) => `<i class="${mealClass(r.meal)}" style="width:${(r.kcal / scale) * 100}%" title="${r.meal} ${fmt(r.kcal)} kcal"></i>`)
+    .join("");
+  // 目標をこえた日は、目標のところに線
+  const mark = over && goal > 0 ? `<span class="goal-mark" style="left:${(goal / scale) * 100}%" aria-hidden="true"></span>` : "";
+  return `<div class="bar stack${over ? " over" : ""}">${segs}${mark}</div>`;
+}
+
+// 食事ごとのカロリーと割合の並び（色の点つき）。avgDays を渡すと「1日平均」も
+function mealSplitHtml(rows, avgDays = 0) {
+  const shown = rows.filter((r) => r.kcal > 0);
+  if (!shown.length) return "";
+  return `<ul class="meal-split">${shown
+    .map((r) => {
+      const kcal = avgDays ? Math.round(r.kcal / avgDays) : r.kcal;
+      return `<li class="${mealClass(r.meal)}"><span class="dot" aria-hidden="true"></span>${r.meal}<b>${r.pct}%</b><small>${avgDays ? "平均 " : ""}${fmt(kcal)} kcal</small></li>`;
+    })
+    .join("")}</ul>`;
+}
+
 function pct(v, goal) {
   return goal > 0 ? Math.min(100, Math.round((v / goal) * 100)) : 0;
 }
 
-// 合計カロリーと目標のバー、PFC
+// 合計カロリーと目標のバー（朝・昼・夜・間食の色で積む）と、食事ごとの割合、PFC
 function totalsHtml(logs, t, g) {
   const missing = t.count - t.withKcal;
   // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
@@ -360,7 +388,8 @@ function totalsHtml(logs, t, g) {
     .join("");
   return `
       <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
-      <div class="bar${t.kcal > g.kcal ? " over" : ""}"><i style="width:${pct(t.kcal, g.kcal)}%"></i></div>
+      ${mealBarHtml(byMeal(logs), Math.max(g.kcal, t.kcal, 1), { over: t.kcal > g.kcal, goal: g.kcal })}
+      ${mealSplitHtml(byMeal(logs))}
       ${hasPfc ? `<div class="pfc">
         ${pfc}
       </div>` : ""}
@@ -394,7 +423,7 @@ function dayListHtml(logs) {
   return MEALS.map((meal) => {
     const items = logs.filter((l) => l.meal === meal);
     if (!items.length) return "";
-    return `<div class="meal-group"><span class="meal-tag">${meal}</span><div class="items">${items.map(itemHtml).join("")}</div></div>`;
+    return `<div class="meal-group"><span class="meal-tag ${mealClass(meal)}">${meal}</span><div class="items">${items.map(itemHtml).join("")}</div></div>`;
   }).join("");
 }
 
@@ -471,9 +500,20 @@ function renderLookback() {
     days
       .map((d) => {
         const [, m, dd] = d.date.split("-").map(Number);
-        return `<div class="day-col${d.date === today ? " today" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><i style="height:${(d.kcal / top) * 100}%"></i></span><span>${m}/${dd}</span></div>`;
+        // 棒は朝・昼・夜・間食の色を下から積む
+        const segs = d.meals
+          .filter((r) => r.kcal > 0)
+          .map((r) => `<i class="${mealClass(r.meal)}" style="flex-grow:${r.kcal}"></i>`)
+          .join("");
+        return `<div class="day-col${d.date === today ? " today" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><span class="stack" style="height:${(d.kcal / top) * 100}%">${segs}</span></span><span>${m}/${dd}</span></div>`;
       })
       .join("");
+  // この7日の、食事ごとの割合（カロリーを入れた日の平均も）
+  const weekRows = byMeal(days.flatMap((d) => d.meals));
+  const kcalDays = days.filter((d) => d.kcal > 0).length;
+  $("weekSplit").innerHTML = kcalDays
+    ? `<p class="ranking-title">🍽 この7日の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
+    : "";
   const top5 = menus(all).slice(0, 5);
   $("ranking").innerHTML = top5.length
     ? `<p class="ranking-title">🏅 よく食べるもの</p><ol class="ranking">${top5.map((m) => `<li><span>${esc(m.name)}</span><span>${m.count} 回</span></li>`).join("")}</ol>`

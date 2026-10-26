@@ -4,7 +4,7 @@ import "./_botlink.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { addLog, exportJson, importJson } from "../js/store.js";
-import { menus, totals, logsOf, week, streak, addDays } from "../js/stats.js";
+import { byMeal, menus, totals, logsOf, week, streak, addDays } from "../js/stats.js";
 
 const XSS = "<img src=x onerror=alert(1)>"; // qcheck-ok: W8 外からの文字の見本
 const blank = () => ({ v: 1, logs: [], targets: { kcal: 2000, p: 65, f: 60, c: 280 }, deleted: [], sendText: false });
@@ -116,4 +116,27 @@ test("日付：月・年・うるう年をまたいでも1日ずつ数える", (
   const w = week(s, "2028-03-01");
   assert.deepEqual(w.map((d) => d.date).slice(-3), ["2028-02-28", "2028-02-29", "2028-03-01"]);
   assert.equal(w[6].kcal, 100);
+});
+
+test("食事ごとの割合：足して 100%、カロリーのない食事は 0%", () => {
+  const rows = byMeal([
+    { meal: "朝", kcal: 100 },
+    { meal: "昼", kcal: 100 },
+    { meal: "夜", kcal: 100 },
+    { meal: "夜", kcal: null }
+  ]);
+  assert.deepEqual(rows.map((r) => r.meal), ["朝", "昼", "夜", "間食"]);
+  assert.deepEqual(rows.map((r) => r.kcal), [100, 100, 100, 0]);
+  assert.equal(rows.reduce((n, r) => n + r.pct, 0), 100);
+  assert.equal(rows[3].pct, 0);
+  assert.deepEqual(byMeal([]).map((r) => r.pct), [0, 0, 0, 0]);
+});
+
+test("1週間の日ごとに、食事ごとのカロリーも入る", () => {
+  const s = blank();
+  addLog(s, { date: "2026-10-22", meal: "昼", name: "カレー", kcal: 780 });
+  addLog(s, { date: "2026-10-22", meal: "間食", name: "せんべい", kcal: 120 });
+  const day = week(s, "2026-10-22").at(-1);
+  assert.equal(day.kcal, 900);
+  assert.deepEqual(day.meals.map((r) => [r.meal, r.kcal, r.pct]), [["朝", 0, 0], ["昼", 780, 87], ["夜", 0, 0], ["間食", 120, 13]]);
 });
