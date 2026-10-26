@@ -52,8 +52,11 @@ body {
   background: color-mix(in srgb, var(--m) 14%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 45%, var(--ls-subtext));
   box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--m) 55%, transparent);
+  transition: border-radius 0.15s ease;
 }
+/* 選んでいるものは角を小さく（丸から四角へ）して、ほかの丸いボタンとはっきり分ける */
 .meals .ls-chip[aria-checked="true"] {
+  border-radius: 10px;
   border-color: var(--m);
   background: color-mix(in srgb, var(--m) 26%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 50%, var(--ls-text));
