@@ -134,11 +134,14 @@ body {
 .bar.stack.over { box-shadow: 0 0 0 2px var(--ume); }
 .bar .goal-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ls-text); }
 /* 食事ごとのカロリーと割合 */
-.meal-split { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; font-size: 13px; font-weight: 700; color: var(--ls-subtext); }
-.meal-split li { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; }
-.meal-split .dot { align-self: center; width: 10px; height: 10px; border-radius: 50%; background: var(--m); }
-.meal-split b { color: var(--ls-text); font-size: 15px; }
-.meal-split small { font-size: 11px; }
+/* 朝・昼・夜・間食を、入力欄のタブと同じ並びで横に4つ。1つずつ「● 朝 16%」と「平均 215 kcal」の2行 */
+.meal-split { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
+.meal-split li { display: grid; gap: 2px; justify-items: center; padding: 6px 2px; border-radius: 10px; background: color-mix(in srgb, var(--m) 9%, var(--ls-surface)); white-space: nowrap; min-width: 0; }
+.meal-split .name { display: flex; align-items: center; gap: 4px; }
+.meal-split .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--m); flex: 0 0 auto; }
+.meal-split b { color: var(--ls-text); font-size: 15px; font-variant-numeric: tabular-nums; }
+.meal-split small { font-size: 10px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.meal-split .is-zero { opacity: .45; }
 .pfc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .pfc div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
 .pfc b { color: var(--ls-text); font-size: 14px; }

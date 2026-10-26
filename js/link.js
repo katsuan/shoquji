@@ -2,8 +2,8 @@
 // LINE の中では LIFF が ?〜 に戻して届く。ブラウザで liff.line.me を開いたときは liff.state に入って届く
 // 受けるのは、日付・食事・名前・数字・どこを見るかだけ（つなぎ先などは受けとらない。W5）
 // app.js が読む（開いたときに1回）
-import { MEALS, num } from "./store.js?v=202610262230";
-import { addDays, ymd } from "./stats.js?v=202610262230";
+import { MEALS, num } from "./store.js?v=202610262231";
+import { addDays, ymd } from "./stats.js?v=202610262231";
 
 // 開いた URL（LINE では liff.state の中）から、ボットのカード・メニューの指定を読む
 export function readLink(href = location.href) {
