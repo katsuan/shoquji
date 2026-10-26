@@ -54,6 +54,15 @@ body {
   box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--m) 55%, transparent);
   transition: border-radius 0.15s ease;
 }
+/* 食事のボタンから食べたものの欄までの枠：選んでいる食事の色の枠と、うすい地 */
+.meal-frame {
+  display: grid; gap: 12px; padding: 12px; border-radius: 16px;
+  border: 2px solid var(--m, var(--ls-line));
+  background: color-mix(in srgb, var(--m, var(--ls-accent)) 7%, var(--ls-surface));
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.meal-frame .ls-input { background: var(--ls-surface); }
+.meal-frame .ls-input:focus { border-color: var(--m); }
 /* 選んでいるものは角を小さく（丸から四角へ）して、ほかの丸いボタンとはっきり分ける */
 .meals .ls-chip[aria-checked="true"] {
   border-radius: 10px;

@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262030";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610262030";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262030";
-import { createBotLink } from "./js/botlink.js?v=202610262030";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262030";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262030";
-import { cardUrl } from "./js/card.js?v=202610262030";
-import { writeDays } from "./js/days.js?v=202610262030";
-import { readLink } from "./js/link.js?v=202610262030";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262030";
-import { $, esc } from "./js/dom.js?v=202610262030";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262100";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610262100";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262100";
+import { createBotLink } from "./js/botlink.js?v=202610262100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262100";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262100";
+import { cardUrl } from "./js/card.js?v=202610262100";
+import { writeDays } from "./js/days.js?v=202610262100";
+import { readLink } from "./js/link.js?v=202610262100";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262100";
+import { $, esc } from "./js/dom.js?v=202610262100";
 
 
 let state = load();
@@ -86,6 +86,8 @@ $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.targ
 function renderMeals() {
   const box = document.querySelector(".meals");
   box.innerHTML = MEALS.map((m) => `<button class="ls-chip ${mealClass(m)}" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
+  // 食べたものの欄までの枠も、選んでいる食事の色に
+  $("mealFrame").className = `meal-frame ${mealClass(ui.meal)}`;
 }
 document.querySelector(".meals").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");

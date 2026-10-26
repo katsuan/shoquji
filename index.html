@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262030">
-<link rel="stylesheet" href="style.css?v=202610262030">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262100">
+<link rel="stylesheet" href="style.css?v=202610262100">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -49,12 +49,15 @@
   <!-- 記録する -->
   <section class="ls-panel" aria-labelledby="formTitle">
     <h2 id="formTitle" class="ls-panel-title">📝 <span id="formHeading">記録する</span></h2>
-    <div class="meals" role="radiogroup" aria-label="いつ食べた？"></div>
-    <label class="ls-field">
-      <span class="ls-label">食べたもの</span>
-      <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done" aria-describedby="nameError">
-    </label>
-    <p id="nameError" class="ls-hint is-error" hidden>食べたものを入れてね</p>
+    <!-- 食事のボタンから食べたものの欄までを、選んでいる食事の色の枠で囲む（いまどの食事を記録しているか、ひと目でわかるように。色は app.js の renderMeals） -->
+    <div id="mealFrame" class="meal-frame">
+      <div class="meals" role="radiogroup" aria-label="いつ食べた？"></div>
+      <label class="ls-field">
+        <span class="ls-label">食べたもの</span>
+        <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done" aria-describedby="nameError">
+      </label>
+      <p id="nameError" class="ls-hint is-error" hidden>食べたものを入れてね</p>
+    </div>
     <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
     <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
     <details id="nutri" class="ls-fold nutri">
@@ -254,10 +257,10 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262030" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262100" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262030" defer></script>
-<script type="module" src="app.js?v=202610262030"></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262100" defer></script>
+<script type="module" src="app.js?v=202610262100"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
