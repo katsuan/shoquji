@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262000";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610262000";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262000";
-import { createBotLink } from "./js/botlink.js?v=202610262000";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262000";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262000";
-import { cardUrl } from "./js/card.js?v=202610262000";
-import { writeDays } from "./js/days.js?v=202610262000";
-import { readLink } from "./js/link.js?v=202610262000";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262000";
-import { $, esc } from "./js/dom.js?v=202610262000";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262100";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610262100";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262100";
+import { createBotLink } from "./js/botlink.js?v=202610262100";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262100";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262100";
+import { cardUrl } from "./js/card.js?v=202610262100";
+import { writeDays } from "./js/days.js?v=202610262100";
+import { readLink } from "./js/link.js?v=202610262100";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262100";
+import { $, esc } from "./js/dom.js?v=202610262100";
 
 
 let state = load();
@@ -419,7 +419,7 @@ function mealSplitHtml(rows, avgDays = 0) {
     .map((r) => {
       const kcal = avgDays ? Math.round(r.kcal / avgDays) : r.kcal;
       const zero = r.kcal > 0 ? "" : " is-zero";
-      return `<li class="${mealClass(r.meal)}${zero}"><span class="name"><span class="dot" aria-hidden="true"></span>${r.meal}<b>${r.pct}%</b></span><small>${avgDays ? "平均 " : ""}${fmt(kcal)} kcal</small></li>`;
+      return `<li class="${mealClass(r.meal)}${zero}"><span class="name">${r.meal}<b>${r.pct}%</b></span>${avgDays ? `<small>平均</small>` : ""}<small>${fmt(kcal)} kcal</small></li>`;
     })
     .join("")}</ul>`;
 }
@@ -554,6 +554,21 @@ function rangeLabel(from, to) {
 }
 
 // 「ふりかえり」（続けた日数・週のカロリー・食事ごとの割合・よく食べるもの）を描く
+// 週のはじまりのボタン（⚙️ 設定）の押されている印をそろえる
+function renderWeekStart() {
+  const now = weekStart();
+  document.querySelectorAll("[data-week-start]").forEach((b) => b.setAttribute("aria-checked", String(Number(b.dataset.weekStart) === now)));
+}
+// 週のはじまりを変える（Q 共通の設定。ほかの Q のツールも同じ週のはじまりで開く）
+$("weekStart").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-week-start]");
+  if (!b) return;
+  window.QWeekStart?.set(Number(b.dataset.weekStart));
+  weekOffset = 0;
+  renderWeekStart();
+  renderLookback();
+});
+
 function renderLookback() {
   const today = ymd();
   const all = view();
@@ -679,6 +694,7 @@ function render() {
   renderMeals();
   renderSuggest();
   renderDay();
+  renderWeekStart();
   renderLookback();
   renderTargets();
   $("sendTextToggle").checked = state.sendText;
@@ -740,10 +756,9 @@ me = window.QLineMe?.mount({
   connected: () => !!botLink.client(),
   pending: () => botLink.pending(),
   retry: () => botLink.retry(),
-  onSettings: () => {
-    $("lineFold").open = true;
-    $("lineFold").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  onSettings: () => window.QLineMe.openFold("lineFold"),
+  // 「⚙️ 設定」：ページの下の設定の欄（目標・送り方・週のはじまり・記録の控え。q-oqrn の ux.md A7）
+  onPrefs: () => window.QLineMe.openFold("settings")
 });
 botLink.connect();
 
@@ -752,7 +767,7 @@ window.QBotLink?.guide({
   key: "shoquji:lineBannerOff", // この端末で閉じたか（設定なので端末に残してよい）
   openUrl: OPEN_URL,
   say,
-  closedText: "案内を閉じました（「⚙️ くらぶボットとつなぐ」からまた見られます）"
+  closedText: "案内を閉じました（「🔗 くらぶボットとつなぐ」からまた見られます）"
 });
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
