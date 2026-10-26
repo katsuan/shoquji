@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262100">
-<link rel="stylesheet" href="style.css?v=202610262100">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262145">
+<link rel="stylesheet" href="style.css?v=202610262145">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -49,35 +49,36 @@
   <!-- 記録する -->
   <section class="ls-panel" aria-labelledby="formTitle">
     <h2 id="formTitle" class="ls-panel-title">📝 <span id="formHeading">記録する</span></h2>
-    <!-- 食事のボタンから食べたものの欄までを、選んでいる食事の色の枠で囲む（いまどの食事を記録しているか、ひと目でわかるように。色は app.js の renderMeals） -->
+    <!-- 朝・昼・夜・間食はタブ。選んでいるタブは下の枠とつながり、枠（食べたもの〜栄養・量）はその食事の色（app.js の renderMeals）。
+         いまどの食事を記録しているか、入れているあいだずっとわかるように。「＋ 記録する」は枠の外 -->
+    <div class="meals meal-tabs" role="radiogroup" aria-label="いつ食べた？"></div>
     <div id="mealFrame" class="meal-frame">
-      <div class="meals" role="radiogroup" aria-label="いつ食べた？"></div>
       <label class="ls-field">
         <span class="ls-label">食べたもの</span>
         <input id="name" class="ls-input" maxlength="40" placeholder="例：カレーライス" autocomplete="off" enterkeyhint="done" aria-describedby="nameError">
       </label>
       <p id="nameError" class="ls-hint is-error" hidden>食べたものを入れてね</p>
-    </div>
-    <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
-    <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
-    <details id="nutri" class="ls-fold nutri">
-      <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
-      <div class="ls-fold-body nutri-grid">
-        <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>kcal</i></span></label>
-        <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
-        <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="f" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
-        <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+      <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
+      <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
+      <details id="nutri" class="ls-fold nutri">
+        <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
+        <div class="ls-fold-body nutri-grid">
+          <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>kcal</i></span></label>
+          <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">脂質</span><span class="unit-input"><input id="f" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+          <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="c" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
+        </div>
+      </details>
+      <!-- MYメニュー・候補から数字を入れたとき：もとの値に倍率をかけて入れなおす（大盛り・半分など） -->
+      <div id="scaleRow" class="ls-chips scale-row" hidden aria-label="量の倍率">
+        <span class="scale-label">量</span>
+        <button class="ls-chip is-small" type="button" data-scale="0.5">×½</button>
+        <button class="ls-chip is-small" type="button" data-scale="1">×1</button>
+        <button class="ls-chip is-small" type="button" data-scale="1.5">×1.5</button>
+        <button class="ls-chip is-small" type="button" data-scale="2">×2</button>
       </div>
-    </details>
-    <!-- MYメニュー・候補から数字を入れたとき：もとの値に倍率をかけて入れなおす（大盛り・半分など） -->
-    <div id="scaleRow" class="ls-chips scale-row" hidden aria-label="量の倍率">
-      <span class="scale-label">量</span>
-      <button class="ls-chip is-small" type="button" data-scale="0.5">×½</button>
-      <button class="ls-chip is-small" type="button" data-scale="1">×1</button>
-      <button class="ls-chip is-small" type="button" data-scale="1.5">×1.5</button>
-      <button class="ls-chip is-small" type="button" data-scale="2">×2</button>
+      <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     </div>
-    <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     <div class="form-actions">
       <button id="saveBtn" class="ls-button is-primary is-block" type="button">＋ 記録する</button>
       <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>
@@ -257,10 +258,10 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262100" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262145" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262100" defer></script>
-<script type="module" src="app.js?v=202610262100"></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262145" defer></script>
+<script type="module" src="app.js?v=202610262145"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

@@ -45,32 +45,37 @@ body {
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .days .ls-chip, .meals .ls-chip { min-height: 44px; font-size: 15px; font-weight: 800; }
-/* 食事のボタンは、下の一覧の札と同じ見た目（その食事の色のうすい地と、下の色の線）。選んでいるものは、その食事の色の太い枠 */
-.meals .ls-chip {
-  padding: 0 4px; white-space: nowrap;
-  border: 1px solid transparent;
-  background: color-mix(in srgb, var(--m) 14%, var(--ls-surface));
+/* 朝・昼・夜・間食はタブ：下の枠（食べたもの〜栄養・量）の上にのる。選んでいないタブは、その食事の色のうすい地。
+ * 選んでいるタブは、枠と同じ色の線・地で、枠とつながって見える（タブの下の線を消して、枠の上の線にかぶせる） */
+.meal-tabs { gap: 4px; align-items: end; margin-bottom: -16px; position: relative; z-index: 1; } /* パネルのすき間（16px）を消して、枠にくっつける */
+.meal-tabs .ls-chip {
+  min-height: 40px; padding: 0 4px; white-space: nowrap;
+  border: 2px solid transparent; border-bottom: 0; border-radius: 12px 12px 0 0;
+  background: color-mix(in srgb, var(--m) 16%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 45%, var(--ls-subtext));
-  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--m) 55%, transparent);
-  transition: border-radius 0.15s ease;
+  box-shadow: none;
 }
-/* 食事のボタンから食べたものの欄までの枠：選んでいる食事の色の枠と、うすい地 */
+.meal-tabs .ls-chip[aria-checked="true"] {
+  min-height: 48px; margin-bottom: -2px; padding-bottom: 2px;
+  border-color: var(--m);
+  background: var(--frame-bg);
+  color: color-mix(in srgb, var(--m) 55%, var(--ls-text));
+}
+.meal-tabs .ls-chip, .meal-frame { --frame-bg: color-mix(in srgb, var(--m, var(--ls-accent)) 9%, var(--ls-surface)); }
+/* 枠：選んでいる食事の色。上の角はタブとつながるので四角 */
 .meal-frame {
-  display: grid; gap: 12px; padding: 12px; border-radius: 16px;
+  display: grid; gap: 12px; padding: 14px 12px 12px; border-radius: 0 0 16px 16px;
   border: 2px solid var(--m, var(--ls-line));
-  background: color-mix(in srgb, var(--m, var(--ls-accent)) 7%, var(--ls-surface));
+  background: var(--frame-bg);
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .meal-frame .ls-input { background: var(--ls-surface); }
 .meal-frame .ls-input:focus { border-color: var(--m); }
-/* 選んでいるものは角を小さく（丸から四角へ）して、ほかの丸いボタンとはっきり分ける */
-.meals .ls-chip[aria-checked="true"] {
-  border-radius: 10px;
-  border-color: var(--m);
-  background: color-mix(in srgb, var(--m) 26%, var(--ls-surface));
-  color: color-mix(in srgb, var(--m) 50%, var(--ls-text));
-  box-shadow: inset 0 0 0 2px var(--m);
-}
+.meal-frame .ls-fold { background: var(--ls-surface); }
+/* 枠の中はせまくなるので、「栄養も入れる」は折り返さない（「なくてもOK」のほうを縮める） */
+.meal-frame .nutri summary { white-space: nowrap; }
+.meal-frame .nutri .ls-fold-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 360px) { .meal-frame { padding: 12px 8px 8px; } }
 /* 日付の欄は丸いボタンの上に透明で重ねる（押すと端末の日付えらびが開く） */
 .date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 
