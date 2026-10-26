@@ -8,7 +8,7 @@
 //   （submitMealBatch・listMealLogs など）。送る形はくらぶボットの形 { app: "qlove", v: 1, tool: "shoquji", action, … }
 //   （くらぶボットは action で受けるので、前の形と同じように受けられる）
 // js/botlink.js・js/bot-menu.js・app.js が読む
-import { LINE_LOG } from "./line-config.js?v=202610261900";
+import { LINE_LOG } from "./line-config.js?v=202610262000";
 
 const Q = () => globalThis.QBotLink;
 const TOOL = "shoquji";

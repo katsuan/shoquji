@@ -45,8 +45,20 @@ body {
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .days .ls-chip, .meals .ls-chip { min-height: 44px; font-size: 15px; font-weight: 800; }
-/* 食事のボタンにも、その食事の色の点 */
-.meals .ls-chip::before { content: ""; display: inline-block; flex: none; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: var(--m); }
+/* 食事のボタンは、下の一覧の札と同じ見た目（その食事の色のうすい地と、下の色の線）。選んでいるものは、その食事の色の太い枠 */
+.meals .ls-chip {
+  padding: 0 4px; white-space: nowrap;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--m) 14%, var(--ls-surface));
+  color: color-mix(in srgb, var(--m) 45%, var(--ls-subtext));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--m) 55%, transparent);
+}
+.meals .ls-chip[aria-checked="true"] {
+  border-color: var(--m);
+  background: color-mix(in srgb, var(--m) 26%, var(--ls-surface));
+  color: color-mix(in srgb, var(--m) 50%, var(--ls-text));
+  box-shadow: inset 0 0 0 2px var(--m);
+}
 /* 日付の欄は丸いボタンの上に透明で重ねる（押すと端末の日付えらびが開く） */
 .date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 
