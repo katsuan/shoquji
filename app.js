@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610261900";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610261900";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610261900";
-import { createBotLink } from "./js/botlink.js?v=202610261900";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610261900";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610261900";
-import { cardUrl } from "./js/card.js?v=202610261900";
-import { writeDays } from "./js/days.js?v=202610261900";
-import { readLink } from "./js/link.js?v=202610261900";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610261900";
-import { $, esc } from "./js/dom.js?v=202610261900";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262000";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610262000";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262000";
+import { createBotLink } from "./js/botlink.js?v=202610262000";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262000";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262000";
+import { cardUrl } from "./js/card.js?v=202610262000";
+import { writeDays } from "./js/days.js?v=202610262000";
+import { readLink } from "./js/link.js?v=202610262000";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262000";
+import { $, esc } from "./js/dom.js?v=202610262000";
 
 
 let state = load();
@@ -536,12 +536,37 @@ $("sendTextToggle").addEventListener("change", (e) => {
 });
 
 // ---- ふりかえり ----
+let weekOffset = 0; // 見ている週（0＝今週、-1＝先週…）
+
+// 週のはじまり（Q 共通の設定。読めなければ月曜）
+function weekStart() {
+  try {
+    return window.QWeekStart ? window.QWeekStart.get(1) : 1;
+  } catch {
+    return 1;
+  }
+}
+
+// 「10/20〜10/26」の形
+function rangeLabel(from, to) {
+  const md = (d) => d.split("-").slice(1).map(Number).join("/");
+  return `${md(from)}〜${md(to)}`;
+}
+
+// 「ふりかえり」（続けた日数・週のカロリー・食事ごとの割合・よく食べるもの）を描く
 function renderLookback() {
   const today = ymd();
   const all = view();
   const n = streak(all, today);
   $("streak").innerHTML = n ? `🔥 <b>${n}</b> 日つづけて記録しています` : "記録した日が続くと、ここに日数が出ます";
-  const days = week(all, today);
+  const start = weekStart();
+  const days = week(all, today, { start, offset: weekOffset });
+  // もどれるのは、いちばん古い記録の週まで
+  const oldest = all.logs.reduce((m, l) => (l.date < m ? l.date : m), today);
+  $("weekPrev").disabled = days[0].date <= weekStartOf(oldest, start);
+  $("weekNext").disabled = weekOffset >= 0;
+  $("weekLabel").textContent = `${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}　${rangeLabel(days[0].date, days[6].date)}`;
+  $("week").setAttribute("aria-label", `${rangeLabel(days[0].date, days[6].date)} のカロリー`);
   const goal = state.targets.kcal;
   const top = Math.max(goal * 1.2, ...days.map((d) => d.kcal), 1);
   $("week").innerHTML =
@@ -549,26 +574,36 @@ function renderLookback() {
     `<div class="goal" style="top:${16 + 110 * (1 - goal / top)}px"><span>目標 ${fmt(goal)}</span></div>` +
     days
       .map((d) => {
-        const [, m, dd] = d.date.split("-").map(Number);
+        const [y, m, dd] = d.date.split("-").map(Number);
         // 棒は朝・昼・夜・間食の色を下から積む
         const segs = d.meals
           .filter((r) => r.kcal > 0)
           .map((r) => `<i class="${mealClass(r.meal)}" style="flex-grow:${r.kcal}"></i>`)
           .join("");
-        return `<div class="day-col${d.date === today ? " today" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><span class="stack" style="height:${(d.kcal / top) * 100}%">${segs}</span></span><span>${m}/${dd}</span></div>`;
+        const dow = "日月火水木金土"[new Date(y, m - 1, dd).getDay()];
+        return `<div class="day-col${d.date === today ? " today" : ""}${d.future ? " future" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><span class="stack" style="height:${(d.kcal / top) * 100}%">${segs}</span></span><span>${m}/${dd}</span><span class="dow">${dow}</span></div>`;
       })
       .join("");
   // この7日の、食事ごとの割合（カロリーを入れた日の平均も）
   const weekRows = byMeal(days.flatMap((d) => d.meals));
   const kcalDays = days.filter((d) => d.kcal > 0).length;
   $("weekSplit").innerHTML = kcalDays
-    ? `<p class="ranking-title">🍽 この7日の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
+    ? `<p class="ranking-title">🍽 ${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
     : "";
   const top5 = menus(all).slice(0, 5);
   $("ranking").innerHTML = top5.length
     ? `<p class="ranking-title">🏅 よく食べるもの</p><ol class="ranking">${top5.map((m) => `<li><span>${esc(m.name)}</span><span>${m.count} 回</span></li>`).join("")}</ol>`
     : "";
 }
+
+$("weekPrev").addEventListener("click", () => {
+  weekOffset--;
+  renderLookback();
+});
+$("weekNext").addEventListener("click", () => {
+  weekOffset = Math.min(0, weekOffset + 1);
+  renderLookback();
+});
 
 // ---- 目標・控え ----
 const TARGET_INPUTS = { tKcal: "kcal", tP: "p", tF: "f", tC: "c" };

@@ -255,3 +255,12 @@ body {
 /* 見出しを、ことばの途中で折り返さない（「つな／ぐ」にしない）。折り返すなら .nw のまとまりの間で */
 .nw { display: inline-block; }
 .ls-fold > summary .ls-fold-meta { white-space: nowrap; }
+
+/* 週のきりかえ（‹ 今週 10/20〜10/26 ›）。押す所は 44px */
+.week-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.week-label { flex: 1; text-align: center; font-size: 14px; font-weight: 800; white-space: nowrap; }
+.week-step { min-width: 44px; min-height: 44px; border: 1px solid var(--ls-line); border-radius: 999px; background: var(--ls-surface); color: var(--ls-text); font-size: 20px; font-weight: 800; cursor: pointer; }
+.week-step:disabled { opacity: 0.35; cursor: default; }
+.day-col { grid-template-rows: 14px 110px 16px 14px; }
+.day-col .dow { font-size: 10px; line-height: 14px; }
+.day-col.future { opacity: 0.45; }

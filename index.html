@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610261900">
-<link rel="stylesheet" href="style.css?v=202610261900">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262000">
+<link rel="stylesheet" href="style.css?v=202610262000">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -179,6 +179,12 @@
       <summary><span class="ls-fold-icon" aria-hidden="true">📈</span>ふりかえり</summary>
       <div class="ls-fold-body">
         <div id="streak" class="streak"></div>
+        <!-- 週の区切りは Q 共通の週のはじまり（月曜／日曜。shared/week-start.js）。前の週・次の週にもどせる -->
+        <div class="week-nav">
+          <button id="weekPrev" class="week-step" type="button" aria-label="前の週">‹</button>
+          <span id="weekLabel" class="week-label"></span>
+          <button id="weekNext" class="week-step" type="button" aria-label="次の週">›</button>
+        </div>
         <div id="week" class="week" aria-label="1週間のカロリー"></div>
         <div id="weekSplit" class="week-split"></div>
         <div id="ranking" class="ranking"></div>
@@ -263,10 +269,12 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610261900" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262000" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610261900" defer></script>
-<script type="module" src="app.js?v=202610261900"></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262000" defer></script>
+<!-- 週のはじまり（Q 共通。月曜／日曜。ほかの Q ツールで変えたものと同じ） -->
+<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202610262000"></script>
+<script type="module" src="app.js?v=202610262000"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

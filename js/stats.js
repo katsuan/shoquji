@@ -1,6 +1,6 @@
 // しょくじ：日付と集計の計算（合計・食事ごとの割合・よく食べるもの・1週間・続けた日数）。画面にはさわらない。
 // app.js と js/ のほかの部品が読む
-import { MEALS } from "./store.js?v=202610261900";
+import { MEALS } from "./store.js?v=202610262000";
 
 const WEEK = ["日", "月", "火", "水", "木", "金", "土"];
 
@@ -86,13 +86,22 @@ export function menus(state) {
   return [...map.values()].sort((a, b) => b.count - a.count || b.last - a.last);
 }
 
-// 今日までの7日（古い順）の合計カロリーと、食事ごとのカロリー（meals）
-export function week(state, today) {
+// その日をふくむ週の、はじまりの日（start：1＝月曜・0＝日曜。Q 共通の週のはじまり）
+export function weekStartOf(date, start = 1) {
+  const [y, m, d] = date.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return addDays(date, -((dow - (start === 0 ? 0 : 1) + 7) % 7));
+}
+
+// きょうをふくむ週から offset 週ずらした週の7日（週のはじまりから順に）の、合計カロリーと食事ごとのカロリー（meals）。
+// きょうより先の日は future: true（記録はまだないので空で出す）
+export function week(state, today, { start = 1, offset = 0 } = {}) {
+  const first = addDays(weekStartOf(today, start), offset * 7);
   return Array.from({ length: 7 }, (_, i) => {
-    const date = addDays(today, i - 6);
+    const date = addDays(first, i);
     const logs = logsOf(state, date);
     const t = totals(logs);
-    return { date, kcal: t.kcal, count: t.count, meals: byMeal(logs) };
+    return { date, kcal: t.kcal, count: t.count, meals: byMeal(logs), future: date > today };
   });
 }
 

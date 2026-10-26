@@ -4,7 +4,7 @@ import "./_botlink.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { addLog, exportJson, importJson } from "../js/store.js";
-import { byMeal, menus, totals, logsOf, week, streak, addDays } from "../js/stats.js";
+import { byMeal, menus, totals, logsOf, week, weekStartOf, streak, addDays } from "../js/stats.js";
 
 const XSS = "<img src=x onerror=alert(1)>"; // qcheck-ok: W8 外からの文字の見本
 const blank = () => ({ v: 1, logs: [], targets: { kcal: 2000, p: 65, f: 60, c: 280 }, deleted: [], sendText: false });
@@ -113,9 +113,11 @@ test("日付：月・年・うるう年をまたいでも1日ずつ数える", (
   ["2028-02-28", "2028-02-29", "2028-03-01"].forEach((date) => addLog(s, { date, meal: "朝", name: "パン", kcal: 100 }));
   assert.equal(streak(s, "2028-03-01"), 3);
   assert.equal(streak(s, "2028-03-02"), 3, "きょうまだなら、きのうまでで数える");
+  // 2028-03-01 は水曜。月曜はじまりの週は 2/28（月）〜3/5（日）
   const w = week(s, "2028-03-01");
-  assert.deepEqual(w.map((d) => d.date).slice(-3), ["2028-02-28", "2028-02-29", "2028-03-01"]);
-  assert.equal(w[6].kcal, 100);
+  assert.deepEqual(w.map((d) => d.date).slice(0, 3), ["2028-02-28", "2028-02-29", "2028-03-01"]);
+  assert.equal(w[2].kcal, 100);
+  assert.equal(w[3].future, true, "きょうより先の日");
 });
 
 test("食事ごとの割合：足して 100%、カロリーのない食事は 0%", () => {
@@ -136,7 +138,27 @@ test("1週間の日ごとに、食事ごとのカロリーも入る", () => {
   const s = blank();
   addLog(s, { date: "2026-10-22", meal: "昼", name: "カレー", kcal: 780 });
   addLog(s, { date: "2026-10-22", meal: "間食", name: "せんべい", kcal: 120 });
-  const day = week(s, "2026-10-22").at(-1);
+  const day = week(s, "2026-10-22").find((d) => d.date === "2026-10-22");
   assert.equal(day.kcal, 900);
   assert.deepEqual(day.meals.map((r) => [r.meal, r.kcal, r.pct]), [["朝", 0, 0], ["昼", 780, 87], ["夜", 0, 0], ["間食", 120, 13]]);
+});
+
+test("週の区切り：月曜はじまり・日曜はじまり。前の週へずらすと、週・年をまたいでも7日ずつ", () => {
+  // 2026-10-26 は月曜、2026-10-25 は日曜
+  assert.equal(weekStartOf("2026-10-26", 1), "2026-10-26");
+  assert.equal(weekStartOf("2026-10-25", 1), "2026-10-19", "月曜はじまりなら、日曜は週の最後");
+  assert.equal(weekStartOf("2026-10-25", 0), "2026-10-25");
+  assert.equal(weekStartOf("2026-10-31", 0), "2026-10-25");
+  const s = blank();
+  addLog(s, { date: "2026-12-31", meal: "夜", name: "そば", kcal: 400 });
+  addLog(s, { date: "2027-01-01", meal: "朝", name: "おもち", kcal: 300 });
+  // 2027-01-01 は金曜。月曜はじまりなら 12/28〜1/3、日曜はじまりなら 12/27〜1/2
+  const mon = week(s, "2027-01-01", { start: 1 });
+  assert.deepEqual([mon[0].date, mon[6].date], ["2026-12-28", "2027-01-03"]);
+  assert.deepEqual(mon.filter((d) => d.kcal).map((d) => [d.date, d.kcal]), [["2026-12-31", 400], ["2027-01-01", 300]]);
+  const sun = week(s, "2027-01-01", { start: 0 });
+  assert.deepEqual([sun[0].date, sun[6].date], ["2026-12-27", "2027-01-02"]);
+  const prev = week(s, "2027-01-01", { start: 1, offset: -1 });
+  assert.deepEqual([prev[0].date, prev[6].date], ["2026-12-21", "2026-12-27"]);
+  assert.ok(prev.every((d) => !d.future));
 });
