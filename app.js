@@ -1,17 +1,17 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262145";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610262145";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262145";
-import { createBotLink } from "./js/botlink.js?v=202610262145";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262145";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262145";
-import { cardUrl } from "./js/card.js?v=202610262145";
-import { writeDays } from "./js/days.js?v=202610262145";
-import { readLink } from "./js/link.js?v=202610262145";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262145";
-import { $, esc } from "./js/dom.js?v=202610262145";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610262230";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, ymd } from "./js/stats.js?v=202610262230";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610262230";
+import { createBotLink } from "./js/botlink.js?v=202610262230";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610262230";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610262230";
+import { cardUrl } from "./js/card.js?v=202610262230";
+import { writeDays } from "./js/days.js?v=202610262230";
+import { readLink } from "./js/link.js?v=202610262230";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610262230";
+import { $, esc } from "./js/dom.js?v=202610262230";
 
 
 let state = load();
@@ -23,6 +23,7 @@ const ui = {
   masterEdit: null, // 保存する MYメニュー { key, keep, toMine }（ボットのカードの「MYメニューを直す」・MYメニューの欄から）
   base: null, // MYメニュー・候補から入れた数字（量の倍率のもと）。{ kcal, p, f, c }
   scale: 1, // いまの倍率
+  est: null, // ご飯◯杯分で選んだもの（"0.5"・"1"…・"few"）。カロリーを自分で入れたら null
   justAdded: null // 記録したばかりの id（一覧で少し光らせる）
 };
 
@@ -88,6 +89,7 @@ function renderMeals() {
   box.innerHTML = MEALS.map((m) => `<button class="ls-chip ${mealClass(m)}" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
   // 食べたものの欄までの枠も、選んでいる食事の色に
   $("mealFrame").className = `meal-frame ${mealClass(ui.meal)}`;
+  renderEst(); // 間食だけ「少し」がある
 }
 document.querySelector(".meals").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");
@@ -132,6 +134,38 @@ function renderSuggest() {
   };
 }
 
+// ---- だいたいのカロリー（ご飯◯杯分） ----
+// くらぶボットと同じ目安：ご飯1杯（150g）≈ 240kcal。朝・昼・夜は½〜3杯、間食は「少し」〜1.5杯
+const RICE_BOWL_KCAL = 240;
+function estOptions(meal) {
+  const bowls = meal === "間食" ? [{ key: "few", label: "🍬 少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
+  return bowls.map((b) => (typeof b === "object" ? b : { key: String(b), label: `${b === 0.5 ? "½" : b}杯`, kcal: Math.round(RICE_BOWL_KCAL * b) }));
+}
+// ボタンを描く（押したものは選んだ印。カロリーを自分で入れたら外れる）
+function renderEst() {
+  const opts = estOptions(ui.meal);
+  if (ui.est && !opts.some((o) => o.key === ui.est)) ui.est = null; // 食事を切りかえて、その量がなくなったとき
+  $("estChips").style.setProperty("--n", opts.length);
+  $("estChips").innerHTML = opts
+    .map((o) => `<button class="ls-chip" type="button" data-est="${o.key}" aria-pressed="${o.key === ui.est}">${o.label}<small>${o.kcal}kcal</small></button>`)
+    .join("");
+}
+$("estChips").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-est]");
+  if (!b) return;
+  const o = estOptions(ui.meal).find((x) => x.key === b.dataset.est);
+  if (!o) return;
+  // もう一度押すと取り消す
+  ui.est = ui.est === o.key ? null : o.key;
+  $("kcal").value = ui.est ? o.kcal : "";
+  hideKcalError();
+  // 前に食べたものの数字の倍率は、だいたいで入れたら使わない
+  ui.base = null;
+  ui.scale = 1;
+  renderScale();
+  renderEst();
+});
+
 // 前に食べたものを入れる（名前と、最後に入れたカロリー・PFC）
 function fillMenu(m) {
   fillEntry(m, { openOnly: true });
@@ -143,7 +177,14 @@ function hideKcalError() {
   $("kcalError").hidden = true;
   $("kcal").removeAttribute("aria-invalid");
 }
-$("kcal").addEventListener("input", hideKcalError);
+$("kcal").addEventListener("input", () => {
+  hideKcalError();
+  // 自分で数字を入れたら、ご飯◯杯分の選んだ印は外す
+  if (ui.est) {
+    ui.est = null;
+    renderEst();
+  }
+});
 
 // 名前の欄の赤い文字を消す
 function hideNameError() {
@@ -177,7 +218,9 @@ function clearForm() {
   NUTRI.forEach((k) => ($(k).value = ""));
   ui.base = null;
   ui.scale = 1;
+  ui.est = null;
   renderScale();
+  renderEst();
   renderSuggest();
 }
 
@@ -273,7 +316,9 @@ function fillEntry(e, { openOnly = false } = {}) {
   // 量の倍率のもと（数字があるときだけ）
   ui.base = has ? Object.fromEntries(NUTRI.map((k) => [k, num(e[k])])) : null;
   ui.scale = 1;
+  ui.est = null;
   renderScale();
+  renderEst();
 }
 
 // 量の倍率：もとの数字に倍率をかけて入れなおす（大盛り・半分など）
@@ -287,7 +332,9 @@ $("scaleRow").addEventListener("click", (e) => {
   ui.scale = Number(b.dataset.scale);
   NUTRI.forEach((k) => ($(k).value = ui.base[k] == null ? "" : Math.round(ui.base[k] * ui.scale * 10) / 10));
   $("nutri").open = true;
+  ui.est = null;
   renderScale();
+  renderEst();
 });
 
 // MYメニューを入力欄に開いて直す（「📌 よく記録するもの・MYメニュー」から）

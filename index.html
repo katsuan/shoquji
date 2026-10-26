@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262145">
-<link rel="stylesheet" href="style.css?v=202610262145">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262230">
+<link rel="stylesheet" href="style.css?v=202610262230">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -60,6 +60,11 @@
       <p id="nameError" class="ls-hint is-error" hidden>食べたものを入れてね</p>
       <!-- 食べたことのあるものは、押すとカロリー・PFC も入る（入れた文字で絞りこむ） -->
       <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
+      <!-- だいたいのカロリー（ご飯◯杯分）。くらぶボットと同じ目安（ご飯1杯 150g ≈ 240kcal）。押すとカロリーの欄に入る（app.js の renderEst） -->
+      <div class="est-row" role="group" aria-labelledby="estTitle">
+        <p class="est-head"><span id="estTitle">🍚 ご飯何杯分？</span><small>1杯（150g）≈ 240kcal</small></p>
+        <div id="estChips" class="est-chips"></div>
+      </div>
       <details id="nutri" class="ls-fold nutri">
         <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
         <div class="ls-fold-body nutri-grid">
@@ -258,10 +263,10 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262145" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262230" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262145" defer></script>
-<script type="module" src="app.js?v=202610262145"></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262230" defer></script>
+<script type="module" src="app.js?v=202610262230"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
