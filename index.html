@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610271256">
-<link rel="stylesheet" href="style.css?v=202610271256">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610281201">
+<link rel="stylesheet" href="style.css?v=202610281201">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -96,6 +96,8 @@
     <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
+    <!-- LINE 版で、まだくらぶボットに送っていない記録があるとき・ログインしていないときだけ（文は js/outbox.js の saveNoteText） -->
+    <p class="where-note" id="saveNote" role="status" hidden></p>
     <!-- LINE の中でくらぶボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
     <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、くらぶボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
@@ -273,12 +275,12 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610271256" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610281201" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610271256" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610281201" defer></script>
 <!-- 週のはじまり（Q 共通。月曜／日曜。ほかの Q ツールで変えたものと同じ） -->
-<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202610271256"></script>
-<script type="module" src="app.js?v=202610271256"></script>
+<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202610281201"></script>
+<script type="module" src="app.js?v=202610281201"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

@@ -6,13 +6,14 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610271256";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610271256";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610271256";
-import { LINE_LOG } from "./line-config.js?v=202610271256";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610271256";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610271256";
-import { $ } from "./dom.js?v=202610271256";
+import { addDays, ymd } from "./stats.js?v=202610281201";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610281201";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610281201";
+import { LINE_LOG } from "./line-config.js?v=202610281201";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610281201";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610281201";
+import { $ } from "./dom.js?v=202610281201";
+import { createOutbox, isOffline, unsentLogs } from "./outbox.js?v=202610281201";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -30,6 +31,8 @@ export function createBotLink(ctx) {
   let range = null; // ボットの記録を全部読めた期間 { from, to }
   let syncing = false;
   const hidden = new Set(); // 消すのを待っているボットの記録の logId（画面からは先に消す）
+  // 送る係（送っている途中の記録は、もう一度は送らない。js/outbox.js）
+  const outbox = createOutbox((logs) => (isOffline() ? { ok: false, error: "net" } : client.record(logs)));
 
   function loadBot() {
     if (!inLine || !gasTarget()) return [];
@@ -67,9 +70,11 @@ export function createBotLink(ctx) {
   }
 
   // 記録をボットにも入れる（同じ id は何度送っても1回だけ入る）。うまくいかなければ「もう一度」
+  // 電波がない・送れなかったとき：記録は端末に「まだ送っていない」として残り、電波がもどったら・次に開いたときに送る
   async function send(logs, { quiet = false } = {}) {
     if (!client || !logs.length) return;
-    const res = await client.record(logs);
+    const res = await outbox.push(logs);
+    if (res.none) return;
     if (asGuest(res)) return;
     if (res.ok) {
       markSent(ctx.state(), logs.map((l) => l.id));
@@ -78,6 +83,8 @@ export function createBotLink(ctx) {
       if (!quiet && res.added?.length) ctx.say(`🤖 くらぶボットにも入れました`);
       return;
     }
+    ctx.changed?.(); // 「まだ送っていません」の数を描きなおす
+    if (res.error === "net" && quiet) return; // 記録したときの自動の送りは、電波がなければ静かに待つ（画面の1行とアイコンの数でわかる）
     if ((res.error === "net" || res.error === "fail") && window.LineShareUI?.toast) {
       window.LineShareUI.toast(lineLogMessage(res.error), { actionLabel: "もう一度", onAction: () => send(logs), ms: 8000 });
     } else {
@@ -94,10 +101,7 @@ export function createBotLink(ctx) {
 
   // まだボットに入れていない、ここ7日の記録（電波がなかった・ログインしていなかった・つながる前に入れた分）
   function unsent() {
-    const state = ctx.state();
-    const from = addDays(ymd(), -6);
-    const sent = new Set(state.sent);
-    return state.logs.filter((l) => l.date >= from && !sent.has(l.id));
+    return unsentLogs(ctx.state(), ymd());
   }
 
   // まだボットに入れていない、ここ7日の記録を入れる（つながったとき・電波がもどったとき）
@@ -205,7 +209,8 @@ export function createBotLink(ctx) {
   function connect() {
     const had = !!client;
     client = null;
-    return startLineLog(gasTarget()).then(async (next) => {
+    // ログインできない・電波がないときに失敗しても止めない（記録は端末に残り、もどったら retry でつなぎなおす）
+    return startLineLog(gasTarget()).catch(() => null).then(async (next) => {
       // つなぎ先がある人が、LINE のアプリ内のブラウザ（LIFF ではない）で開いたときは、開きなおしを出す
       $("reopenInLiff").hidden = window.QBotLink ? window.QBotLink.reopenHidden({ client: next, url: gasTarget() }) : true;
       showConnected(false);

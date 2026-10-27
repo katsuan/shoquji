@@ -1,17 +1,18 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610271256";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610271256";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610271256";
-import { createBotLink } from "./js/botlink.js?v=202610271256";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610271256";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610271256";
-import { cardUrl } from "./js/card.js?v=202610271256";
-import { writeDays } from "./js/days.js?v=202610271256";
-import { readLink } from "./js/link.js?v=202610271256";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610271256";
-import { $, esc } from "./js/dom.js?v=202610271256";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610281201";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610281201";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610281201";
+import { createBotLink } from "./js/botlink.js?v=202610281201";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610281201";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610281201";
+import { cardUrl } from "./js/card.js?v=202610281201";
+import { writeDays } from "./js/days.js?v=202610281201";
+import { readLink } from "./js/link.js?v=202610281201";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610281201";
+import { $, esc } from "./js/dom.js?v=202610281201";
+import { saveNoteText } from "./js/outbox.js?v=202610281201";
 
 
 let state = load();
@@ -38,7 +39,7 @@ function persist() {
 
 // ---- くらぶボット（LINE 版で、つないだときだけ。js/botlink.js） ----
 let me = null; // 見出しの右の本人のアイコン（shared/line-me.js。ブラウザ版では null）
-const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit, changed: () => me?.update() });
+const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit, changed: () => drawStatus() });
 // くらぶボットへの呼び出し口（js/linelog.js。つないでいなければ null）
 const lineLog = () => botLink.client(); // つないでいなければ null
 // 画面に出す中身：この端末の記録＋ボットで入れた記録
@@ -702,6 +703,7 @@ function render() {
   $("saveBtn").textContent = ui.masterEdit ? (ui.masterEdit.toMine ? "📒 自分用に保存" : "📒 MYメニューに保存") : ui.editing || ui.botEdit ? "✏️ 直す" : "＋ 記録する";
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
   document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない
+  drawStatus(); // 記録がふえた・へったら「まだ送っていません」の数も
 }
 
 render();
@@ -760,7 +762,16 @@ me = window.QLineMe?.mount({
   // 「⚙️ 設定」：ページの下の設定の欄（目標・送り方・週のはじまり・記録の控え。q-oqrn の ux.md A7）
   onPrefs: () => window.QLineMe.openFold("settings")
 });
-botLink.connect();
+// まだ送っていない記録・ログインしていないときの1行と、アイコンの数の印を描きなおす（送れた・つながった・電波が変わったとき）
+function drawStatus() {
+  me?.update();
+  const text = saveNoteText({ inLine: botLink.inLine, pending: botLink.pending(), loggedIn: me?.status?.().loggedIn });
+  $("saveNote").textContent = text;
+  $("saveNote").hidden = !text;
+}
+window.addEventListener("online", drawStatus);
+window.addEventListener("offline", drawStatus);
+botLink.connect().finally(drawStatus);
 
 // ---- LINE 版で使う：ブラウザで開いたときの案内と、4コマ（最初だけ。閉じたら出さない。Q キットの shared/botlink.js の guide） ----
 window.QBotLink?.guide({
