@@ -1,20 +1,19 @@
 // くらぶボット（LINE の中でつないだとき）の設定と、よく記録するもの
 //   - 開いたときに1回、ボットの目標・20時のお知らせ・よく記録するもの・MYメニューを読む（readProfile）。目標はボットにそろえる
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
-//   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す、LINE のリッチメニュー「⚡ よく記録」の見本と作りなおし
+//   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
 // app.js が読む（initBotMenu を1回）。js/botlink.js も、つないだときに readProfile・resetProfile を使う
-import { fmt } from "./stats.js?v=202610262100";
-import { lineLogMessage } from "./linelog.js?v=202610262100";
-import { drawQuickMenu, LAYOUT as RICH_LAYOUT } from "./meal-richmenu.js?v=202610262100";
-import { $, esc } from "./dom.js?v=202610262100";
+import { fmt } from "./stats.js?v=202610271256";
+import { lineLogMessage } from "./linelog.js?v=202610271256";
+import { $, esc } from "./dom.js?v=202610271256";
 
 
 // MYメニューの名前（種類・量つき）
 export const dn = (m) => String(m.displayName || [m.menu || m.name, m.flavor, m.unit].filter(Boolean).join(" ")).trim();
 
 let ctx = null; // { lineLog(), state(), ui, link, render, persist, say, startMasterEdit }
-let profile = null; // ボットの { user, quickMenus, popularMenus, menus, quickRichMenu }（つないだあと、開いたときに読む）
+let profile = null; // ボットの { user, quickMenus, popularMenus, menus, isAdmin }（つないだあと、開いたときに読む）
 let pins = null; // 並べかえ中の固定（MYメニューの masterKey）。null のあいだは保存してある並び
 
 // ボットから読んだ設定（目標・お知らせ・よく記録するもの・MYメニュー。まだなら null）
@@ -25,23 +24,13 @@ export const resetProfile = () => {
   pins = null;
 };
 
-const RICH_KEY = "shoquji:richOn"; // 「トークのメニューにも出す」（この端末の設定）
-// 「トークのメニューにも出す」がオンか（この端末の設定。はじめはオン）
-const richOn = () => {
-  try {
-    return localStorage.getItem(RICH_KEY) !== "0";
-  } catch {
-    return true;
-  }
-};
-
 // 開いたときに1回：ボットの目標・お知らせ・よく記録するもの・MYメニューを読む
 export async function readProfile() {
   if (!ctx.lineLog()) return;
   const res = await ctx.lineLog().state();
   if (!res.ok) return; // 読めなくても、記録はできる（失敗の知らせは記録を読むほうで出す）
   const d = res.dashboard || {};
-  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], quickRichMenu: res.quickRichMenu || null, isAdmin: res.permission?.isAdmin === true };
+  profile = { user: d.user || {}, quickMenus: d.quickMenus || [], popularMenus: d.popularMenus || [], menus: res.menus || [], isAdmin: res.permission?.isAdmin === true };
   // 目標カロリーは、ボットのものにそろえる
   const target = Number(profile.user.calorieTarget) || 0;
   if (target > 0 && target !== ctx.state().targets.kcal) {
@@ -56,7 +45,6 @@ export async function readProfile() {
     $("quickFold").open = true;
     $("quickFold").scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  refreshRichMenuIfStale();
 }
 
 // 目標・お知らせを、ボットにも（送った項目だけ直る）
@@ -65,7 +53,6 @@ export async function saveProfile(patch, doneText) {
   const res = await ctx.lineLog().profile(patch);
   if (!res.ok) return ctx.say(lineLogMessage(res.error));
   if (res.dashboard) profile = { ...profile, user: res.dashboard.user || profile.user, quickMenus: res.dashboard.quickMenus || profile.quickMenus, popularMenus: res.dashboard.popularMenus || profile.popularMenus };
-  if (res.quickRichMenu) profile.quickRichMenu = res.quickRichMenu;
   if (doneText) ctx.say(doneText);
   return res;
 }
@@ -74,43 +61,6 @@ export async function saveProfile(patch, doneText) {
 const savedPins = () => (profile ? profile.quickMenus.filter((m) => m.pinned && m.masterKey).map((m) => m.masterKey) : []);
 // masterKey から MYメニュー・よく記録するものを引ける Map
 export const byKey = () => new Map([...(profile?.menus || []), ...(profile?.quickMenus || [])].filter((m) => m.masterKey).map((m) => [m.masterKey, m]));
-
-// 「⚡ よく記録」に並べる品：固定した順 → あいたところは記録の多い順（カロリーがわからない品は出さない）
-function richItems(list = pins || savedPins()) {
-  const map = byKey();
-  const out = list.map((k) => map.get(k)).filter(Boolean).map((m) => ({ name: dn(m), kcal: m.kcal ?? null, pinned: true }));
-  const used = new Set(out.map((i) => i.name));
-  const popular = (profile?.popularMenus || []).map((m) => ({ ...m, kcal: m.kcal ?? (m.averageKcal || null) }));
-  [...popular, ...(profile?.quickMenus || [])]
-    .filter((m) => !(m.masterKey && list.includes(m.masterKey)) && m.kcal != null && !used.has(dn(m)))
-    .forEach((m) => {
-      used.add(dn(m));
-      out.push({ name: dn(m), kcal: m.kcal, pinned: false });
-    });
-  return out.slice(0, RICH_LAYOUT.quickCount);
-}
-// 「⚡ よく記録」に描いた並びの印（品・カロリー・固定。くらべて描きなおすかを決める）
-const richKey = (items) => JSON.stringify(items.map((i) => [i.name, i.kcal, i.pinned ? 1 : 0]));
-
-// 開いたとき：LINE の「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る（まだなければ作る）
-let richRefreshing = false;
-// 開いたとき：トークの「⚡ よく記録」が今の並びとちがえば、裏で描きなおして送る
-async function refreshRichMenuIfStale() {
-  if (!ctx.lineLog() || !profile?.quickRichMenu || !richOn() || richRefreshing) return;
-  const items = richItems(savedPins());
-  if (!items.length) return;
-  const key = richKey(items);
-  if (profile.quickRichMenu.key === key) return;
-  const existed = profile.quickRichMenu.has;
-  richRefreshing = true;
-  try {
-    const res = await saveProfile({ richMenu: { image: await drawQuickMenu(items), items: items.map((i) => i.name), key } });
-    if (res && res.richMenu && res.richMenu.ok && !existed) ctx.say("トークのメニューの「⚡ よく記録」に、よく記録するものを並べました");
-  } catch (error) {
-    console.error(error);
-  }
-  richRefreshing = false;
-}
 
 // 📌 並べかえ（たたみ欄）
 function renderPins() {
@@ -139,24 +89,6 @@ function renderPins() {
           <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${m.scope === "common" && !profile.isAdmin ? "✏️ 自分用に" : "✏️ 直す"}</button></div>`
       )
       .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
-  $("richOn").checked = richOn();
-  renderRichPreview();
-}
-
-let previewKey = "";
-// 「⚡ よく記録」の見本の画像を、今の並びで描いて出す（たたみ欄が開いているときだけ）
-async function renderRichPreview() {
-  if (!richOn() || !$("quickFold").open) {
-    $("richPreview").innerHTML = "";
-    previewKey = "";
-    return;
-  }
-  const items = richItems();
-  const key = richKey(items);
-  if (key === previewKey) return;
-  previewKey = key;
-  const url = await drawQuickMenu(items);
-  if (previewKey === key) $("richPreview").innerHTML = `<img src="${url}" alt="トークのメニュー「⚡ よく記録」の見本">`; // qcheck-ok: W1 url は canvas.toDataURL で作った data: の URL
 }
 
 // ボットの設定と、よく記録するもの・MYメニューの欄のボタンをつなぐ（app.js から1回）
@@ -165,14 +97,6 @@ export function initBotMenu(context) {
   $("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "🔔 20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));
   $("quickFold").addEventListener("toggle", renderPins);
   $("pinSearch").addEventListener("input", renderPins);
-  $("richOn").addEventListener("change", (e) => {
-    try {
-      localStorage.setItem(RICH_KEY, e.target.checked ? "1" : "0");
-    } catch {
-      // 残せなくても、いまはその設定で
-    }
-    renderPins();
-  });
   $("quickFold").addEventListener("click", (e) => {
     const edit = e.target.closest("[data-master-edit]");
     if (edit) return ctx.startMasterEdit(edit.dataset.masterEdit);
@@ -200,9 +124,7 @@ export function initBotMenu(context) {
     $("savePins").disabled = true;
     $("savePins").textContent = "保存中…";
     try {
-      const items = richOn() ? richItems(list) : [];
-      const richMenu = items.length ? { image: await drawQuickMenu(items), items: items.map((i) => i.name), key: richKey(items) } : null;
-      const res = await saveProfile({ favorites: list, ...(richMenu ? { richMenu } : {}) });
+      const res = await saveProfile({ favorites: list });
       if (res) {
         // 返事に新しい並びがないときも、画面は保存した並びに
         if (!res.dashboard && profile) {
@@ -210,8 +132,7 @@ export function initBotMenu(context) {
           profile.quickMenus = [...list.map((k) => ({ ...map.get(k), pinned: true })), ...profile.quickMenus.filter((m) => !list.includes(m.masterKey)).map((m) => ({ ...m, pinned: false }))];
         }
         pins = null;
-        if (res.richMenu && !res.richMenu.ok) ctx.say("並びは保存しました。トークのメニューは作れませんでした。少し待って、もう一度ためしてね");
-        else ctx.say(richMenu ? "📌 並びを保存して、トークのメニューにも出しました" : "📌 よく記録するものの並びを保存しました");
+        ctx.say("📌 よく記録するものの並びを保存しました");
       }
     } finally {
       $("savePins").disabled = false;

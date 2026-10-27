@@ -27,8 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610262100">
-<link rel="stylesheet" href="style.css?v=202610262100">
+<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202610271256">
+<link rel="stylesheet" href="style.css?v=202610271256">
 </head>
 <body>
 <main class="ls-page ls-stack">
@@ -191,11 +191,11 @@
       </div>
     </details>
 
-    <!-- よく記録するもの（くらぶボットとつないでいるときだけ）：📌 固定と並べかえ、LINE のリッチメニュー「⚡ よく記録」 -->
+    <!-- よく記録するもの（くらぶボットとつないでいるときだけ）：📌 固定と並べかえ、MYメニューをさがして直す -->
     <details class="ls-fold" id="quickFold" hidden>
       <summary><span class="ls-fold-icon" aria-hidden="true">📌</span>よく記録するもの・MYメニュー</summary>
       <div class="ls-fold-body">
-        <p class="ls-hint">📌 固定した品は、いつも前に並びます。あいたところは記録の多い順です。トークの下のメニュー「⚡ よく記録」から、押すだけで記録できます。</p>
+        <p class="ls-hint">📌 固定した品は、いつも前に並びます。あいたところは記録の多い順です。ボットの返事の下に出るボタンに、この順で並び、押すだけで記録できます。</p>
         <p class="sub-title">固定した品（<span id="pinCount">0</span>/12）</p>
         <ol id="pinList" class="pin-list"></ol>
         <label class="ls-field">
@@ -203,8 +203,6 @@
           <input id="pinSearch" class="ls-input" maxlength="40" placeholder="例：カレー" autocomplete="off" enterkeyhint="search">
         </label>
         <div id="pinCands" class="cand-list"></div>
-        <label class="send-text"><input id="richOn" type="checkbox"><span>トークのメニューにも出す<small>トークの下の「⚡ よく記録」に、前から 6 品が並びます</small></span></label>
-        <div id="richPreview" class="rich-preview"></div>
         <button id="savePins" class="ls-button is-primary is-block" type="button">📌 この並びで保存</button>
       </div>
     </details>
@@ -253,7 +251,7 @@
         </div>
         <p class="ls-hint small">「ふりかえり」の週の区切り。ほかの Q のツールにもそろいます。</p>
         <p class="sub-title">🔒 記録の控え</p>
-        <p class="ls-hint">記録はこの端末（ブラウザ）の中だけにあります。機種変更やブラウザのデータを消す前に、控えを書き出しておくと安心です。</p>
+        <p class="ls-hint">しょくじの記録は、この端末（ブラウザ）に残っています。機種変更やブラウザのデータを消す前に、控えを書き出しておくと安心です（LINE 版でボットとつないでいれば、ボットにも残ります）。</p>
         <div class="form-actions">
           <button id="exportBtn" class="ls-button is-block" type="button">⬇️ 控えを書き出す</button>
           <label class="ls-button is-block file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
@@ -275,12 +273,12 @@
 <script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
 <script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610262100" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202610271256" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610262100" defer></script>
+<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202610271256" defer></script>
 <!-- 週のはじまり（Q 共通。月曜／日曜。ほかの Q ツールで変えたものと同じ） -->
-<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202610262100"></script>
-<script type="module" src="app.js?v=202610262100"></script>
+<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202610271256"></script>
+<script type="module" src="app.js?v=202610271256"></script>
 <script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>

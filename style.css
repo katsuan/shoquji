@@ -233,8 +233,6 @@ body {
 .pin-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
 .pin-row button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--ls-subtext); font-size: 15px; cursor: pointer; }
 .pin-row button:disabled { opacity: 0.3; cursor: default; }
-.rich-preview img { display: block; width: 100%; border: 1.5px solid var(--ls-line); border-radius: 12px; }
-.rich-preview:empty { display: none; }
 .item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; }
 .cand-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px dashed var(--ls-line); }
 .cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
