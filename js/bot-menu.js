@@ -4,9 +4,9 @@
 //   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
 // app.js が読む（initBotMenu を1回）。js/botlink.js も、つないだときに readProfile・resetProfile を使う
-import { fmt } from "./stats.js?v=202610281201";
-import { lineLogMessage } from "./linelog.js?v=202610281201";
-import { $, esc } from "./dom.js?v=202610281201";
+import { fmt } from "./stats.js?v=202610291713";
+import { lineLogMessage } from "./linelog.js?v=202610291713";
+import { $, esc } from "./dom.js?v=202610291713";
 
 
 // MYメニューの名前（種類・量つき）

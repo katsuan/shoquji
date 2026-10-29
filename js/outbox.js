@@ -3,7 +3,7 @@
 //   - 送っていないものは、つながったとき・電波がもどったとき・次に開いたときに送る（js/botlink.js）
 //   - 同じ記録を2回送らない：送っている途中の id は、もう一度送らない（ボットも同じ id は1回だけ入れる）
 // 画面には文字だけを返す（saveNoteText）。DOM にはさわらない（テストは test/outbox.test.mjs）
-import { addDays } from "./stats.js?v=202610281201";
+import { addDays } from "./stats.js?v=202610291713";
 
 export const UNSENT_DAYS = 7; // 送りなおすのは、ここ7日の記録まで
 
@@ -48,3 +48,29 @@ export function saveNoteText(s) {
   if (s?.inLine && s.loggedIn === false) return "👤 ログインしていません。記録はこの端末に保存中";
   return "";
 }
+
+// 前につながったくらぶボットの URL を覚えておく場所（URL だけ。ID トークンは入れない）
+export const BOT_SEEN_KEY = "shoquji:bot";
+// つながったくらぶボットの URL を覚える（"" なら忘れる。残せない端末では何もしない）
+export function rememberBot(url, storage = globalThis.localStorage) {
+  try {
+    if (url) storage.setItem(BOT_SEEN_KEY, url);
+    else storage.removeItem(BOT_SEEN_KEY);
+  } catch {
+    // 残せなくても、つないでいるあいだは送れる
+  }
+}
+// 覚えているくらぶボットの URL（なければ ""）
+export function seenBot(storage = globalThis.localStorage) {
+  try {
+    return String(storage.getItem(BOT_SEEN_KEY) || "");
+  } catch {
+    return "";
+  }
+}
+/**
+ * つながっていなくても、くらぶボットに送る人とわかるか
+ * - 自分で入れたつなぎ先（own）があるとき
+ * - なければ、前につながったくらぶボットの URL が、いまも入っているとき（くらぶボットに「しょくじ」の機能があるとわかっている）
+ */
+export const botKnown = ({ own, qloveUrl, seen }) => !!(own || (qloveUrl && qloveUrl === seen));

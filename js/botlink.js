@@ -6,14 +6,14 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610281201";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610281201";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610281201";
-import { LINE_LOG } from "./line-config.js?v=202610281201";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610281201";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610281201";
-import { $ } from "./dom.js?v=202610281201";
-import { createOutbox, isOffline, unsentLogs } from "./outbox.js?v=202610281201";
+import { addDays, ymd } from "./stats.js?v=202610291713";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610291713";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610291713";
+import { LINE_LOG } from "./line-config.js?v=202610291713";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610291713";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610291713";
+import { $ } from "./dom.js?v=202610291713";
+import { botKnown, createOutbox, isOffline, rememberBot, seenBot, unsentLogs } from "./outbox.js?v=202610291713";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
@@ -111,7 +111,8 @@ export function createBotLink(ctx) {
 
   // まだボットに送っていない記録の数（見出しの右のアイコンの印。LINE 版でボットにつなぐ人だけ）
   function pending() {
-    return inLine && gasTarget() ? unsent().length : 0;
+    const known = botKnown({ own: gasTarget(), qloveUrl: window.QloveBotLink?.get?.() || "", seen: seenBot() });
+    return inLine && known ? unsent().length : 0;
   }
 
   // 電波がもどったとき・「いま送る」：つながっていれば送って読みなおし、まだならつなぎなおす（つなぐと送る）
@@ -218,6 +219,8 @@ export function createBotLink(ctx) {
       client = next;
       // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う（つながった表示も出さない）
       const first = await next.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
+      // くらぶボット（自分で入れたつなぎ先ではない）なら、使っている人かどうかを覚える（電波がないときの「まだ送っていない」の数に）
+      if (!gasTarget()) rememberBot(asGuest(first) ? "" : window.QloveBotLink?.get?.() || "");
       if (asGuest(first)) return;
       showConnected(true);
       ctx.render();

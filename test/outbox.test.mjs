@@ -85,3 +85,20 @@ test("電波：onLine が false のときだけ「ない」", () => {
   assert.equal(isOffline({ onLine: true }), false);
   assert.equal(isOffline(null), false);
 });
+
+test("くらぶボットだけでつないでいる人も、つながっていないときに「まだ送っていない」とわかる（前につながった URL を覚える）", async () => {
+  const { botKnown, rememberBot, seenBot, BOT_SEEN_KEY } = await import("../js/outbox.js");
+  const mem = new Map();
+  const st = { getItem: (k) => (mem.has(k) ? mem.get(k) : null), setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+  const QLOVE = "https://script.google.com/macros/s/AKfyQLOVE_TEST_1234567890/exec";
+  assert.equal(botKnown({ own: "https://script.google.com/macros/s/AKfyOWN_1234567890/exec", qloveUrl: "", seen: "" }), true, "自分で入れたつなぎ先");
+  assert.equal(botKnown({ own: "", qloveUrl: QLOVE, seen: seenBot(st) }), false, "まだ一度もつながっていない");
+  rememberBot(QLOVE, st);
+  assert.equal(botKnown({ own: "", qloveUrl: QLOVE, seen: seenBot(st) }), true, "前につながった");
+  assert.equal(botKnown({ own: "", qloveUrl: "", seen: seenBot(st) }), false, "くらぶボットの URL を消した");
+  rememberBot("", st);
+  assert.equal(mem.has(BOT_SEEN_KEY), false, "使っていない人とわかったら忘れる");
+  const broken = { getItem() { throw new Error("no"); }, setItem() { throw new Error("no"); }, removeItem() { throw new Error("no"); } };
+  rememberBot(QLOVE, broken);
+  assert.equal(seenBot(broken), "", "残せない端末でも止まらない");
+});
