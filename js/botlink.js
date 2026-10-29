@@ -6,14 +6,14 @@
 //   - 消す：画面からは先に消し、「元に戻す」を押せるあいだは待ってから、ボットからも消す（js/removals.js）
 // 画面の残り（記録・一覧など）とは、createBotLink で受けとる ctx でつなぐ
 // app.js が読む（createBotLink を1回）
-import { addDays, ymd } from "./stats.js?v=202610291713";
-import { markSent, removeLog, updateLog } from "./store.js?v=202610291713";
-import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610291713";
-import { LINE_LOG } from "./line-config.js?v=202610291713";
-import { resetProfile, readProfile } from "./bot-menu.js?v=202610291713";
-import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610291713";
-import { $ } from "./dom.js?v=202610291713";
-import { botKnown, createOutbox, isOffline, rememberBot, seenBot, unsentLogs } from "./outbox.js?v=202610291713";
+import { addDays, ymd } from "./stats.js?v=202610291807";
+import { markSent, removeLog, updateLog } from "./store.js?v=202610291807";
+import { botLogsForView, cleanGasUrl, inLineApp, lineLogMessage, planSync, startLineLog } from "./linelog.js?v=202610291807";
+import { LINE_LOG } from "./line-config.js?v=202610291807";
+import { resetProfile, readProfile } from "./bot-menu.js?v=202610291807";
+import { cancelRemoval, queueRemoval, waitingOwnIds } from "./removals.js?v=202610291807";
+import { $ } from "./dom.js?v=202610291807";
+import { botKnown, createOutbox, isOffline, rememberBot, seenBot, unsentLogs } from "./outbox.js?v=202610291807";
 
 const BOT_KEY = "shoquji:bot"; // ボットで入れた記録の控え（LINE の中でつないだときだけ）
 const BOT_DAYS = 60; // 読むのは、きょうから60日前まで

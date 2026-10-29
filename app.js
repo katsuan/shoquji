@@ -1,18 +1,18 @@
 // しょくじ（ShoQuji）の画面の入口：記録する・直す・消す・一覧・ふりかえり・目標・控えの操作と、部品をつなぐ。
 // index.html が読む（type="module"）。記録の保存は js/store.js、計算は js/stats.js、
 // くらぶボットとのつなぎは js/botlink.js（LINE 版でつないだときだけ）
-import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610291713";
-import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610291713";
-import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610291713";
-import { createBotLink } from "./js/botlink.js?v=202610291713";
-import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610291713";
-import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610291713";
-import { cardUrl } from "./js/card.js?v=202610291713";
-import { writeDays } from "./js/days.js?v=202610291713";
-import { readLink } from "./js/link.js?v=202610291713";
-import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610291713";
-import { $, esc } from "./js/dom.js?v=202610291713";
-import { saveNoteText } from "./js/outbox.js?v=202610291713";
+import { MEALS, addLog, exportJson, importJson, load, num, removeLog, reset, restoreLog, save, updateLog } from "./js/store.js?v=202610291807";
+import { addDays, byMeal, fmt, label, logsOf, mealNow, menus, streak, totals, week, weekStartOf, ymd } from "./js/stats.js?v=202610291807";
+import { cleanGasUrl, fromBotMeal, inLineApp, lineLogMessage, toBotMeal } from "./js/linelog.js?v=202610291807";
+import { createBotLink } from "./js/botlink.js?v=202610291807";
+import { LINE_LOG, OPEN_URL } from "./js/line-config.js?v=202610291807";
+import { byKey, dn, getProfile, initBotMenu, readProfile, saveProfile } from "./js/bot-menu.js?v=202610291807";
+import { cardUrl } from "./js/card.js?v=202610291807";
+import { writeDays } from "./js/days.js?v=202610291807";
+import { readLink } from "./js/link.js?v=202610291807";
+import { cancelRemoval, isWaiting } from "./js/removals.js?v=202610291807";
+import { $, esc } from "./js/dom.js?v=202610291807";
+import { saveNoteText } from "./js/outbox.js?v=202610291807";
 
 
 let state = load();

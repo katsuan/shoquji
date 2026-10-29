@@ -3,7 +3,7 @@
 //   - 送っていないものは、つながったとき・電波がもどったとき・次に開いたときに送る（js/botlink.js）
 //   - 同じ記録を2回送らない：送っている途中の id は、もう一度送らない（ボットも同じ id は1回だけ入れる）
 // 画面には文字だけを返す（saveNoteText）。DOM にはさわらない（テストは test/outbox.test.mjs）
-import { addDays } from "./stats.js?v=202610291713";
+import { addDays } from "./stats.js?v=202610291807";
 
 export const UNSENT_DAYS = 7; // 送りなおすのは、ここ7日の記録まで
 

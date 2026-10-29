@@ -261,3 +261,9 @@ body {
 .day-col { grid-template-rows: 14px 110px 16px 14px; }
 .day-col .dow { font-size: 10px; line-height: 14px; }
 .day-col.future { opacity: 0.45; }
+
+/* キーボードで動かしているときの枠（Q キットの部品と同じ。指やマウスで押したときは出ない。入力欄は欄の色で見える） */
+:where(button, a[href], summary, [tabindex]):focus-visible { outline: 2px solid var(--ls-text); outline-offset: 2px; }
+/* 文字だけのボタン（「すべて消す」など）：見た目はそのまま、押せる所を上下に広げる（44px めやす） */
+.link { position: relative; }
+.link::after { content: ""; position: absolute; inset: -6px -4px; }
