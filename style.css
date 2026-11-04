@@ -272,3 +272,15 @@ body {
 /* 文字だけのボタン（「すべて消す」など）：見た目はそのまま、押せる所を上下に広げる（44px めやす） */
 .link { position: relative; }
 .link::after { content: ""; position: absolute; inset: -6px -4px; }
+
+/* 線アイコン（Q キットの ls-icon）：字の前に置き、間は 8。説明の行・小見出し・LINE で開く良さの行は、アイコンと字を横に並べる */
+.sub-title, .line-merit li { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
+.sub-title .ls-icon, .line-merit .ls-icon { margin-top: 2px; color: var(--ls-subtext); }
+.line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); }
+.date-pick .ls-icon { width: 18px; height: 18px; }
+.item .del .ls-icon, .pin-row button .ls-icon { width: 18px; height: 18px; }
+.cand-row .ls-button .ls-icon { width: 16px; height: 16px; }
+/* 320px の幅で「くらぶボットと つなぐ ／ くわしい人向け」が入りきらず、ページが横にはみ出していた。添え書きは折り返してよい */
+#lineFold > summary .ls-fold-meta { white-space: normal; }
+/* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
+.ls-panel > *, .meal-frame > * { min-width: 0; }

@@ -80,7 +80,7 @@ export function createBotLink(ctx) {
       markSent(ctx.state(), logs.map((l) => l.id));
       ctx.persist();
       ctx.changed?.();
-      if (!quiet && res.added?.length) ctx.say(`🤖 くらぶボットにも入れました`);
+      if (!quiet && res.added?.length) ctx.say(`くらぶボットにも入れました`);
       return;
     }
     ctx.changed?.(); // 「まだ送っていません」の数を描きなおす
@@ -195,7 +195,7 @@ export function createBotLink(ctx) {
       }
       ctx.render();
     });
-    ctx.say(`🗑 「${b.menu}」を消しました（くらぶボットからも）`, () => {
+    ctx.say(`「${b.menu}」を消しました（くらぶボットからも）`, () => {
       cancelRemoval(`bot:${id}`);
       hidden.delete(id);
       ctx.render();

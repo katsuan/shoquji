@@ -11,7 +11,7 @@ import { cardUrl } from "./js/card.js?v=202611012034";
 import { writeDays } from "./js/days.js?v=202611012034";
 import { readLink } from "./js/link.js?v=202611012034";
 import { cancelRemoval, isWaiting } from "./js/removals.js?v=202611012034";
-import { $, esc } from "./js/dom.js?v=202611012034";
+import { $, esc, icon } from "./js/dom.js?v=202611012034";
 import { saveNoteText } from "./js/outbox.js?v=202611012034";
 
 
@@ -69,7 +69,7 @@ function renderDays() {
   document.querySelectorAll("[data-day]").forEach((b) => b.classList.toggle("is-active", Number(b.dataset.day) === off));
   const pick = document.querySelector(".date-pick");
   pick.classList.toggle("is-active", off === null);
-  $("pickLabel").textContent = off === null ? `📅 ${label(ui.date)}` : "📅 日付";
+  $("pickLabel").textContent = off === null ? label(ui.date) : "日付";
   $("datePick").value = ui.date;
   $("datePick").max = ymd();
 }
@@ -238,7 +238,7 @@ $("saveBtn").addEventListener("click", () => {
   if (ui.botEdit || ui.masterEdit) return saveRemote(entry);
   if (ui.editing) {
     const edited = updateLog(state, ui.editing, entry);
-    say(`✏️ 「${entry.name.trim()}」を直しました`);
+    say(`「${entry.name.trim()}」を直しました`);
     ui.editing = null;
     // ボットにも：送ってあれば直す、まだなら送る
     if (edited) botLink.sendSaved(edited, { edited: true });
@@ -246,7 +246,7 @@ $("saveBtn").addEventListener("click", () => {
     const log = addLog(state, entry);
     ui.justAdded = log.id;
     // 季節の絵文字をときどき（Q キットの season.js。読めていなければ付けない）
-    const done = `🍚 ${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`;
+    const done = `${label(ui.date)} の${ui.meal}に「${entry.name.trim()}」を記録しました ↓`;
     say(window.QSeason ? QSeason.decorate(done) : done);
     botLink.sendSaved(log);
   }
@@ -284,7 +284,7 @@ async function saveRemote(entry) {
     // 画面のボットの記録も、返事を待たずに直す（次に読んだときにそろう）
     const b = botLink.find(ui.botEdit);
     if (b) Object.assign(b, { date: e.date, meal: toBotMeal(e.meal), menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
-    say(`✏️ 「${e.name}」を直しました（くらぶボットにも）`);
+    say(`「${e.name}」を直しました（くらぶボットにも）`);
   } else {
     const toMine = ui.masterEdit.toMine;
     if (toMine) {
@@ -295,7 +295,7 @@ async function saveRemote(entry) {
       const m = getProfile()?.menus?.find((x) => x.masterKey && x.masterKey === ui.masterEdit.key);
       if (m) Object.assign(m, { menu: e.name, kcal: e.kcal, protein: e.p, fat: e.f, carb: e.c });
     }
-    const saved = toMine ? `📒 「${e.name}」を自分用の MYメニューにしました` : `📒 MYメニューの「${e.name}」を保存しました`;
+    const saved = toMine ? `「${e.name}」を自分用の MYメニューにしました` : `MYメニューの「${e.name}」を保存しました`;
     say(`${window.QSeason ? window.QSeason.decorate(saved) : saved}。次からトークで名前を送るだけで記録できます`);
   }
   savedAt = Date.now();
@@ -458,13 +458,13 @@ function itemHtml(l) {
             ${name}
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
             <span class="bot-tag" title="くらぶボットで入れた記録">ボット</span>
-            ${lineLog() ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">✕</button>` : ""}
+            ${lineLog() ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">${icon("close")}</button>` : ""}
           </div>`;
   }
   return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
             <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
             <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">✕</button>
+            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">${icon("close")}</button>
           </div>`;
 }
 
@@ -489,7 +489,7 @@ function renderDay() {
     $("totals").innerHTML = "";
     // 季節の絵文字をときどき（Q キットの season.js が読めてから1回だけ決めて、描きなおしても変えない）
     if (emptyEmoji === null && window.QSeason) emptyEmoji = window.QSeason.maybe();
-    $("dayList").innerHTML = `<div class="ls-empty"><span class="ls-empty-icon" aria-hidden="true">🍙</span>まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${esc(emptyEmoji)}` : ""}</div>`;
+    $("dayList").innerHTML = `<div class="ls-empty">まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${esc(emptyEmoji)}` : ""}</div>`;
   } else {
     $("totals").innerHTML = totalsHtml(logs, t, state.targets);
     $("dayList").innerHTML = dayListHtml(logs);
@@ -518,7 +518,7 @@ $("dayList").addEventListener("click", (e) => {
   persist();
   render();
   botLink.removeOwnLater(log);
-  say(`🗑 「${log.name}」を消しました`, () => {
+  say(`「${log.name}」を消しました`, () => {
     // もうボットから消してしまっていたら（閉じかけて送ったなど）、もう一度入れる
     const already = !isWaiting(`own:${log.id}`);
     cancelRemoval(`own:${log.id}`);
@@ -573,7 +573,7 @@ function renderLookback() {
   const today = ymd();
   const all = view();
   const n = streak(all, today);
-  $("streak").innerHTML = n ? `🔥 <b>${n}</b> 日つづけて記録しています` : "記録した日が続くと、ここに日数が出ます";
+  $("streak").innerHTML = n ? `<b>${n}</b> 日つづけて記録しています` : "記録した日が続くと、ここに日数が出ます";
   const start = weekStart();
   const days = week(all, today, { start, offset: weekOffset });
   // もどれるのは、いちばん古い記録の週まで
@@ -603,11 +603,11 @@ function renderLookback() {
   const weekRows = byMeal(days.flatMap((d) => d.meals));
   const kcalDays = days.filter((d) => d.kcal > 0).length;
   $("weekSplit").innerHTML = kcalDays
-    ? `<p class="ranking-title">🍽 ${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
+    ? `<p class="ranking-title">${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
     : "";
   const top5 = menus(all).slice(0, 5);
   $("ranking").innerHTML = top5.length
-    ? `<p class="ranking-title">🏅 よく食べるもの</p><ol class="ranking">${top5.map((m) => `<li><span>${esc(m.name)}</span><span>${m.count} 回</span></li>`).join("")}</ol>`
+    ? `<p class="ranking-title">よく食べるもの</p><ol class="ranking">${top5.map((m) => `<li><span>${esc(m.name)}</span><span>${m.count} 回</span></li>`).join("")}</ol>`
     : "";
 }
 
@@ -634,7 +634,7 @@ Object.entries(TARGET_INPUTS).forEach(([id, k]) =>
     persist();
     render();
     // つないでいるときは、目標カロリーをボットにもそろえる（集計カード・20時のお知らせで使う）
-    if (k === "kcal" && v > 0 && lineLog()) saveProfile({ calorieTarget: Math.round(v) }, "🎯 目標カロリーを、くらぶボットにもそろえました");
+    if (k === "kcal" && v > 0 && lineLog()) saveProfile({ calorieTarget: Math.round(v) }, "目標カロリーを、くらぶボットにもそろえました");
   })
 );
 
@@ -656,7 +656,7 @@ $("exportBtn").addEventListener("click", async () => {
   a.download = file.name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  say("⬇️ 控えを書き出しました");
+  say("控えを書き出しました");
 });
 
 $("importFile").addEventListener("change", async (e) => {
@@ -669,7 +669,7 @@ $("importFile").addEventListener("change", async (e) => {
     const added = importJson(state, await file.text());
     persist();
     render();
-    say(`⬆️ 控えを読みこみました（${added} 件ふえました）`);
+    say(`控えを読みこみました（${added} 件ふえました）`);
   } catch {
     say("読みこめませんでした（しょくじで書き出した控えか確かめてください）");
   }
@@ -699,7 +699,8 @@ function render() {
   renderTargets();
   $("sendTextToggle").checked = state.sendText;
   $("formHeading").textContent = ui.botEdit ? "ボットの記録を直す" : ui.masterEdit ? (ui.masterEdit.toMine ? "共通の MYメニューを自分用にする" : "MYメニューを直す") : ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
-  $("saveBtn").textContent = ui.masterEdit ? (ui.masterEdit.toMine ? "📒 自分用に保存" : "📒 MYメニューに保存") : ui.editing || ui.botEdit ? "✏️ 直す" : "＋ 記録する";
+  const [saveIcon, saveText] = ui.masterEdit ? ["save", ui.masterEdit.toMine ? "自分用に保存" : "MYメニューに保存"] : ui.editing || ui.botEdit ? ["edit", "直す"] : ["add", "記録する"];
+  $("saveBtn").innerHTML = `${icon(saveIcon)}<span>${esc(saveText)}</span>`; // qcheck-ok: W1 icon() は決まった名前の線アイコンだけ、字は esc 済み
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
   document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない
   drawStatus(); // 記録がふえた・へったら「まだ送っていません」の数も
@@ -746,7 +747,7 @@ $("gasUrl").addEventListener("change", () => {
   state.gasUrl = url;
   botLink.forget();
   persist();
-  say(url ? "🔗 つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとのくらぶボットにもどしました" : "つなぎ先を消しました");
+  say(url ? "つなぎ先を決めました" : LINE_LOG.gasUrl ? "つなぎ先をもとのくらぶボットにもどしました" : "つなぎ先を消しました");
   botLink.connect();
 });
 openFromLink();

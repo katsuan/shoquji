@@ -43,7 +43,7 @@
   <nav class="days" aria-label="日付">
     <button class="ls-chip" type="button" data-day="0">きょう</button>
     <button class="ls-chip" type="button" data-day="-1">きのう</button>
-    <label class="ls-chip date-pick"><span id="pickLabel">📅 日付</span><input id="datePick" type="date" aria-label="ほかの日"></label>
+    <label class="ls-chip date-pick"><span class="ls-icon" data-icon="calendar" aria-hidden="true"></span><span id="pickLabel">日付</span><input id="datePick" type="date" aria-label="ほかの日"></label>
   </nav>
 
   <!-- 記録する -->
@@ -85,7 +85,7 @@
       <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     </div>
     <div class="form-actions">
-      <button id="saveBtn" class="ls-button is-primary is-block" type="button">＋ 記録する</button>
+      <button id="saveBtn" class="ls-button is-primary is-block" type="button"><span class="ls-icon" data-icon="add" aria-hidden="true"></span><span>記録する</span></button>
       <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>
     </div>
     <p id="status" class="status" role="status"></p>
@@ -99,13 +99,13 @@
     <!-- LINE 版で、まだくらぶボットに送っていない記録があるとき・ログインしていないときだけ（文は js/outbox.js の saveNoteText） -->
     <p class="where-note" id="saveNote" role="status" hidden></p>
     <!-- LINE の中でくらぶボットとつないでいるときだけ：記録の置き場所（ブラウザとは別）。一覧のじゃまをしないよう下に -->
-    <p class="where-note" id="whereNote" hidden>📱 LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、くらぶボットにも入ります。</p>
+    <p class="where-note" id="whereNote" hidden>LINE 版の記録は、ブラウザ版とは<b>別</b>です。<br>記録すると、くらぶボットにも入ります。</p>
     <!-- つなぎ先を入れた人が、LINE のアプリ内のブラウザ（LIFF ではない形）で開いたとき -->
-    <p class="where-note" id="reopenInLiff" hidden>📱 この開き方だと、記録がくらぶボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
+    <p class="where-note" id="reopenInLiff" hidden>この開き方だと、記録がくらぶボットに届きません。<a id="reopenLink" href="https://katsuan.github.io/shoquji/">LINE 版で開きなおす ›</a></p>
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
       <a id="sendBtn" class="ls-button is-block line is-oqrn" href="#">カードでおくるん</a>
-      <p id="sendTextNote" class="ls-hint send-note" hidden>📝 記録用の文字もいっしょに送ります（「⚙️ 設定」で切りかえ）</p>
+      <p id="sendTextNote" class="ls-hint send-note" hidden>記録用の文字もいっしょに送ります（「⚙️ 設定」で切りかえ）</p>
     </div>
   </section>
 
@@ -114,14 +114,14 @@
   <section class="ls-panel" id="lineGuidePanel" aria-labelledby="lineGuideTitle" hidden>
     <div class="guide-head">
       <h2 id="lineGuideTitle" class="ls-panel-title">📱 LINE 版で使う</h2>
-      <button class="line-guide-close" type="button" data-close-line-guide aria-label="案内を閉じる">✕ 閉じる</button>
+      <button class="line-guide-close" type="button" data-close-line-guide aria-label="案内を閉じる"><span class="ls-icon" data-icon="close" aria-hidden="true"></span>閉じる</button>
     </div>
     <!-- 「LINEで開く」は、おくるん（Q キット）の共通の案内（LineShareLiff.outsideHelp） -->
     <!-- LINE で開く良さ（言い切れることだけ） -->
     <ul class="ls-hint line-merit">
-      <li>💾 記録がくらぶボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</li>
-      <li>📱 機種を変えても、ボットに入った記録が出ます（ここ60日分）</li>
-      <li>🤖 ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</li>
+      <li><span class="ls-icon" data-icon="save" aria-hidden="true"></span><span>記録がくらぶボットのシートにも残ります。ブラウザ版だけの記録は、履歴を消したり機種を変えたりすると消えることがあります</span></li>
+      <li><span class="ls-icon" data-icon="app" aria-hidden="true"></span><span>機種を変えても、ボットに入った記録が出ます（ここ60日分）</span></li>
+      <li><span class="ls-icon" data-icon="bot" aria-hidden="true"></span><span>ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</span></li>
     </ul>
     <div id="lineOutside"></div>
     <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「🔗 くらぶボットとつなぐ」からまた見られます）。</p>
@@ -197,15 +197,15 @@
     <details class="ls-fold" id="quickFold" hidden>
       <summary><span class="ls-fold-icon" aria-hidden="true">📌</span>よく記録するもの・MYメニュー</summary>
       <div class="ls-fold-body">
-        <p class="ls-hint">📌 固定した品は、いつも前に並びます。あいたところは記録の多い順です。ボットの返事の下に出るボタンに、この順で並び、押すだけで記録できます。</p>
+        <p class="ls-hint">固定した品は、いつも前に並びます。あいたところは記録の多い順です。ボットの返事の下に出るボタンに、この順で並び、押すだけで記録できます。</p>
         <p class="sub-title">固定した品（<span id="pinCount">0</span>/12）</p>
         <ol id="pinList" class="pin-list"></ol>
         <label class="ls-field">
-          <span class="ls-label">MYメニューをさがす（📌 固定・✏️ 直す。共通の品は自分用にできます）</span>
+          <span class="ls-label">MYメニューをさがす（固定・直す。共通の品は自分用にできます）</span>
           <input id="pinSearch" class="ls-input" maxlength="40" placeholder="例：カレー" autocomplete="off" enterkeyhint="search">
         </label>
         <div id="pinCands" class="cand-list"></div>
-        <button id="savePins" class="ls-button is-primary is-block" type="button">📌 この並びで保存</button>
+        <button id="savePins" class="ls-button is-primary is-block" type="button"><span class="ls-icon" data-icon="save" aria-hidden="true"></span><span>この並びで保存</span></button>
       </div>
     </details>
 
@@ -216,7 +216,7 @@
         <!-- はじめだけ要る説明 -->
         <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、くらぶボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
         <!-- つながっているあいだの説明 -->
-        <p id="lineLogNote" class="ls-hint" hidden>🔗 いまはくらぶボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（名前を押すと直せます）。</p>
+        <p id="lineLogNote" class="ls-hint" hidden>いまはくらぶボットとつながっています。記録すると、ボットのシートにも入ります。ボットのトークで送った記録は「ボット」の札で出ます（名前を押すと直せます）。</p>
         <div id="gasField" hidden>
           <label class="ls-field">
             <span class="ls-label">記録を入れる、くらぶボットの URL</span>
@@ -225,7 +225,7 @@
           <p id="gasUrlError" class="ls-hint is-error" role="alert" hidden>GAS のウェブアプリの URL（…/exec）を入れてね</p>
           <p class="ls-hint small">自分のくらぶボットの GAS エディタで <code>showWebhookUrl</code> を実行して出る ② の URL（合言葉なし）です。空のときは、いつものくらぶボットにつながります。</p>
         </div>
-        <button class="ls-button is-block" type="button" data-show-line-guide>👀 使い方（4コマ）を見る</button>
+        <button class="ls-button is-block" type="button" data-show-line-guide><span class="ls-icon" data-icon="view" aria-hidden="true"></span>使い方（4コマ）を見る</button>
         <p class="ls-hint small">自分のボットを持つとき：<a href="https://katsuan.github.io/qlove-bot/docs/setup.html" target="_blank" rel="noopener">くらぶボットの作り方</a>（自分の LINE の公式アカウントと、配布用シートのコピー。30分くらい）</p>
       </div>
     </details>
@@ -234,7 +234,7 @@
     <details class="ls-fold" id="settings">
       <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>設定 <span class="ls-fold-meta">目標・送り方・記録の控え</span></summary>
       <div class="ls-fold-body">
-        <p class="sub-title">🎯 1日の目標（バーの目安）</p>
+        <p class="sub-title"><span class="ls-icon" data-icon="target" aria-hidden="true"></span>1日の目標（バーの目安）</p>
         <div class="nutri-grid">
           <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="tKcal" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>kcal</i></span></label>
           <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="tP" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
@@ -243,20 +243,20 @@
         </div>
         <!-- くらぶボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
         <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>くらぶボットから届きます。目標カロリーもボットとそろえます</small></span></label>
-        <p class="sub-title">📨 カードで送るとき</p>
+        <p class="sub-title"><span class="ls-icon" data-icon="send" aria-hidden="true"></span>カードで送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE のくらぶボットに送ると、ボットが読んで記録できる -->
         <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>くらぶボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
-        <p class="sub-title">📅 週のはじまり</p>
+        <p class="sub-title"><span class="ls-icon" data-icon="calendar" aria-hidden="true"></span>週のはじまり</p>
         <div id="weekStart" class="ls-chips" role="radiogroup" aria-label="週のはじまり">
           <button class="ls-chip is-small" type="button" role="radio" data-week-start="1">月曜</button>
           <button class="ls-chip is-small" type="button" role="radio" data-week-start="0">日曜</button>
         </div>
         <p class="ls-hint small">「ふりかえり」の週の区切り。ほかの Q のツールにもそろいます。</p>
-        <p class="sub-title">🔒 記録の控え</p>
+        <p class="sub-title"><span class="ls-icon" data-icon="lock" aria-hidden="true"></span>記録の控え</p>
         <p class="ls-hint">しょくじの記録は、この端末（ブラウザ）に残っています。機種変更やブラウザのデータを消す前に、控えを書き出しておくと安心です（LINE 版でボットとつないでいれば、ボットにも残ります）。</p>
         <div class="form-actions">
-          <button id="exportBtn" class="ls-button is-block" type="button">⬇️ 控えを書き出す</button>
-          <label class="ls-button is-block file-btn">⬆️ 控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
+          <button id="exportBtn" class="ls-button is-block" type="button"><span class="ls-icon" data-icon="backup" aria-hidden="true"></span>控えを書き出す</button>
+          <label class="ls-button is-block file-btn"><span class="ls-icon" data-icon="archive" aria-hidden="true"></span>控えを読みこむ<input id="importFile" type="file" accept="application/json,.json"></label>
         </div>
         <button id="resetBtn" class="link danger" type="button">記録をすべて消す</button>
       </div>

@@ -6,7 +6,7 @@
 // app.js が読む（initBotMenu を1回）。js/botlink.js も、つないだときに readProfile・resetProfile を使う
 import { fmt } from "./stats.js?v=202611012034";
 import { lineLogMessage } from "./linelog.js?v=202611012034";
-import { $, esc } from "./dom.js?v=202611012034";
+import { $, esc, icon } from "./dom.js?v=202611012034";
 
 
 // MYメニューの名前（種類・量つき）
@@ -72,10 +72,10 @@ function renderPins() {
     ? list
         .map((k, i) => {
           const m = map.get(k) || { menu: "（消えたメニュー）" };
-          return `<li class="pin-row"><span class="pin-name">📌 ${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+          return `<li class="pin-row"><span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
             <button type="button" data-pin-move="${esc(k)}" data-dir="-1" aria-label="上へ"${i === 0 ? " disabled" : ""}>↑</button>
             <button type="button" data-pin-move="${esc(k)}" data-dir="1" aria-label="下へ"${i === list.length - 1 ? " disabled" : ""}>↓</button>
-            <button type="button" data-pin-del="${esc(k)}" aria-label="固定をやめる">✕</button></li>`;
+            <button type="button" data-pin-del="${esc(k)}" aria-label="固定をやめる">${icon("close")}</button></li>`;
         })
         .join("")
     : '<li class="ls-hint">まだありません。下の欄でさがして、押すと固定できます。</li>';
@@ -85,8 +85,8 @@ function renderPins() {
     cands
       .map(
         (m) => `<div class="cand-row"><span class="pin-name"><i class="scope-tag${m.scope === "common" ? " is-common" : ""}">${m.scope === "common" ? "共通" : "自分"}</i>${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
-          <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">📌 固定</button>
-          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${m.scope === "common" && !profile.isAdmin ? "✏️ 自分用に" : "✏️ 直す"}</button></div>`
+          <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">${icon("star")}固定</button>
+          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${icon("edit")}${m.scope === "common" && !profile.isAdmin ? "自分用に" : "直す"}</button></div>`
       )
       .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
 }
@@ -94,7 +94,7 @@ function renderPins() {
 // ボットの設定と、よく記録するもの・MYメニューの欄のボタンをつなぐ（app.js から1回）
 export function initBotMenu(context) {
   ctx = context;
-  $("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "🔔 20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));
+  $("botNotify").addEventListener("change", (e) => saveProfile({ notify: e.target.checked }, e.target.checked ? "20時のお知らせをオンにしました" : "20時のお知らせをオフにしました"));
   $("quickFold").addEventListener("toggle", renderPins);
   $("pinSearch").addEventListener("input", renderPins);
   $("quickFold").addEventListener("click", (e) => {
@@ -132,11 +132,11 @@ export function initBotMenu(context) {
           profile.quickMenus = [...list.map((k) => ({ ...map.get(k), pinned: true })), ...profile.quickMenus.filter((m) => !list.includes(m.masterKey)).map((m) => ({ ...m, pinned: false }))];
         }
         pins = null;
-        ctx.say("📌 よく記録するものの並びを保存しました");
+        ctx.say("よく記録するものの並びを保存しました");
       }
     } finally {
       $("savePins").disabled = false;
-      $("savePins").textContent = "📌 この並びで保存";
+      $("savePins").innerHTML = `${icon("save")}<span>この並びで保存</span>`; // qcheck-ok: W1 決まった線アイコンと決まった字だけ
       renderPins();
     }
   });
