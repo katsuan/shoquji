@@ -297,3 +297,5 @@ body {
 .cand-row .ls-icon-button { color: var(--ls-text); }
 .cand-head { padding: 0; color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
 .cand-head > span:not(.pin-name) { text-align: center; }
+/* さがした品の「固定」「直す」と、固定した品の行の印は 16px（ボタンの押せる所は 44px のまま） */
+.cand-row .ls-icon-button .ls-icon, .pin-row > .ls-icon, .pin-row button .ls-icon { width: 16px; height: 16px; }
