@@ -120,12 +120,11 @@ function allMenus() {
   return base;
 }
 
-// 入力中の名前に合う「よく食べるもの」のボタンを出す
+// 入力中の名前に合う「よく食べるもの」のボタンを出す（名前がまったく同じ品は、いちばん前に）
 function renderSuggest() {
   const q = $("name").value.trim();
-  const list = allMenus()
-    .filter((m) => !q || (m.name.includes(q) && m.name !== q))
-    .slice(0, q ? 6 : 8);
+  const hits = allMenus().filter((m) => !q || m.name.includes(q));
+  const list = [...hits.filter((m) => q && m.name === q), ...hits.filter((m) => !q || m.name !== q)].slice(0, q ? 6 : 8);
   $("suggest").innerHTML = list
     .map((m, i) => `<button class="ls-chip is-small pick" type="button" data-i="${i}">${esc(m.name)}${m.kcal != null ? `<small>${fmt(m.kcal)}kcal</small>` : ""}</button>`)
     .join("");
