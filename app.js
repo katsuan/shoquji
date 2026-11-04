@@ -459,7 +459,7 @@ function weekStart() {
   }
 }
 
-// 週のはじまりのボタン（⚙️ 設定）の押されている印をそろえる
+// 週のはじまりのボタン（設定）の押されている印をそろえる
 function renderWeekStart() {
   const now = weekStart();
   document.querySelectorAll("[data-week-start]").forEach((b) => b.setAttribute("aria-checked", String(Number(b.dataset.weekStart) === now)));
@@ -649,7 +649,7 @@ me = window.QLineMe?.mount({
   pending: () => botLink.pending(),
   retry: () => botLink.retry(),
   onSettings: () => window.QLineMe.openFold("lineFold"),
-  // 「⚙️ 設定」：ページの下の設定の欄（目標・送り方・週のはじまり・記録の控え。q-oqrn の ux.md A7）
+  // 「設定」：ページの下の設定の欄（目標・送り方・週のはじまり・記録の控え。q-oqrn の ux.md A7）
   onPrefs: () => window.QLineMe.openFold("settings")
 });
 // まだ送っていない記録・ログインしていないときの1行と、アイコンの数の印を描きなおす（送れた・つながった・電波が変わったとき）

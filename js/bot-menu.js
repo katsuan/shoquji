@@ -1,7 +1,7 @@
 // くらぶボット（LINE の中でつないだとき）の設定と、よく記録するもの
 //   - 開いたときに1回、ボットの目標・20時のお知らせ・よく記録するもの・MYメニューを読む（readProfile）。目標はボットにそろえる
 //   - 目標・お知らせ・よく記録するものの固定を、ボットにも送る（saveProfile）
-//   - 「📌 よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す
+//   - 「よく記録するもの・MYメニュー」の欄：固定と並べかえ、MYメニューをさがして直す
 // 画面の残り（記録・一覧など）とは、initBotMenu で受けとる ctx でつなぐ
 // app.js が読む（initBotMenu を1回）。js/botlink.js も、つないだときに readProfile・resetProfile を使う
 import { fmt } from "./stats.js?v=202611012034";
@@ -62,7 +62,7 @@ const savedPins = () => (profile ? profile.quickMenus.filter((m) => m.pinned && 
 // masterKey から MYメニュー・よく記録するものを引ける Map
 export const byKey = () => new Map([...(profile?.menus || []), ...(profile?.quickMenus || [])].filter((m) => m.masterKey).map((m) => [m.masterKey, m]));
 
-// 📌 並べかえ（たたみ欄）
+// 固定した品の並べかえ（たたみ欄）
 function renderPins() {
   if (!profile) return;
   const list = pins || savedPins();
