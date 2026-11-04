@@ -276,26 +276,21 @@ body {
 .sub-title, .line-merit li { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
 .sub-title .ls-icon, .line-merit .ls-icon { margin-top: 2px; }
 .line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); }
-.date-pick .ls-icon { width: 18px; height: 18px; }
-.item .del .ls-icon, .pin-row button .ls-icon { width: 18px; height: 18px; }
 /* 320px の幅で「くらぶボットと つなぐ ／ くわしい人向け」が入りきらず、ページが横にはみ出していた。添え書きは折り返してよい */
 #lineFold > summary .ls-fold-meta { white-space: normal; }
 /* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
 .ls-panel > *, .meal-frame > *, .ls-folds > *, .ls-fold-body > * { min-width: 0; }
 /* パネルの見出し・チェックの欄・まだ送っていない記録の1行の線アイコン */
 .ls-panel-title { display: flex; align-items: center; gap: var(--ls-space-s); }
-.send-text > .ls-icon { width: 18px; height: 18px; margin-top: 1px; }
+.send-text > .ls-icon { margin-top: 2px; }
 #saveNote { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
 #saveNote[hidden] { display: none; }
 #saveNote .ls-icon { margin-top: 2px; }
-/* 固定した品の行の頭の印（チェックつきのブックマーク。まだ固定していない品の「固定」ボタンは印なしのブックマーク） */
-.pin-row > .ls-icon { width: 18px; height: 18px; }
 /* 固定した品・さがした品の行も、欄の幅に合わせて縮む */
 .pin-list > li, .cand-list > * { min-width: 0; }
 /* さがした品：名前（のこり）・固定・直すの3列。上の見出しの行に「固定」「直す」、品の行はアイコンだけのボタン */
 .cand-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--ls-tap) var(--ls-tap); }
-.cand-row .ls-icon-button { color: var(--ls-text); }
 .cand-head { padding: 0; color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
 .cand-head > span:not(.pin-name) { text-align: center; }
-/* さがした品の「固定」「直す」と、固定した品の行の印は 16px（ボタンの押せる所は 44px のまま） */
-.cand-row .ls-icon-button .ls-icon, .pin-row > .ls-icon, .pin-row button .ls-icon { width: 16px; height: 16px; }
+/* さがした品の「固定」「直す」のアイコンは 16px（字の大きさで決める。押せる所は 44px のまま） */
+.cand-row .ls-icon-button { font-size: 16px; }
