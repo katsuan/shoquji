@@ -13,6 +13,7 @@ import { readLink } from "./js/link.js?v=202611012034";
 import { cancelRemoval, isWaiting } from "./js/removals.js?v=202611012034";
 import { $, esc, icon } from "./js/dom.js?v=202611012034";
 import { saveNoteIcon, saveNoteText } from "./js/outbox.js?v=202611012034";
+import { dayListHtml, estOptions, formTexts, mealBarHtml, mealClass, mealSplitHtml, rangeLabel, totalsHtml, weekHtml, weekName } from "./js/views.js?v=202611012034";
 
 
 let state = load();
@@ -41,9 +42,9 @@ function persist() {
 let me = null; // 見出しの右の本人のアイコン（shared/line-me.js。ブラウザ版では null）
 const botLink = createBotLink({ state: () => state, ui, link, render, persist, say, cancelEdit, startBotEdit, changed: () => drawStatus() });
 // くらぶボットへの呼び出し口（js/linelog.js。つないでいなければ null）
-const lineLog = () => botLink.client(); // つないでいなければ null
+const lineLog = () => botLink.client();
 // 画面に出す中身：この端末の記録＋ボットで入れた記録
-const view = () => botLink.view(); // 画面に出す中身：この端末の記録＋ボットで入れた記録
+const view = () => botLink.view();
 
 // 知らせは Q キットのトースト（下に数秒）。取り消せるものは「元に戻す」を付ける。読めないときは下の文字で
 function say(text, undo) {
@@ -134,13 +135,7 @@ function renderSuggest() {
   };
 }
 
-// ---- だいたいのカロリー（ご飯◯杯分） ----
-// くらぶボットと同じ目安：ご飯1杯（150g）≈ 240kcal。朝・昼・夜は½〜3杯、間食は「少し」〜1.5杯
-const RICE_BOWL_KCAL = 240;
-function estOptions(meal) {
-  const bowls = meal === "間食" ? [{ key: "few", label: "少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
-  return bowls.map((b) => (typeof b === "object" ? b : { key: String(b), label: `${b === 0.5 ? "½" : b}杯`, kcal: Math.round(RICE_BOWL_KCAL * b) }));
-}
+// ---- だいたいのカロリー（ご飯◯杯分。目安は js/views.js の estOptions） ----
 // ボタンを描く（押したものは選んだ印。カロリーを自分で入れたら外れる）
 function renderEst() {
   const opts = estOptions(ui.meal);
@@ -256,7 +251,6 @@ $("saveBtn").addEventListener("click", () => {
   render();
 });
 
-// ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない）。カロリーは要る
 let savingRemote = false;
 // ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない。カロリーは要る）
 async function saveRemote(entry) {
@@ -337,7 +331,7 @@ $("scaleRow").addEventListener("click", (e) => {
   renderEst();
 });
 
-// MYメニューを入力欄に開いて直す（「📌 よく記録するもの・MYメニュー」から）
+// MYメニューを入力欄に開いて直す（「よく記録するもの・MYメニュー」の欄から）
 function startMasterEdit(key) {
   const m = byKey().get(key);
   if (!m) return;
@@ -394,89 +388,7 @@ $("cancelEdit").addEventListener("click", () => {
   render();
 });
 
-// ---- この日のしょくじ ----
-// 朝・昼・夜・間食の色（style.css の .m0〜.m3。朝＝黄・昼＝緑・夜＝藍・間食＝ピンク）
-function mealClass(meal) {
-  return `m${Math.max(0, MEALS.indexOf(meal))}`;
-}
-
-// 食事ごとの色のバー（横）。rows は byMeal の形。scale はバーの右はしにあたるカロリー
-function mealBarHtml(rows, scale, { over = false, goal = 0 } = {}) {
-  const segs = rows
-    .filter((r) => r.kcal > 0)
-    .map((r) => `<i class="${mealClass(r.meal)}" style="width:${(r.kcal / scale) * 100}%" title="${r.meal} ${fmt(r.kcal)} kcal"></i>`)
-    .join("");
-  // 目標をこえた日は、目標のところに線
-  const mark = over && goal > 0 ? `<span class="goal-mark" style="left:${(goal / scale) * 100}%" aria-hidden="true"></span>` : "";
-  return `<div class="bar stack${over ? " over" : ""}">${segs}${mark}</div>`;
-}
-
-// 食事ごとの割合とカロリーを、入力欄のタブと同じ朝・昼・夜・間食の横並びで（1つずつ「● 朝 16%」「平均 215 kcal」の2行）。
-// 記録のない食事も薄く出す（どれがないかわかるように）。avgDays を渡すと「1日平均」も
-function mealSplitHtml(rows, avgDays = 0) {
-  if (!rows.some((r) => r.kcal > 0)) return "";
-  return `<ul class="meal-split">${rows
-    .map((r) => {
-      const kcal = avgDays ? Math.round(r.kcal / avgDays) : r.kcal;
-      const zero = r.kcal > 0 ? "" : " is-zero";
-      return `<li class="${mealClass(r.meal)}${zero}"><span class="name">${r.meal}<b>${r.pct}%</b></span>${avgDays ? `<small>平均</small>` : ""}<small>${fmt(kcal)} kcal</small></li>`;
-    })
-    .join("")}</ul>`;
-}
-
-function pct(v, goal) {
-  return goal > 0 ? Math.min(100, Math.round((v / goal) * 100)) : 0;
-}
-
-// 合計カロリーと目標のバー（朝・昼・夜・間食の色で積む）と、食事ごとの割合、PFC
-function totalsHtml(logs, t, g) {
-  const missing = t.count - t.withKcal;
-  // PFC は、入れた品がある日だけ出す（入れていないのに「0 g」と出ると、食べていないように見えるため）
-  const hasPfc = logs.some((l) => l.p != null || l.f != null || l.c != null);
-  const pfc = [["p", "たんぱく質"], ["f", "脂質"], ["c", "炭水化物"]]
-    .map(([k, name]) => `<div class="${k}">${name}<b>${fmt(t[k])}<small> / ${fmt(g[k])}g</small></b><span class="bar"><i style="width:${pct(t[k], g[k])}%"></i></span></div>`)
-    .join("");
-  return `
-      <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
-      ${mealBarHtml(byMeal(logs), Math.max(g.kcal, t.kcal, 1), { over: t.kcal > g.kcal, goal: g.kcal })}
-      ${mealSplitHtml(byMeal(logs))}
-      ${hasPfc ? `<div class="pfc">
-        ${pfc}
-      </div>` : ""}
-      ${missing ? `<p class="note">※ カロリーを入れていないものが ${missing} 件あります（合計に入っていません）</p>` : ""}`;
-}
-
-// 食事ごとの一覧（名前を押すと直す、✕ で消す）
-function itemHtml(l) {
-  // ボットで入れた記録：消すのはトークで。直すのは、つないでいるときだけ
-  if (l.bot) {
-    // LINE の中でつないでいるときは、押すと直せる（ボットの記録を直す）
-    const name = lineLog()
-      ? `<button class="name" type="button" data-bot-edit="${esc(l.logId)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>`
-      : `<span class="bot-name">${esc(l.name)}</span>`;
-    return `<div class="item is-bot${l.logId === ui.botEdit ? " is-editing" : ""}">
-            ${name}
-            <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <span class="bot-tag" title="くらぶボットで入れた記録">ボット</span>
-            ${lineLog() ? `<button class="del" type="button" data-bot-del="${esc(l.logId)}" aria-label="${esc(l.name)} を消す">${icon("close")}</button>` : ""}
-          </div>`;
-  }
-  return `<div class="item${l.id === ui.editing ? " is-editing" : ""}${l.id === ui.justAdded ? " is-new" : ""}">
-            <button class="name" type="button" data-edit="${esc(l.id)}" aria-label="${esc(l.name)} を直す">${esc(l.name)}</button>
-            <span class="kc">${l.kcal != null ? `${fmt(l.kcal)} kcal` : ""}</span>
-            <button class="del" type="button" data-del="${esc(l.id)}" aria-label="${esc(l.name)} を消す">${icon("close")}</button>
-          </div>`;
-}
-
-// その日の記録を、食事ごとのまとまりの HTML にする
-function dayListHtml(logs) {
-  return MEALS.map((meal) => {
-    const items = logs.filter((l) => l.meal === meal);
-    if (!items.length) return "";
-    return `<div class="meal-group"><span class="meal-tag ${mealClass(meal)}">${meal}</span><div class="items">${items.map(itemHtml).join("")}</div></div>`;
-  }).join("");
-}
-
+// ---- この日のしょくじ（中身は js/views.js） ----
 let emptyEmoji = null; // 記録がない日のあいさつに付ける季節の絵文字（"" は付けない）
 // 「この日のしょくじ」（合計と目標・食事ごとの一覧・カードで送る）を描く
 function renderDay() {
@@ -492,7 +404,7 @@ function renderDay() {
     $("dayList").innerHTML = `<div class="ls-empty">まだ記録がありません。上で食べたものを入れてみましょう${emptyEmoji ? ` ${esc(emptyEmoji)}` : ""}</div>`;
   } else {
     $("totals").innerHTML = totalsHtml(logs, t, state.targets);
-    $("dayList").innerHTML = dayListHtml(logs);
+    $("dayList").innerHTML = dayListHtml(logs, { editing: ui.editing, justAdded: ui.justAdded, botEdit: ui.botEdit, botLinked: !!lineLog() });
   }
   ui.justAdded = null;
   // カードで送る：記録があるときだけ出す。記録用の文字をオンにしていれば、そのことを小さく
@@ -547,13 +459,6 @@ function weekStart() {
   }
 }
 
-// 「10/20〜10/26」の形
-function rangeLabel(from, to) {
-  const md = (d) => d.split("-").slice(1).map(Number).join("/");
-  return `${md(from)}〜${md(to)}`;
-}
-
-// 「ふりかえり」（続けた日数・週のカロリー・食事ごとの割合・よく食べるもの）を描く
 // 週のはじまりのボタン（⚙️ 設定）の押されている印をそろえる
 function renderWeekStart() {
   const now = weekStart();
@@ -569,6 +474,7 @@ $("weekStart").addEventListener("click", (e) => {
   renderLookback();
 });
 
+// 「ふりかえり」（続けた日数・週のカロリー・食事ごとの割合・よく食べるもの）を描く
 function renderLookback() {
   const today = ymd();
   const all = view();
@@ -580,30 +486,14 @@ function renderLookback() {
   const oldest = all.logs.reduce((m, l) => (l.date < m ? l.date : m), today);
   $("weekPrev").disabled = days[0].date <= weekStartOf(oldest, start);
   $("weekNext").disabled = weekOffset >= 0;
-  $("weekLabel").textContent = `${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}　${rangeLabel(days[0].date, days[6].date)}`;
+  $("weekLabel").textContent = `${weekName(weekOffset)}　${rangeLabel(days[0].date, days[6].date)}`;
   $("week").setAttribute("aria-label", `${rangeLabel(days[0].date, days[6].date)} のカロリー`);
-  const goal = state.targets.kcal;
-  const top = Math.max(goal * 1.2, ...days.map((d) => d.kcal), 1);
-  $("week").innerHTML =
-    // 目標の線：バーの段（上から 16px〜126px）の中の高さ
-    `<div class="goal" style="top:${16 + 110 * (1 - goal / top)}px"><span>目標 ${fmt(goal)}</span></div>` +
-    days
-      .map((d) => {
-        const [y, m, dd] = d.date.split("-").map(Number);
-        // 棒は朝・昼・夜・間食の色を下から積む
-        const segs = d.meals
-          .filter((r) => r.kcal > 0)
-          .map((r) => `<i class="${mealClass(r.meal)}" style="flex-grow:${r.kcal}"></i>`)
-          .join("");
-        const dow = "日月火水木金土"[new Date(y, m - 1, dd).getDay()];
-        return `<div class="day-col${d.date === today ? " today" : ""}${d.future ? " future" : ""}"><span class="v">${d.kcal ? fmt(d.kcal) : ""}</span><span class="col"><span class="stack" style="height:${(d.kcal / top) * 100}%">${segs}</span></span><span>${m}/${dd}</span><span class="dow">${dow}</span></div>`;
-      })
-      .join("");
+  $("week").innerHTML = weekHtml(days, { today, goal: state.targets.kcal });
   // この7日の、食事ごとの割合（カロリーを入れた日の平均も）
   const weekRows = byMeal(days.flatMap((d) => d.meals));
   const kcalDays = days.filter((d) => d.kcal > 0).length;
   $("weekSplit").innerHTML = kcalDays
-    ? `<p class="ranking-title">${weekOffset === 0 ? "今週" : weekOffset === -1 ? "先週" : "この週"}の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
+    ? `<p class="ranking-title">${weekName(weekOffset)}の朝・昼・夜・間食</p>${mealBarHtml(weekRows, Math.max(1, weekRows.reduce((n, r) => n + r.kcal, 0)))}${mealSplitHtml(weekRows, kcalDays)}`
     : "";
   const top5 = menus(all).slice(0, 5);
   $("ranking").innerHTML = top5.length
@@ -698,8 +588,8 @@ function render() {
   renderLookback();
   renderTargets();
   $("sendTextToggle").checked = state.sendText;
-  $("formHeading").textContent = ui.botEdit ? "ボットの記録を直す" : ui.masterEdit ? (ui.masterEdit.toMine ? "共通の MYメニューを自分用にする" : "MYメニューを直す") : ui.editing ? "記録を直す" : `記録する（${dayOffset() === 0 ? "きょう" : label(ui.date)}）`;
-  const [saveIcon, saveText] = ui.masterEdit ? ["save", ui.masterEdit.toMine ? "自分用に保存" : "MYメニューに保存"] : ui.editing || ui.botEdit ? ["edit", "直す"] : ["add", "記録する"];
+  const { heading, saveIcon, saveText } = formTexts(ui, dayOffset());
+  $("formHeading").textContent = heading;
   $("saveBtn").innerHTML = `${icon(saveIcon)}<span>${esc(saveText)}</span>`; // qcheck-ok: W1 icon() は決まった名前の線アイコンだけ、字は esc 済み
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
   document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない

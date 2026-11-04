@@ -33,7 +33,7 @@ export function cardUrl(date, logs, t, { sendText = false } = {}) {
 // 記録用の文字（くらぶボットが読む形。line-meal-project の 3_usecase.shoquji.gs）
 //   #しょくじ 2026/10/22
 //   朝 トースト 250kcal P8 F6 C40
-function recordText(date, logs) {
+export function recordText(date, logs) {
   const lines = logs.map((l) => {
     const nums = [l.kcal != null ? `${l.kcal}kcal` : "", l.p != null ? `P${l.p}` : "", l.f != null ? `F${l.f}` : "", l.c != null ? `C${l.c}` : ""].filter(Boolean);
     return [l.meal, l.name.replace(/\s+/g, " "), ...nums].join(" ");
