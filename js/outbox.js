@@ -44,9 +44,14 @@ export const isOffline = (nav = typeof navigator !== "undefined" ? navigator : n
  */
 export function saveNoteText(s) {
   const n = Math.max(0, Number(s?.pending) || 0);
-  if (n) return `📮 ${n}件 まだ送っていません（つながったら送ります）`;
-  if (s?.inLine && s.loggedIn === false) return "👤 ログインしていません。記録はこの端末に保存中";
+  if (n) return `${n}件 まだ送っていません（つながったら送ります）`;
+  if (s?.inLine && s.loggedIn === false) return "ログインしていません。記録はこの端末に保存中";
   return "";
+}
+
+// その1行の頭に付ける線アイコンの名前（まだ送っていない＝inbox、ログインしていない＝user）
+export function saveNoteIcon(s) {
+  return Math.max(0, Number(s?.pending) || 0) ? "inbox" : "user";
 }
 
 // 前につながったくらぶボットの URL を覚えておく場所（URL だけ。ID トークンは入れない）

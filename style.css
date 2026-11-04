@@ -284,3 +284,10 @@ body {
 #lineFold > summary .ls-fold-meta { white-space: normal; }
 /* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
 .ls-panel > *, .meal-frame > * { min-width: 0; }
+/* パネルの見出し・チェックの欄・まだ送っていない記録の1行の線アイコン */
+.ls-panel-title { display: flex; align-items: center; gap: var(--ls-space-s); }
+.ls-panel-title .ls-icon { color: var(--ls-subtext); }
+.send-text > .ls-icon { width: 18px; height: 18px; margin-top: 1px; color: var(--ls-subtext); }
+#saveNote { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
+#saveNote[hidden] { display: none; }
+#saveNote .ls-icon { margin-top: 2px; }

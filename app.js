@@ -12,7 +12,7 @@ import { writeDays } from "./js/days.js?v=202611012034";
 import { readLink } from "./js/link.js?v=202611012034";
 import { cancelRemoval, isWaiting } from "./js/removals.js?v=202611012034";
 import { $, esc, icon } from "./js/dom.js?v=202611012034";
-import { saveNoteText } from "./js/outbox.js?v=202611012034";
+import { saveNoteIcon, saveNoteText } from "./js/outbox.js?v=202611012034";
 
 
 let state = load();
@@ -138,7 +138,7 @@ function renderSuggest() {
 // くらぶボットと同じ目安：ご飯1杯（150g）≈ 240kcal。朝・昼・夜は½〜3杯、間食は「少し」〜1.5杯
 const RICE_BOWL_KCAL = 240;
 function estOptions(meal) {
-  const bowls = meal === "間食" ? [{ key: "few", label: "🍬 少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
+  const bowls = meal === "間食" ? [{ key: "few", label: "少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
   return bowls.map((b) => (typeof b === "object" ? b : { key: String(b), label: `${b === 0.5 ? "½" : b}杯`, kcal: Math.round(RICE_BOWL_KCAL * b) }));
 }
 // ボタンを描く（押したものは選んだ印。カロリーを自分で入れたら外れる）
@@ -765,8 +765,9 @@ me = window.QLineMe?.mount({
 // まだ送っていない記録・ログインしていないときの1行と、アイコンの数の印を描きなおす（送れた・つながった・電波が変わったとき）
 function drawStatus() {
   me?.update();
-  const text = saveNoteText({ inLine: botLink.inLine, pending: botLink.pending(), loggedIn: me?.status?.().loggedIn });
-  $("saveNote").textContent = text;
+  const s = { inLine: botLink.inLine, pending: botLink.pending(), loggedIn: me?.status?.().loggedIn };
+  const text = saveNoteText(s);
+  $("saveNote").innerHTML = text ? `${icon(saveNoteIcon(s))}<span>${esc(text)}</span>` : ""; // qcheck-ok: W1 決まった名前の線アイコンと、esc した字だけ
   $("saveNote").hidden = !text;
 }
 window.addEventListener("online", drawStatus);
@@ -778,7 +779,7 @@ window.QBotLink?.guide({
   key: "shoquji:lineBannerOff", // この端末で閉じたか（設定なので端末に残してよい）
   openUrl: OPEN_URL,
   say,
-  closedText: "案内を閉じました（「🔗 くらぶボットとつなぐ」からまた見られます）"
+  closedText: "案内を閉じました（「くらぶボットとつなぐ」からまた見られます）"
 });
 
 // 開いたまま日付が変わって戻ってきたら、「きょう」を見ていた人は新しいきょうへ（入力中・直している途中はそのまま）
@@ -799,6 +800,6 @@ document.addEventListener("visibilitychange", () => {
 // はじめての人にだけ、使い方を3つ（「わかった」で消え、二度と出さない）
 window.LineShareUI?.firstTip(
   "shoquji",
-  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。✕ で消しても「元に戻す」で戻せます", "ブラウザ版の記録はこの端末の中だけ。LINE 版なら、くらぶボットのシートにも残ります"],
+  ["食べたものを入れて「＋ 記録する」。前に食べたものは、下のボタンを押すと入ります", "記録の名前を押すと直せます。右の × で消しても「元に戻す」で戻せます", "ブラウザ版の記録はこの端末の中だけ。LINE 版なら、くらぶボットのシートにも残ります"],
   document.querySelector(".days")
 );

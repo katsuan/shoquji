@@ -1,7 +1,7 @@
 // まだ送っていない記録：電波なし → もどる、ログインなし、2回送らない（js/outbox.js）
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createOutbox, isOffline, saveNoteText, unsentLogs } from "../js/outbox.js";
+import { createOutbox, isOffline, saveNoteIcon, saveNoteText, unsentLogs } from "../js/outbox.js";
 import { addLog, load, markSent, save } from "../js/store.js";
 
 const log = (id, date) => ({ id, date, meal: "昼", name: "おにぎり", kcal: 180 });
@@ -74,10 +74,15 @@ test("端末に残せない（プライベートブラウズなど）ときも�
 });
 
 test("画面の1行", () => {
-  assert.equal(saveNoteText({ inLine: true, pending: 2, loggedIn: true }), "📮 2件 まだ送っていません（つながったら送ります）");
-  assert.equal(saveNoteText({ inLine: true, pending: 0, loggedIn: false }), "👤 ログインしていません。記録はこの端末に保存中");
+  assert.equal(saveNoteText({ inLine: true, pending: 2, loggedIn: true }), "2件 まだ送っていません（つながったら送ります）");
+  assert.equal(saveNoteText({ inLine: true, pending: 0, loggedIn: false }), "ログインしていません。記録はこの端末に保存中");
   assert.equal(saveNoteText({ inLine: true, pending: 0, loggedIn: true }), "");
   assert.equal(saveNoteText({ inLine: false, pending: 0, loggedIn: false }), "", "ブラウザ版はいつも端末なので出さない");
+});
+
+test("画面の1行の頭の線アイコン", () => {
+  assert.equal(saveNoteIcon({ inLine: true, pending: 2, loggedIn: true }), "inbox");
+  assert.equal(saveNoteIcon({ inLine: true, pending: 0, loggedIn: false }), "user");
 });
 
 test("電波：onLine が false のときだけ「ない」", () => {

@@ -12,7 +12,7 @@
 </head>
 <body>
 <main class="ls-page ls-stack doc">
-  <p class="ls-hint" style="border:2px solid #6C47FF;border-radius:12px;padding:12px;margin:12px 0"><b>📦 食事記録ボットは「くらぶボット」に引っこしました。</b>これから始める人は、<a href="https://katsuan.github.io/qlove-bot/docs/setup.html">くらぶボットの作り方</a>を見てね。下は、前の食事記録ボットの手順です。</p>
+  <p class="ls-hint" style="border:2px solid #6C47FF;border-radius:12px;padding:12px;margin:12px 0"><b>食事記録ボットは「くらぶボット」に引っこしました。</b>これから始める人は、<a href="https://katsuan.github.io/qlove-bot/docs/setup.html">くらぶボットの作り方</a>を見てね。下は、前の食事記録ボットの手順です。</p>
 
   <header class="ls-brand">
     <h1 class="ls-brand-name"><img class="ls-brand-icon" src="../icon.svg" alt="" width="30" height="30">しょくじ</h1>
@@ -30,7 +30,7 @@
       <li><a href="https://docs.google.com/spreadsheets/d/1xqNuE1aap43v6-pTt8TOhrITmmCc6JIGnk8ruJhWqRs/copy" target="_blank" rel="noopener">配布用シート（食事記録 しょくじ版）</a>を開き、「コピーを作成」（シートについた GAS も一緒にコピーされます。記録はこのシートに入ります）</li>
       <li>コピーしたシートの「拡張機能」→「Apps Script」を開き、左のいちばん上の <code>gs/00_run/00_run</code> を開いて、上の関数の欄で <code>setupShoquji</code> をえらんで実行（はじめは権限の確認が出ます）</li>
       <li>「デプロイ」→「新しいデプロイ」→ 種類「ウェブアプリ」、実行するユーザー「自分」、アクセスできるユーザー「全員」→ 出てきた URL（<code>…/exec</code>）をコピー<br><small>（しょくじからの呼び出しは、確かめた本人のものだけ受けます）</small></li>
-      <li>LINE 版のしょくじを開き、「⚙️ 食事記録ボットとつなぐ（くわしい人向け）」に 3 の URL を入れる。「持ち主の登録を受けつけました」と出ます</li>
+      <li>LINE 版のしょくじを開き、「くらぶボットとつなぐ（くわしい人向け）」に 3 の URL を入れる。「持ち主の登録を受けつけました」と出ます</li>
       <li>10分以内に、同じ <code>00_run</code> で <code>adoptShoqujiOwner</code> を実行（実行ログに自分の名前が出ればよい）。しょくじを開きなおすと、記録がシートにも入ります</li>
     </ol>
     <p class="ls-hint">うまく記録されないときは、同じ <code>00_run</code> で <code>checkAll</code> を実行すると、実行ログに直すところ（❌）が出ます。</p>

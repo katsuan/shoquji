@@ -48,7 +48,7 @@
 
   <!-- 記録する -->
   <section class="ls-panel" aria-labelledby="formTitle">
-    <h2 id="formTitle" class="ls-panel-title">📝 <span id="formHeading">記録する</span></h2>
+    <h2 id="formTitle" class="ls-panel-title"><span class="ls-icon" data-icon="edit" aria-hidden="true"></span><span id="formHeading">記録する</span></h2>
     <!-- 朝・昼・夜・間食はタブ。選んでいるタブは下の枠とつながり、枠（食べたもの〜栄養・量）はその食事の色（app.js の renderMeals）。
          いまどの食事を記録しているか、入れているあいだずっとわかるように。「＋ 記録する」は枠の外 -->
     <div class="meals meal-tabs" role="radiogroup" aria-label="いつ食べた？"></div>
@@ -62,11 +62,11 @@
       <div id="suggest" class="ls-chips suggest" aria-label="よく食べるもの"></div>
       <!-- だいたいのカロリー（ご飯◯杯分）。くらぶボットと同じ目安（ご飯1杯 150g ≈ 240kcal）。押すとカロリーの欄に入る（app.js の renderEst） -->
       <div class="est-row" role="group" aria-labelledby="estTitle">
-        <p class="est-head"><span id="estTitle">🍚 ご飯何杯分？</span><small>1杯（150g）≈ 240kcal</small></p>
+        <p class="est-head"><span id="estTitle">ご飯何杯分？</span><small>1杯（150g）≈ 240kcal</small></p>
         <div id="estChips" class="est-chips"></div>
       </div>
       <details id="nutri" class="ls-fold nutri">
-        <summary><span class="ls-fold-icon" aria-hidden="true">🥗</span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
+        <summary><span class="ls-icon ls-fold-icon" data-icon="sprout" aria-hidden="true"></span>栄養も入れる <span class="ls-fold-meta">なくてもOK</span></summary>
         <div class="ls-fold-body nutri-grid">
           <label class="ls-field"><span class="ls-label">カロリー</span><span class="unit-input"><input id="kcal" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>kcal</i></span></label>
           <label class="ls-field"><span class="ls-label">たんぱく質</span><span class="unit-input"><input id="p" class="ls-input" inputmode="decimal" enterkeyhint="done" placeholder="0"><i>g</i></span></label>
@@ -93,7 +93,7 @@
 
   <!-- この日のしょくじ：合計と目標、食事ごとの一覧（押すと直せる）、カードで送る -->
   <section class="ls-panel" aria-labelledby="dayTitle">
-    <h2 id="dayTitle" class="ls-panel-title">🍽 <span id="dayHeading">きょうのしょくじ</span></h2>
+    <h2 id="dayTitle" class="ls-panel-title"><span class="ls-icon" data-icon="list" aria-hidden="true"></span><span id="dayHeading">きょうのしょくじ</span></h2>
     <div id="totals" class="totals"></div>
     <div id="dayList" class="day-list"></div>
     <!-- LINE 版で、まだくらぶボットに送っていない記録があるとき・ログインしていないときだけ（文は js/outbox.js の saveNoteText） -->
@@ -105,15 +105,15 @@
     <!-- 記録が1件以上あるときだけ出す -->
     <div id="sendArea" class="send-area" hidden>
       <a id="sendBtn" class="ls-button is-block line is-oqrn" href="#">カードでおくるん</a>
-      <p id="sendTextNote" class="ls-hint send-note" hidden>記録用の文字もいっしょに送ります（「⚙️ 設定」で切りかえ）</p>
+      <p id="sendTextNote" class="ls-hint send-note" hidden>記録用の文字もいっしょに送ります（「設定」で切りかえ）</p>
     </div>
   </section>
 
   <!-- LINE で使う（最初だけ・閉じられる）：LINE で開く案内と、4コマの使い方（LINE の画面に似せた絵。明るいまま）。つづくと同じ作り。
-       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE 版では出さない（「🔗 くらぶボットとつなぐ」から見られる） -->
+       この日のしょくじの下に置き、毎日の操作のじゃまをしない。LINE 版では出さない（「くらぶボットとつなぐ」から見られる） -->
   <section class="ls-panel" id="lineGuidePanel" aria-labelledby="lineGuideTitle" hidden>
     <div class="guide-head">
-      <h2 id="lineGuideTitle" class="ls-panel-title">📱 LINE 版で使う</h2>
+      <h2 id="lineGuideTitle" class="ls-panel-title"><span class="ls-icon" data-icon="app" aria-hidden="true"></span>LINE 版で使う</h2>
       <button class="line-guide-close" type="button" data-close-line-guide aria-label="案内を閉じる"><span class="ls-icon" data-icon="close" aria-hidden="true"></span>閉じる</button>
     </div>
     <!-- 「LINEで開く」は、おくるん（Q キット）の共通の案内（LineShareLiff.outsideHelp） -->
@@ -124,7 +124,7 @@
       <li><span class="ls-icon" data-icon="bot" aria-hidden="true"></span><span>ボットのトークに食べたものを送っても記録できます。20時の「記録がない日」のお知らせも選べます</span></li>
     </ul>
     <div id="lineOutside"></div>
-    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「🔗 くらぶボットとつなぐ」からまた見られます）。</p>
+    <p class="ls-hint">横にめくると、4コマで使い方がわかります（閉じても「くらぶボットとつなぐ」からまた見られます）。</p>
     <div class="line-guide" role="list" aria-label="4コマの使い方">
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -134,7 +134,7 @@
             <div class="lg-tap">👆</div>
           </div>
         </div>
-        <figcaption><b>1. リンクを開く</b>上のボタンのリンクを押すと開きます（自分あてのトークに貼っておくと便利）。ブラウザ版とは別の記録なので、いまの記録は「⚙️ 設定」の記録の控えでうつせます</figcaption>
+        <figcaption><b>1. リンクを開く</b>上のボタンのリンクを押すと開きます（自分あてのトークに貼っておくと便利）。ブラウザ版とは別の記録なので、いまの記録は「設定」の記録の控えでうつせます</figcaption>
       </figure>
       <figure class="lg-panel" role="listitem">
         <div class="lg-phone" aria-hidden="true">
@@ -178,7 +178,7 @@
   <div class="ls-folds">
     <!-- ふりかえり：1週間・続けて記録した日数・よく食べるもの -->
     <details class="ls-fold" id="lookback">
-      <summary><span class="ls-fold-icon" aria-hidden="true">📈</span>ふりかえり</summary>
+      <summary><span class="ls-icon ls-fold-icon" data-icon="chart" aria-hidden="true"></span>ふりかえり</summary>
       <div class="ls-fold-body">
         <div id="streak" class="streak"></div>
         <!-- 週の区切りは Q 共通の週のはじまり（月曜／日曜。shared/week-start.js）。前の週・次の週にもどせる -->
@@ -195,7 +195,7 @@
 
     <!-- よく記録するもの（くらぶボットとつないでいるときだけ）：📌 固定と並べかえ、MYメニューをさがして直す -->
     <details class="ls-fold" id="quickFold" hidden>
-      <summary><span class="ls-fold-icon" aria-hidden="true">📌</span>よく記録するもの・MYメニュー</summary>
+      <summary><span class="ls-icon ls-fold-icon" data-icon="star" aria-hidden="true"></span>よく記録するもの・MYメニュー</summary>
       <div class="ls-fold-body">
         <p class="ls-hint">固定した品は、いつも前に並びます。あいたところは記録の多い順です。ボットの返事の下に出るボタンに、この順で並び、押すだけで記録できます。</p>
         <p class="sub-title">固定した品（<span id="pinCount">0</span>/12）</p>
@@ -211,7 +211,7 @@
 
     <!-- くらぶボットとつなぐ（くわしい人向け）：自分のくらぶボットにつなぐときの URL の欄。作り方は くらぶボット（qlove-bot）の docs/setup.html -->
     <details class="ls-fold" id="lineFold">
-      <summary><span class="ls-fold-icon" aria-hidden="true">🔗</span><span><span class="nw">くらぶボットと</span><span class="nw">つなぐ</span></span> <span class="ls-fold-meta">くわしい人向け</span></summary>
+      <summary><span class="ls-icon ls-fold-icon" data-icon="link" aria-hidden="true"></span><span><span class="nw">くらぶボットと</span><span class="nw">つなぐ</span></span> <span class="ls-fold-meta">くわしい人向け</span></summary>
       <div class="ls-fold-body">
         <!-- はじめだけ要る説明 -->
         <p id="lineIntro" class="ls-hint">LINE 版のしょくじは、くらぶボット（GAS）とつなげます。つなぐと、記録がボットのシートにも入り、ボットのトークで送った記録もここに出ます。ブラウザ版は、今までどおり何も送りません。</p>
@@ -232,7 +232,7 @@
 
     <!-- ⚙️ 設定（Q のツールの決まり：設定はページの下のここに1つ。LINE 版はアイコンのシートの「⚙️ 設定」からも開く。q-oqrn の ux.md A7）：目標・送り方・週のはじまり・控え・全部消す -->
     <details class="ls-fold" id="settings">
-      <summary><span class="ls-fold-icon" aria-hidden="true">⚙️</span>設定 <span class="ls-fold-meta">目標・送り方・記録の控え</span></summary>
+      <summary><span class="ls-icon ls-fold-icon" data-icon="settings" aria-hidden="true"></span>設定 <span class="ls-fold-meta">目標・送り方・記録の控え</span></summary>
       <div class="ls-fold-body">
         <p class="sub-title"><span class="ls-icon" data-icon="target" aria-hidden="true"></span>1日の目標（バーの目安）</p>
         <div class="nutri-grid">
@@ -242,10 +242,10 @@
           <label class="ls-field"><span class="ls-label">炭水化物</span><span class="unit-input"><input id="tC" class="ls-input" inputmode="decimal" enterkeyhint="done"><i>g</i></span></label>
         </div>
         <!-- くらぶボットとつないでいるときだけ：目標カロリーはボットとそろえる。20時のお知らせ -->
-        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span>🔔 20時に、記録がない日はお知らせ<small>くらぶボットから届きます。目標カロリーもボットとそろえます</small></span></label>
+        <label class="send-text" id="botNotifyRow" hidden><input id="botNotify" type="checkbox"><span class="ls-icon" data-icon="bell" aria-hidden="true"></span><span>20時に、記録がない日はお知らせ<small>くらぶボットから届きます。目標カロリーもボットとそろえます</small></span></label>
         <p class="sub-title"><span class="ls-icon" data-icon="send" aria-hidden="true"></span>カードで送るとき</p>
         <!-- 記録用の文字：カードの後ろに「#しょくじ …」の文字も送る。LINE のくらぶボットに送ると、ボットが読んで記録できる -->
-        <label class="send-text"><input id="sendTextToggle" type="checkbox"><span>📝 記録用の文字も送る<small>くらぶボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
+        <label class="send-text"><input id="sendTextToggle" type="checkbox"><span class="ls-icon" data-icon="notebook" aria-hidden="true"></span><span>記録用の文字も送る<small>くらぶボットに送る人むけ（カードの後ろに文字も1通つきます）</small></span></label>
         <p class="sub-title"><span class="ls-icon" data-icon="calendar" aria-hidden="true"></span>週のはじまり</p>
         <div id="weekStart" class="ls-chips" role="radiogroup" aria-label="週のはじまり">
           <button class="ls-chip is-small" type="button" role="radio" data-week-start="1">月曜</button>
