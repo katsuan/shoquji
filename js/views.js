@@ -121,7 +121,7 @@ export function weekHtml(days, { today, goal }) {
 }
 
 // だいたいのカロリー（ご飯◯杯分）。くらぶボットと同じ目安：ご飯1杯（150g）≈ 240kcal。朝・昼・夜は½〜3杯、間食は「少し」〜1.5杯
-export const RICE_BOWL_KCAL = 240;
+const RICE_BOWL_KCAL = 240;
 export function estOptions(meal) {
   const bowls = meal === "間食" ? [{ key: "few", label: "少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
   return bowls.map((b) => (typeof b === "object" ? b : { key: String(b), label: `${b === 0.5 ? "½" : b}杯`, kcal: Math.round(RICE_BOWL_KCAL * b) }));
