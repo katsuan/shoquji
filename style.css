@@ -283,7 +283,7 @@ body {
 /* 320px の幅で「くらぶボットと つなぐ ／ くわしい人向け」が入りきらず、ページが横にはみ出していた。添え書きは折り返してよい */
 #lineFold > summary .ls-fold-meta { white-space: normal; }
 /* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
-.ls-panel > *, .meal-frame > * { min-width: 0; }
+.ls-panel > *, .meal-frame > *, .ls-folds > *, .ls-fold-body > * { min-width: 0; }
 /* パネルの見出し・チェックの欄・まだ送っていない記録の1行の線アイコン */
 .ls-panel-title { display: flex; align-items: center; gap: var(--ls-space-s); }
 .ls-panel-title .ls-icon { color: var(--ls-subtext); }
@@ -291,3 +291,10 @@ body {
 #saveNote { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
 #saveNote[hidden] { display: none; }
 #saveNote .ls-icon { margin-top: 2px; }
+/* 固定した品の行の頭の印（チェックつきのブックマーク。まだ固定していない品の「固定」ボタンは印なしのブックマーク） */
+.pin-row > .ls-icon { width: 18px; height: 18px; color: var(--ls-subtext); }
+/* 固定した品・さがした品の行も、欄の幅に合わせて縮む。さがした品は、名前が狭くなりすぎたらボタンを次の行へ */
+.pin-list > li, .cand-list > * { min-width: 0; }
+.cand-row { flex-wrap: wrap; }
+.cand-row .pin-name { flex: 1 1 120px; }
+.cand-actions { display: flex; gap: var(--ls-space-s); }

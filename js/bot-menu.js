@@ -72,7 +72,7 @@ function renderPins() {
     ? list
         .map((k, i) => {
           const m = map.get(k) || { menu: "（消えたメニュー）" };
-          return `<li class="pin-row"><span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+          return `<li class="pin-row">${icon("bookmark-check")}<span class="pin-name">${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
             <button type="button" data-pin-move="${esc(k)}" data-dir="-1" aria-label="上へ"${i === 0 ? " disabled" : ""}>↑</button>
             <button type="button" data-pin-move="${esc(k)}" data-dir="1" aria-label="下へ"${i === list.length - 1 ? " disabled" : ""}>↓</button>
             <button type="button" data-pin-del="${esc(k)}" aria-label="固定をやめる">${icon("close")}</button></li>`;
@@ -85,8 +85,8 @@ function renderPins() {
     cands
       .map(
         (m) => `<div class="cand-row"><span class="pin-name"><i class="scope-tag${m.scope === "common" ? " is-common" : ""}">${m.scope === "common" ? "共通" : "自分"}</i>${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
-          <button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">${icon("star")}固定</button>
-          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${icon("edit")}${m.scope === "common" && !profile.isAdmin ? "自分用に" : "直す"}</button></div>`
+          <span class="cand-actions"><button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">${icon("bookmark")}固定</button>
+          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${icon("edit")}${m.scope === "common" && !profile.isAdmin ? "自分用に" : "直す"}</button></span></div>`
       )
       .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
 }
