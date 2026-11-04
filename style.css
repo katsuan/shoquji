@@ -32,8 +32,9 @@
 .m2 { --m: var(--meal2); }
 .m3 { --m: var(--meal3); }
 
+/* 背景は平らな色（グラデーションは使わない） */
 body {
-  background: radial-gradient(circle at top right, #ffe2ad, transparent 40%), var(--ls-bg);
+  background: var(--ls-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -43,7 +44,7 @@ body {
 
 /* 日付・食事：横に等分 */
 .days { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .days .ls-chip, .meals .ls-chip { min-height: 44px; font-size: 15px; font-weight: 800; }
 /* 朝・昼・夜・間食はタブ：下の枠（食べたもの〜栄養・量）の上にのる。選んでいないタブは、その食事の色のうすい地。
  * 選んでいるタブは、枠と同じ色の線・地で、枠とつながって見える（タブの下の線を消して、枠の上の線にかぶせる） */
@@ -64,7 +65,7 @@ body {
 .meal-tabs .ls-chip, .meal-frame { --frame-bg: color-mix(in srgb, var(--m, var(--ls-accent)) 9%, var(--ls-surface)); }
 /* 枠：選んでいる食事の色。上の角はタブとつながるので四角 */
 .meal-frame {
-  display: grid; gap: 12px; padding: 14px 12px 12px; border-radius: 0 0 16px 16px;
+  display: grid; gap: 16px; padding: 16px; border-radius: 0 0 16px 16px;
   border: 2px solid var(--m, var(--ls-line));
   background: var(--frame-bg);
   transition: border-color 0.15s ease, background-color 0.15s ease;
@@ -73,17 +74,18 @@ body {
 .meal-frame .ls-input:focus { border-color: var(--m); }
 .meal-frame .ls-fold { background: var(--ls-surface); }
 /* だいたいのカロリー（ご飯◯杯分）：横に等分。2段（量・kcal）。選んだものは食事の色 */
-.est-row { display: grid; gap: 6px; }
-.est-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0; font-size: 13px; font-weight: 800; }
+.est-row { display: grid; gap: 8px; }
+.est-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0 8px; margin: 0; font-size: 13px; font-weight: 800; }
+.est-head > span { white-space: nowrap; }
 .est-head small { color: var(--ls-subtext); font-size: 11px; font-weight: 700; white-space: nowrap; }
-.est-chips { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 6px; }
-.est-chips .ls-chip { flex-direction: column; gap: 0; min-height: 48px; padding: 4px 2px; border-radius: 12px; background: var(--ls-surface); font-size: 14px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
+.est-chips { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); gap: 4px; }
+.est-chips .ls-chip { flex-direction: column; gap: 0; min-height: 48px; padding: 4px; border-radius: 12px; background: var(--ls-surface); font-size: 14px; font-weight: 800; line-height: 1.2; white-space: nowrap; }
 .est-chips .ls-chip small { color: var(--ls-subtext); font-size: 10px; font-weight: 700; }
 .est-chips .ls-chip[aria-pressed="true"] { border-color: var(--m); background: color-mix(in srgb, var(--m) 22%, var(--ls-surface)); color: color-mix(in srgb, var(--m) 55%, var(--ls-text)); box-shadow: inset 0 0 0 1px var(--m); }
 /* 枠の中はせまくなるので、「栄養も入れる」は折り返さない（「なくてもOK」のほうを縮める） */
 .meal-frame .nutri summary { white-space: nowrap; }
 .meal-frame .nutri .ls-fold-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 360px) { .meal-frame { padding: 12px 8px 8px; } }
+@media (max-width: 360px) { .meal-frame { padding: 16px 8px 8px; } }
 /* 日付の欄は丸いボタンの上に透明で重ねる（押すと端末の日付えらびが開く） */
 .date-pick input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; -webkit-appearance: none; appearance: none; }
 
@@ -91,7 +93,7 @@ body {
 .unit-input { position: relative; display: block; min-width: 0; }
 .unit-input .ls-input { padding-right: 44px; text-align: right; }
 .unit-input i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ls-subtext); font-size: 13px; font-style: normal; pointer-events: none; }
-.nutri-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.nutri-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 
 /* よく食べるもの（押すと入る） */
 .suggest:empty { display: none; }
@@ -102,15 +104,15 @@ body {
 .ls-button.line small { font-size: 12px; opacity: 0.9; }
 .file-btn { position: relative; overflow: hidden; }
 .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.send-area { display: grid; gap: 6px; }
-.send-note { font-size: 12px; font-weight: 700; text-align: center; }
+.send-area { display: grid; gap: 8px; }
+.send-note { font-size: 12px; font-weight: 700; }
 .send-text { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .send-text input { flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ls-accent); }
-.send-text span { display: grid; gap: 1px; }
+.send-text span { display: grid; gap: 0; }
 .send-text small { color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
 .link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; text-decoration: underline; cursor: pointer; }
 .link.danger { color: var(--ls-danger); }
-.sub-title { margin: 6px 0 0; padding-top: 10px; border-top: 1px dashed var(--ls-line); font-size: 14px; font-weight: 800; }
+.sub-title { margin: 8px 0 0; padding-top: 16px; border-top: 1px solid var(--ls-line); font-size: 14px; font-weight: 800; }
 .sub-title:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 
 /* Q キットのトーストが読めないときだけ出す文字 */
@@ -121,8 +123,8 @@ body {
 .totals { display: grid; gap: 8px; }
 .totals:empty { display: none; }
 .kcal-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.kcal-line b { font-size: 30px; font-weight: 800; letter-spacing: 0.01em; }
-.kcal-line b small { margin-left: 2px; font-size: 14px; }
+.kcal-line b { font-size: 24px; font-weight: 800; }
+.kcal-line b small { margin-left: 4px; color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .kcal-line span { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .bar { position: relative; height: 10px; overflow: hidden; border-radius: 999px; background: #f6ead6; }
 .bar i { position: absolute; inset: 0 auto 0 0; border-radius: inherit; background: var(--ls-accent); }
@@ -135,43 +137,45 @@ body {
 .bar .goal-mark { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--ls-text); }
 /* 食事ごとのカロリーと割合 */
 /* 朝・昼・夜・間食を、入力欄のタブと同じ並びで横に4つ。1つずつ「● 朝 16%」と「平均 215 kcal」の2行 */
-.meal-split { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
-.meal-split li { display: grid; gap: 0; justify-items: center; padding: 6px 2px; border-radius: 10px; background: color-mix(in srgb, var(--m) 9%, var(--ls-surface)); white-space: nowrap; min-width: 0; }
+.meal-split { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
+.meal-split li { display: grid; gap: 0; justify-items: center; padding: 8px 4px; border-radius: 8px; background: color-mix(in srgb, var(--m) 9%, var(--ls-surface)); white-space: nowrap; min-width: 0; }
 .meal-split .name { display: flex; align-items: center; gap: 4px; }
 .meal-split b { color: var(--ls-text); font-size: 15px; font-variant-numeric: tabular-nums; }
 .meal-split small { font-size: 10px; font-variant-numeric: tabular-nums; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .meal-split .is-zero { opacity: .45; }
 .pfc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.pfc div { display: grid; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
+.pfc div { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--ls-subtext); }
 .pfc b { color: var(--ls-text); font-size: 14px; }
 .pfc .bar { height: 6px; }
 .pfc .p i { background: var(--pc); }
 .pfc .f i { background: var(--fc); }
 .pfc .c i { background: var(--cc); }
 .note { margin: 0; color: var(--ls-subtext); font-size: 12px; }
+/* まだ記録がないときの一言：Q キットの ls-empty は中央なので、ここでは左にそろえる */
+.day-list .ls-empty { justify-items: start; padding: 8px 0; text-align: left; }
 
 /* 食事ごとの一覧：横に「朝」などの札、押すと直せる */
-.day-list { display: grid; gap: 10px; }
+.day-list { display: grid; gap: 8px; }
 .meal-group { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: start; }
-.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 10px; background: color-mix(in srgb, var(--m, var(--ls-accent)) 22%, var(--ls-surface)); color: color-mix(in srgb, var(--m, var(--ls-accent)) 50%, var(--ls-text)); box-shadow: inset 0 -3px 0 var(--m, var(--ls-accent)); font-size: 13px; font-weight: 800; }
-.items { display: grid; gap: 6px; }
-.item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; padding: 6px 4px 6px 10px; border: 1.5px solid var(--ls-line); border-radius: 12px; }
+.meal-tag { display: grid; place-items: center; min-height: 32px; border-radius: 8px; background: color-mix(in srgb, var(--m, var(--ls-accent)) 22%, var(--ls-surface)); color: color-mix(in srgb, var(--m, var(--ls-accent)) 50%, var(--ls-text)); box-shadow: inset 0 -3px 0 var(--m, var(--ls-accent)); font-size: 13px; font-weight: 800; }
+.items { display: grid; gap: 8px; }
+.item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 4px 4px 4px 16px; border: 1px solid var(--ls-line); border-radius: 8px; }
 .item.is-editing { border-color: var(--ls-accent); background: var(--ls-accent-soft); }
 .item button.name { overflow: hidden; padding: 4px 0; border: 0; background: none; font-size: 15px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
 .item .kc { color: var(--ls-subtext); font-size: 13px; font-weight: 700; white-space: nowrap; }
-.item .del { width: 32px; height: 32px; border: 0; border-radius: 50%; background: none; color: #a8978a; font-size: 16px; cursor: pointer; }
+.item .del { width: 40px; height: 40px; border: 0; border-radius: 50%; background: none; color: #a8978a; font-size: 16px; cursor: pointer; }
 /* 記録したばかりの品を、少しのあいだ光らせる */
 .item.is-new { animation: shine 1.6s ease-out; }
 @keyframes shine { 0%, 30% { background: #ffe1a6; border-color: var(--ls-accent); } 100% { background: transparent; } }
 
 /* ふりかえり */
-.streak { font-size: 15px; font-weight: 800; }
-.streak b { color: var(--ls-accent-ink); font-size: 22px; }
+.streak { color: var(--ls-subtext); font-size: 14px; font-weight: 700; }
+.streak b { color: var(--ls-text); font-size: 18px; font-weight: 800; }
 /* 1週間：縦のバー。数字（14px）・バー（110px）・日付（16px）の3段。目標の線はバーの段の中に JS で置く */
-.week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.week .goal { position: absolute; left: 0; right: 0; border-top: 2px dashed rgba(230, 70, 72, 0.5); pointer-events: none; }
-.week .goal span { position: absolute; right: 0; top: 1px; padding: 0 3px; border-radius: 4px; background: rgba(255, 255, 255, 0.85); color: var(--ume); font-size: 10px; font-weight: 700; }
-.day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 2px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
+.week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.week .goal { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ls-subtext); pointer-events: none; }
+.week .goal span { position: absolute; right: 0; top: 0; padding: 0 4px; background: var(--ls-surface); color: var(--ls-subtext); font-size: 10px; font-weight: 700; }
+.day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
 .day-col .v { font-size: 10px; line-height: 14px; white-space: nowrap; }
 .day-col .col { display: flex; align-items: flex-end; justify-content: center; }
 /* 棒は、朝・昼・夜・間食の色を下から積む（高さの割合は flex-grow＝カロリー） */
@@ -183,28 +187,29 @@ body {
 .week-split .ranking-title { margin: 0; }
 .day-col.today { color: var(--ls-accent-ink); }
 .ranking { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 2px; border-bottom: 1px dashed var(--ls-line); font-size: 14px; }
+.ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--ls-line); font-size: 14px; }
 .ranking li span:last-child { color: var(--ls-subtext); font-size: 13px; white-space: nowrap; }
-.ranking-title { margin: 6px 0 0; font-size: 14px; font-weight: 800; }
+.ranking-title { margin: 8px 0 0; font-size: 14px; font-weight: 800; }
 
 /* ---- 暗い表示（index.html の data-ls-dark="auto"。Q キットの色は ui.css が暗くする） ---- */
 @media (prefers-color-scheme: dark) {
-  :root[data-ls-dark="auto"] body { background: radial-gradient(circle at top right, rgba(236, 138, 22, 0.16), transparent 40%), var(--ls-bg); }
   :root[data-ls-dark="auto"] .bar { background: var(--ls-surface-sub); }
 }
 
 /* 食事記録ボットとつなぐ（くわしい人向け）：記録の置き場所の説明・開きなおしの案内・ボットで入れた記録 */
 .ls-hint.small { font-size: 12px; }
-.where-note { margin: 8px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 13px; line-height: 1.55; }
+.where-note { margin: 8px 0 0; padding: 8px 16px; border-radius: 8px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 13px; line-height: 1.55; }
 .where-note b { color: var(--ls-text); }
 .where-note[hidden] { display: none; }
 .item.is-bot { border-style: dashed; }
 .item .bot-name { overflow: hidden; padding: 4px 0; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.item .bot-tag { justify-self: end; padding: 1px 8px; border-radius: 999px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.item .bot-tag { justify-self: end; padding: 0 8px; border-radius: 999px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 11px; font-weight: 700; white-space: nowrap; }
 
 /* ---- LINE で使う：4コマ（LINE の画面に似せた絵。暗い表示でも明るいまま。つづくと同じ作り） ---- */
 .guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.line-guide-close { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; font-weight: 700; cursor: pointer; }
+/* 「LINE で開く」の案内（Q キット）の一言も、このページでは左にそろえる */
+#lineOutside .ls-outside-text { text-align: left; }
+.line-guide-close { flex: none; min-height: 44px; padding: 0 4px; white-space: nowrap; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; font-weight: 700; cursor: pointer; }
 .line-guide { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 72%); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 10px; -webkit-overflow-scrolling: touch; }
 .lg-panel { margin: 0; scroll-snap-align: start; display: grid; gap: 8px; align-content: start; }
 .lg-panel figcaption { color: var(--ls-subtext); font-size: 13px; line-height: 1.5; }
@@ -227,27 +232,27 @@ body {
 .lg-card-btn { padding: 7px; border-top: 1px solid #efe6da; color: #c26a00; font-weight: 700; text-align: center; }
 
 /* よく記録するもの（LINE のメニュー）：固定した品の並べかえ・メニューの見本 */
-.pin-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.pin-row { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; border: 1.5px solid var(--ls-line); border-radius: 12px; }
+.pin-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pin-row { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 16px; border: 1px solid var(--ls-line); border-radius: 8px; }
 .pin-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.pin-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
+.pin-row .pin-name small { margin-left: 8px; color: var(--ls-subtext); font-size: 12px; }
 .pin-row button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--ls-subtext); font-size: 15px; cursor: pointer; }
 .pin-row button:disabled { opacity: 0.3; cursor: default; }
 .item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; }
-.cand-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px dashed var(--ls-line); }
+.cand-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--ls-line); }
 .cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.cand-row .pin-name small { margin-left: 6px; color: var(--ls-subtext); font-size: 12px; }
-.cand-row .ls-button { flex: 0 0 auto; min-height: 44px; padding: 0 10px; }
+.cand-row .pin-name small { margin-left: 8px; color: var(--ls-subtext); font-size: 12px; }
+.cand-row .ls-button { flex: 0 0 auto; min-height: 44px; padding: 0 8px; }
 
 /* MYメニューの「共通／自分」の札と、量の倍率 */
-.scope-tag { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 999px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 11px; font-style: normal; font-weight: 700; vertical-align: 1px; }
+.scope-tag { display: inline-block; margin-right: 8px; padding: 0 8px; border-radius: 999px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 11px; font-style: normal; font-weight: 700; vertical-align: 1px; }
 .scope-tag.is-common { background: var(--ls-surface-sub); color: var(--ls-subtext); }
-.scale-row { align-items: center; gap: 6px; }
+.scale-row { align-items: center; gap: 8px; }
 .scale-row .scale-label { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .scale-row .ls-chip { min-height: 44px; }
 
 /* LINE で開く良さ（「📱 LINE 版で使う」の上。つづくと同じ形） */
-.line-merit { display: grid; gap: 4px; margin: 0 0 8px; padding-left: 0; list-style: none; }
+.line-merit { display: grid; gap: 8px; margin: 0 0 8px; padding-left: 0; list-style: none; }
 
 /* 見出しを、ことばの途中で折り返さない（「つな／ぐ」にしない）。折り返すなら .nw のまとまりの間で */
 .nw { display: inline-block; }
