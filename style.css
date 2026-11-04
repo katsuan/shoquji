@@ -242,7 +242,6 @@ body {
 .cand-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--ls-line); }
 .cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .cand-row .pin-name small { margin-left: 8px; color: var(--ls-subtext); font-size: 12px; }
-.cand-row .ls-button { flex: 0 0 auto; min-height: 44px; padding: 0 8px; }
 
 /* MYメニューの「共通／自分」の札と、量の倍率 */
 .scope-tag { display: inline-block; margin-right: 8px; padding: 0 8px; border-radius: 999px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 11px; font-style: normal; font-weight: 700; vertical-align: 1px; }
@@ -279,7 +278,6 @@ body {
 .line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); }
 .date-pick .ls-icon { width: 18px; height: 18px; }
 .item .del .ls-icon, .pin-row button .ls-icon { width: 18px; height: 18px; }
-.cand-row .ls-button .ls-icon { width: 16px; height: 16px; }
 /* 320px の幅で「くらぶボットと つなぐ ／ くわしい人向け」が入りきらず、ページが横にはみ出していた。添え書きは折り返してよい */
 #lineFold > summary .ls-fold-meta { white-space: normal; }
 /* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
@@ -292,8 +290,10 @@ body {
 #saveNote .ls-icon { margin-top: 2px; }
 /* 固定した品の行の頭の印（チェックつきのブックマーク。まだ固定していない品の「固定」ボタンは印なしのブックマーク） */
 .pin-row > .ls-icon { width: 18px; height: 18px; }
-/* 固定した品・さがした品の行も、欄の幅に合わせて縮む。さがした品は、名前が狭くなりすぎたらボタンを次の行へ */
+/* 固定した品・さがした品の行も、欄の幅に合わせて縮む */
 .pin-list > li, .cand-list > * { min-width: 0; }
-.cand-row { flex-wrap: wrap; }
-.cand-row .pin-name { flex: 1 1 120px; }
-.cand-actions { display: flex; gap: var(--ls-space-s); }
+/* さがした品：名前（のこり）・固定・直すの3列。上の見出しの行に「固定」「直す」、品の行はアイコンだけのボタン */
+.cand-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--ls-tap) var(--ls-tap); }
+.cand-row .ls-icon-button { color: var(--ls-text); }
+.cand-head { padding: 0; color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
+.cand-head > span:not(.pin-name) { text-align: center; }

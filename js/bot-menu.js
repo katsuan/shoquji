@@ -81,14 +81,18 @@ function renderPins() {
     : '<li class="ls-hint">まだありません。下の欄でさがして、押すと固定できます。</li>';
   const q = $("pinSearch").value.trim();
   const cands = (profile.menus || []).filter((m) => m.masterKey && !list.includes(m.masterKey) && (!q || dn(m).includes(q))).slice(0, 12);
-  $("pinCands").innerHTML =
-    cands
-      .map(
-        (m) => `<div class="cand-row"><span class="pin-name"><i class="scope-tag${m.scope === "common" ? " is-common" : ""}">${m.scope === "common" ? "共通" : "自分"}</i>${esc(dn(m))}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
-          <span class="cand-actions"><button class="ls-button is-small" type="button" data-pin-add="${esc(m.masterKey)}">${icon("bookmark")}固定</button>
-          <button class="ls-button is-small" type="button" data-master-edit="${esc(m.masterKey)}">${icon("edit")}${m.scope === "common" && !profile.isAdmin ? "自分用に" : "直す"}</button></span></div>`
-      )
-      .join("") || (q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "");
+  // 「固定」「直す」は上の見出しの行に1回だけ書き、品の行はアイコンだけ（読み上げには品の名前つきで）
+  const head = '<div class="cand-row cand-head" aria-hidden="true"><span></span><span>固定</span><span>直す</span></div>';
+  const rows = cands
+    .map((m) => {
+      const name = dn(m);
+      const toMine = m.scope === "common" && !profile.isAdmin; // 共通の品は、自分用の写しを作って直す
+      return `<div class="cand-row"><span class="pin-name"><i class="scope-tag${m.scope === "common" ? " is-common" : ""}">${m.scope === "common" ? "共通" : "自分"}</i>${esc(name)}${m.kcal != null ? `<small>${fmt(m.kcal)} kcal</small>` : ""}</span>
+          <button class="ls-icon-button" type="button" data-pin-add="${esc(m.masterKey)}" aria-label="${esc(name)} を固定">${icon("bookmark")}</button>
+          <button class="ls-icon-button" type="button" data-master-edit="${esc(m.masterKey)}" aria-label="${esc(name)} を${toMine ? "自分用にして直す" : "直す"}">${icon("edit")}</button></div>`;
+    })
+    .join("");
+  $("pinCands").innerHTML = rows ? head + rows : q ? '<p class="ls-hint">見つかりません。MYメニューにある品だけ出ます。</p>' : "";
 }
 
 // ボットの設定と、よく記録するもの・MYメニューの欄のボタンをつなぐ（app.js から1回）
