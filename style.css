@@ -275,7 +275,7 @@ body {
 
 /* 線アイコン（Q キットの ls-icon）：字の前に置き、間は 8。説明の行・小見出し・LINE で開く良さの行は、アイコンと字を横に並べる */
 .sub-title, .line-merit li { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
-.sub-title .ls-icon, .line-merit .ls-icon { margin-top: 2px; color: var(--ls-subtext); }
+.sub-title .ls-icon, .line-merit .ls-icon { margin-top: 2px; }
 .line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); }
 .date-pick .ls-icon { width: 18px; height: 18px; }
 .item .del .ls-icon, .pin-row button .ls-icon { width: 18px; height: 18px; }
@@ -286,13 +286,12 @@ body {
 .ls-panel > *, .meal-frame > *, .ls-folds > *, .ls-fold-body > * { min-width: 0; }
 /* パネルの見出し・チェックの欄・まだ送っていない記録の1行の線アイコン */
 .ls-panel-title { display: flex; align-items: center; gap: var(--ls-space-s); }
-.ls-panel-title .ls-icon { color: var(--ls-subtext); }
-.send-text > .ls-icon { width: 18px; height: 18px; margin-top: 1px; color: var(--ls-subtext); }
+.send-text > .ls-icon { width: 18px; height: 18px; margin-top: 1px; }
 #saveNote { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
 #saveNote[hidden] { display: none; }
 #saveNote .ls-icon { margin-top: 2px; }
 /* 固定した品の行の頭の印（チェックつきのブックマーク。まだ固定していない品の「固定」ボタンは印なしのブックマーク） */
-.pin-row > .ls-icon { width: 18px; height: 18px; color: var(--ls-subtext); }
+.pin-row > .ls-icon { width: 18px; height: 18px; }
 /* 固定した品・さがした品の行も、欄の幅に合わせて縮む。さがした品は、名前が狭くなりすぎたらボタンを次の行へ */
 .pin-list > li, .cand-list > * { min-width: 0; }
 .cand-row { flex-wrap: wrap; }
