@@ -93,10 +93,8 @@ body {
 .unit-input { position: relative; display: block; min-width: 0; }
 .unit-input .ls-input { padding-right: 44px; text-align: right; }
 .unit-input i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--ls-subtext); font-size: 13px; font-style: normal; pointer-events: none; }
-.nutri-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 
 /* よく食べるもの（押すと入る） */
-.suggest:empty { display: none; }
 .pick small { color: var(--ls-subtext); font-size: 11px; font-weight: 700; }
 
 .form-actions { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; }
@@ -108,11 +106,15 @@ body {
 .send-note { font-size: 12px; font-weight: 700; }
 .send-text { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
 .send-text input { flex: 0 0 auto; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--ls-accent); }
-.send-text span { display: grid; gap: 0; }
+.send-text span { display: grid; }
 .send-text small { color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
-.link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; text-decoration: underline; cursor: pointer; }
+/* 文字だけのボタン（「すべて消す」など）：見た目はそのまま、押せる所を上下に広げる（44px めやす） */
+.link { position: relative; justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.link::after { content: ""; position: absolute; inset: -6px -4px; }
 .link.danger { color: var(--ls-danger); }
-.sub-title { margin: 8px 0 0; padding-top: 16px; border-top: 1px solid var(--ls-line); font-size: 14px; font-weight: 800; }
+/* 設定の小見出し（頭に線アイコン。間は 8） */
+.sub-title { display: flex; align-items: flex-start; gap: var(--ls-space-s); margin: 8px 0 0; padding-top: 16px; border-top: 1px solid var(--ls-line); font-size: 14px; font-weight: 800; }
+.sub-title .ls-icon { margin-top: 2px; }
 .sub-title:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 
 /* Q キットのトーストが読めないときだけ出す文字 */
@@ -171,11 +173,11 @@ body {
 /* ふりかえり */
 .streak { color: var(--ls-subtext); font-size: 14px; font-weight: 700; }
 .streak b { color: var(--ls-text); font-size: 18px; font-weight: 800; }
-/* 1週間：縦のバー。数字（14px）・バー（110px）・日付（16px）の3段。目標の線はバーの段の中に JS で置く */
+/* 1週間：縦のバー。数字（14px）・バー（110px）・日付（16px）・曜日（14px）の4段。目標の線はバーの段の中に置く（js/views.js の weekHtml） */
 .week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .week .goal { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--ls-subtext); pointer-events: none; }
 .week .goal span { position: absolute; right: 0; top: 0; padding: 0 4px; background: var(--ls-surface); color: var(--ls-subtext); font-size: 10px; font-weight: 700; }
-.day-col { display: grid; grid-template-rows: 14px 110px 16px; gap: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
+.day-col { display: grid; grid-template-rows: 14px 110px 16px 14px; gap: 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--ls-subtext); }
 .day-col .v { font-size: 10px; line-height: 14px; white-space: nowrap; }
 .day-col .col { display: flex; align-items: flex-end; justify-content: center; }
 /* 棒は、朝・昼・夜・間食の色を下から積む（高さの割合は flex-grow＝カロリー） */
@@ -186,6 +188,8 @@ body {
 .week-split:empty { display: none; }
 .week-split .ranking-title { margin: 0; }
 .day-col.today { color: var(--ls-accent-ink); }
+.day-col.future { opacity: 0.45; }
+.day-col .dow { font-size: 10px; line-height: 14px; }
 .ranking { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .ranking li { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--ls-line); font-size: 14px; }
 .ranking li span:last-child { color: var(--ls-subtext); font-size: 13px; white-space: nowrap; }
@@ -196,12 +200,11 @@ body {
   :root[data-ls-dark="auto"] .bar { background: var(--ls-surface-sub); }
 }
 
-/* 食事記録ボットとつなぐ（くわしい人向け）：記録の置き場所の説明・開きなおしの案内・ボットで入れた記録 */
+/* くらぶボットとつなぐ（くわしい人向け）：記録の置き場所の説明・開きなおしの案内・ボットで入れた記録 */
 .ls-hint.small { font-size: 12px; }
 .where-note { margin: 8px 0 0; padding: 8px 16px; border-radius: 8px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 13px; line-height: 1.55; }
 .where-note b { color: var(--ls-text); }
-.where-note[hidden] { display: none; }
-.item.is-bot { border-style: dashed; }
+.item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; border-style: dashed; }
 .item .bot-name { overflow: hidden; padding: 4px 0; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .item .bot-tag { justify-self: end; padding: 0 8px; border-radius: 999px; background: var(--ls-surface-sub); color: var(--ls-subtext); font-size: 11px; font-weight: 700; white-space: nowrap; }
 
@@ -209,7 +212,7 @@ body {
 .guide-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* 「LINE で開く」の案内（Q キット）の一言も、このページでは左にそろえる */
 #lineOutside .ls-outside-text { text-align: left; }
-.line-guide-close { flex: none; min-height: 44px; padding: 0 4px; white-space: nowrap; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; font-weight: 700; cursor: pointer; }
+.line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); flex: none; min-height: 44px; padding: 0 4px; white-space: nowrap; border: 0; background: none; color: var(--ls-subtext); font-size: 13px; font-weight: 700; cursor: pointer; }
 .line-guide { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 72%); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 10px; -webkit-overflow-scrolling: touch; }
 .lg-panel { margin: 0; scroll-snap-align: start; display: grid; gap: 8px; align-content: start; }
 .lg-panel figcaption { color: var(--ls-subtext); font-size: 13px; line-height: 1.5; }
@@ -231,17 +234,18 @@ body {
 .lg-card-body b { display: block; font-size: 14px; }
 .lg-card-btn { padding: 7px; border-top: 1px solid #efe6da; color: #c26a00; font-weight: 700; text-align: center; }
 
-/* よく記録するもの（LINE のメニュー）：固定した品の並べかえ・メニューの見本 */
+/* よく記録するもの・MYメニュー：固定した品の並べかえと、MYメニューをさがして直す */
 .pin-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .pin-row { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 16px; border: 1px solid var(--ls-line); border-radius: 8px; }
 .pin-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .pin-row .pin-name small { margin-left: 8px; color: var(--ls-subtext); font-size: 12px; }
 .pin-row button { flex: 0 0 44px; width: 44px; height: 44px; border: 0; border-radius: 10px; background: none; color: var(--ls-subtext); font-size: 15px; cursor: pointer; }
 .pin-row button:disabled { opacity: 0.3; cursor: default; }
-.item.is-bot { grid-template-columns: minmax(0, 1fr) auto auto auto; }
-.cand-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--ls-line); }
-.cand-row .pin-name { flex: 1; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+/* さがした品：名前（のこり）・固定・直すの3列。上の見出しの行に「固定」「直す」、品の行はアイコンだけのボタン（「固定」「直す」のアイコンは字の大きさ 16px で。押せる所は 44px） */
+.cand-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--ls-tap) var(--ls-tap); align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--ls-line); }
+.cand-row .pin-name { min-width: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .cand-row .pin-name small { margin-left: 8px; color: var(--ls-subtext); font-size: 12px; }
+.cand-row .ls-icon-button { font-size: 16px; }
 
 /* MYメニューの「共通／自分」の札と、量の倍率 */
 .scope-tag { display: inline-block; margin-right: 8px; padding: 0 8px; border-radius: 999px; background: var(--ls-accent-soft); color: var(--ls-accent-ink); font-size: 11px; font-style: normal; font-weight: 700; vertical-align: 1px; }
@@ -250,7 +254,7 @@ body {
 .scale-row .scale-label { color: var(--ls-subtext); font-size: 13px; font-weight: 700; }
 .scale-row .ls-chip { min-height: 44px; }
 
-/* LINE で開く良さ（「📱 LINE 版で使う」の上。つづくと同じ形） */
+/* LINE で開く良さ（「LINE 版で使う」の中。つづくと同じ形） */
 .line-merit { display: grid; gap: 8px; margin: 0 0 8px; padding-left: 0; list-style: none; }
 
 /* 見出しを、ことばの途中で折り返さない（「つな／ぐ」にしない）。折り返すなら .nw のまとまりの間で */
@@ -262,35 +266,20 @@ body {
 .week-label { flex: 1; text-align: center; font-size: 14px; font-weight: 800; white-space: nowrap; }
 .week-step { min-width: 44px; min-height: 44px; border: 1px solid var(--ls-line); border-radius: 999px; background: var(--ls-surface); color: var(--ls-text); font-size: 20px; font-weight: 800; cursor: pointer; }
 .week-step:disabled { opacity: 0.35; cursor: default; }
-.day-col { grid-template-rows: 14px 110px 16px 14px; }
-.day-col .dow { font-size: 10px; line-height: 14px; }
-.day-col.future { opacity: 0.45; }
 
 /* キーボードで動かしているときの枠（Q キットの部品と同じ。指やマウスで押したときは出ない。入力欄は欄の色で見える） */
 :where(button, a[href], summary, [tabindex]):focus-visible { outline: 2px solid var(--ls-text); outline-offset: 2px; }
-/* 文字だけのボタン（「すべて消す」など）：見た目はそのまま、押せる所を上下に広げる（44px めやす） */
-.link { position: relative; }
-.link::after { content: ""; position: absolute; inset: -6px -4px; }
 
-/* 線アイコン（Q キットの ls-icon）：字の前に置き、間は 8。説明の行・小見出し・LINE で開く良さの行は、アイコンと字を横に並べる */
-.sub-title, .line-merit li { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
-.sub-title .ls-icon, .line-merit .ls-icon { margin-top: 2px; }
-.line-guide-close { display: inline-flex; align-items: center; gap: var(--ls-space-xs); }
+/* 線アイコン（Q キットの ls-icon）：字の前に置き、間は 8。LINE で開く良さの行は、アイコンと字を横に並べる */
+.line-merit li { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
+.line-merit .ls-icon { margin-top: 2px; }
 /* 320px の幅で「くらぶボットと つなぐ ／ くわしい人向け」が入りきらず、ページが横にはみ出していた。添え書きは折り返してよい */
 #lineFold > summary .ls-fold-meta { white-space: normal; }
-/* パネルの中身は、パネルの幅に合わせて縮む（折り返さない見出しがパネルを押し広げないように） */
-.ls-panel > *, .meal-frame > *, .ls-folds > *, .ls-fold-body > * { min-width: 0; }
-/* パネルの見出し・チェックの欄・まだ送っていない記録の1行の線アイコン */
-.ls-panel-title { display: flex; align-items: center; gap: var(--ls-space-s); }
+/* パネル・欄の中身は、幅に合わせて縮む（折り返さない見出し・行がパネルを押し広げないように） */
+.ls-panel > *, .meal-frame > *, .ls-folds > *, .ls-fold-body > *, .pin-list > li, .cand-list > * { min-width: 0; }
+/* チェックの欄・まだ送っていない記録の1行の線アイコン（パネルの見出しの頭のアイコンは Q キット） */
 .send-text > .ls-icon { margin-top: 2px; }
 #saveNote { display: flex; align-items: flex-start; gap: var(--ls-space-s); }
-#saveNote[hidden] { display: none; }
 #saveNote .ls-icon { margin-top: 2px; }
-/* 固定した品・さがした品の行も、欄の幅に合わせて縮む */
-.pin-list > li, .cand-list > * { min-width: 0; }
-/* さがした品：名前（のこり）・固定・直すの3列。上の見出しの行に「固定」「直す」、品の行はアイコンだけのボタン */
-.cand-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--ls-tap) var(--ls-tap); }
 .cand-head { padding: 0; color: var(--ls-subtext); font-size: 12px; font-weight: 700; }
 .cand-head > span:not(.pin-name) { text-align: center; }
-/* さがした品の「固定」「直す」のアイコンは 16px（字の大きさで決める。押せる所は 44px のまま） */
-.cand-row .ls-icon-button { font-size: 16px; }
