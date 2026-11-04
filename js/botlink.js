@@ -23,8 +23,9 @@ const BOT_DAYS = 60; // 読むのは、きょうから60日前まで
  */
 export function createBotLink(ctx) {
   const inLine = !!LINE_LOG.liffId && inLineApp(); // つなぎ先の欄は、LINE 版のときだけ出す
-  // つなぐ先：自分で入れた URL。なければ、この LIFF のくらぶボット
-  const gasTarget = () => ctx.state().gasUrl || cleanGasUrl(LINE_LOG.gasUrl);
+  // つなぐ先：自分で入れた URL（own）。なければ、この LIFF のいつものくらぶボット
+  const own = () => ctx.state().gasUrl;
+  const gasTarget = () => own() || cleanGasUrl(LINE_LOG.gasUrl);
   let client = null; // startLineLog の返事（つなげないときは null）
   let bot = loadBot();
   let lastRead = 0;
@@ -111,7 +112,8 @@ export function createBotLink(ctx) {
 
   // まだボットに送っていない記録の数（見出しの右のアイコンの印。LINE 版でボットにつなぐ人だけ）
   function pending() {
-    const known = botKnown({ own: gasTarget(), qloveUrl: window.QloveBotLink?.get?.() || "", seen: seenBot() });
+    // 自分のつなぎ先を入れた人、または前にいつものくらぶボットにつながって使っているとわかった人だけ（使っていない人には出さない）
+    const known = botKnown({ own: own(), qloveUrl: gasTarget(), seen: seenBot() });
     return inLine && known ? unsent().length : 0;
   }
 
@@ -219,9 +221,14 @@ export function createBotLink(ctx) {
       client = next;
       // まず読んでみて、このボットを使っていない人なら、何も出さずに端末の中だけで使う（つながった表示も出さない）
       const first = await next.list(addDays(ymd(), -(BOT_DAYS - 1)), ymd());
-      // くらぶボット（自分で入れたつなぎ先ではない）なら、使っている人かどうかを覚える（電波がないときの「まだ送っていない」の数に）
-      if (!gasTarget()) rememberBot(asGuest(first) ? "" : window.QloveBotLink?.get?.() || "");
-      if (asGuest(first)) return;
+      const guest = asGuest(first);
+      // いつものくらぶボット（自分で入れたつなぎ先ではない）なら、使っている人かどうかを覚える（電波がないときの「まだ送っていない」の数に）。
+      // 使っていない人とわかったら忘れる。読めなかったとき（電波がないなど）は、前のまま
+      if (!own()) {
+        if (guest) rememberBot("");
+        else if (first?.ok) rememberBot(gasTarget());
+      }
+      if (guest) return;
       showConnected(true);
       ctx.render();
       ctx.changed?.();

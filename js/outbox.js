@@ -55,7 +55,7 @@ export function saveNoteIcon(s) {
 }
 
 // 前につながったくらぶボットの URL を覚えておく場所（URL だけ。ID トークンは入れない）
-export const BOT_SEEN_KEY = "shoquji:bot";
+export const BOT_SEEN_KEY = "shoquji:botSeen"; // ボットの記録の控え（js/botlink.js の shoquji:bot）とは別の場所
 // つながったくらぶボットの URL を覚える（"" なら忘れる。残せない端末では何もしない）
 export function rememberBot(url, storage = globalThis.localStorage) {
   try {
