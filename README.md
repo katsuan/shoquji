@@ -75,7 +75,7 @@ LINE の中（LIFF）で開いたしょくじだけ、くらぶボット（katsu
 | `js/linelog.js`・`js/line-config.js` | LINE 版のときの、くらぶボットに頼むこと（送る・読む・直す・消す・MYメニューなど）と、その LIFF の ID。つなぐ・送る・LINE 版の案内（4コマ）は、Q キットの共通の部品 `shared/botlink.js`（`window.QBotLink`。index.html で読む。テストは `test/_botlink.mjs` で q-oqrn から読む）。送る形はくらぶボットの `{ app: "qlove", v: 1, tool: "shoquji", action, … }`（くらぶボットは action で受ける） |
 | `img/meal-richmenu-main.png` | 食事記録ボット（line-meal-project の GAS）の共通のリッチメニュー（「📝 記録」）の画像。ボットの GAS が、メニューを作りなおすときにここから取る |
 | `docs/linelog-setup.html` | 前の食事記録ボットとつなぐ手順と、受け口の約束（いまはくらぶボットへの引っこしの案内つき） |
-| `test/` | 控えの読みこみと計算・画面に出す中身（views）・開いたときの指定（link）・消すのを待つ（removals）・ボットとのつなぎ・まだ送っていない記録・読みこみの印（`?v=`）のそろえ忘れのテスト（`node --test test/`。`package.json` は node に js/ を読ませるためだけ） |
+| テスト | テストは、公開しない別の所に置いています（公開の前に GitHub Actions が読んで動かします） |
 | `tools/icon.py` | アイコン・ロゴ・OGP |
 
 ## アイコン・ロゴ・OGP
