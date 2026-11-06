@@ -1,5 +1,5 @@
 /* しょくじ（ShoQuji）。部品（見出しの行・カード・チップ・入力欄・ボタン・開閉・トースト）は Q キット
- * （https://katsuan.github.io/line-share/shared/ui.css）。ここには、しょくじの色と字、しょくじにしかない見た目だけを置く */
+ * （https://katsuan.github.io/oqrn/shared/ui.css）。ここには、しょくじの色と字、しょくじにしかない見た目だけを置く */
 :root {
   /* Q キットの色と字を、しょくじの色（ロゴの玉子焼きの黄色）と丸ゴシックに */
   --ls-accent: #ec8a16;

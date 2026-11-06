@@ -1,4 +1,4 @@
-// 「カードでおくるん」のカード（おくるんのお知らせカード。line-share の shared/oqrn.js）と、くらぶボットが読む記録用の文字
+// 「カードでおくるん」のカード（おくるんのお知らせカード。oqrn の shared/oqrn.js）と、くらぶボットが読む記録用の文字
 // app.js が読む（「カードでおくるん」のリンクを作るとき）
 import { MEALS } from "./store.js?v=202611012034";
 import { fmt, label } from "./stats.js?v=202611012034";

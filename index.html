@@ -27,7 +27,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <!-- Q キット（おくるんの共通部品）。色と字は style.css の :root で、しょくじの色に -->
-<link rel="stylesheet" href="https://katsuan.github.io/line-share/shared/ui.css?v=202611012034">
+<link rel="stylesheet" href="https://katsuan.github.io/oqrn/shared/ui.css?v=202611012034">
 <link rel="stylesheet" href="style.css?v=202611012034">
 </head>
 <body>
@@ -263,25 +263,25 @@
     </details>
   </div>
 
-  <!-- 「📤 しょくじを紹介する」：おくるんで紹介カードを送る窓口（line-share/shared/tool-share.js。中身は line-share/data/hub-links.json） -->
+  <!-- 「📤 しょくじを紹介する」：おくるんで紹介カードを送る窓口（oqrn/shared/tool-share.js。中身は oqrn/data/hub-links.json） -->
   <div data-tool-share></div>
 </main>
 
-<!-- おくるんのカードの入口（LIFF ID とカードの URL は line-share の shared/oqrn.js に1か所） -->
-<script src="https://katsuan.github.io/line-share/shared/oqrn.js"></script>
+<!-- おくるんのカードの入口（LIFF ID とカードの URL は oqrn の shared/oqrn.js に1か所） -->
+<script src="https://katsuan.github.io/oqrn/shared/oqrn.js"></script>
 <!-- Q キットの動き（トーストなど） -->
-<script src="https://katsuan.github.io/line-share/shared/ui.js" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/ui.js" defer></script>
 <!-- 「LINEで開く」の共通の案内（LineShareLiff.outsideHelp） -->
-<script src="https://katsuan.github.io/line-share/shared/liff.js" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/liff.js" defer></script>
 <!-- ボットとつなぐ共通の部品（Q キット。window.QBotLink）。app.js より前に -->
-<script src="https://katsuan.github.io/line-share/shared/qlove-bot.js" defer></script>
-<script src="https://katsuan.github.io/line-share/shared/botlink.js?v=202611012034" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/qlove-bot.js" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/botlink.js?v=202611012034" defer></script>
 <!-- LINE 版の「わたし」（本人のアイコン・まだ送っていない記録の印。Q キット。window.QLineMe） -->
-<script src="https://katsuan.github.io/line-share/shared/line-me.js?v=202611012034" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/line-me.js?v=202611012034" defer></script>
 <!-- 週のはじまり（Q 共通。月曜／日曜。ほかの Q ツールで変えたものと同じ） -->
-<script src="https://katsuan.github.io/line-share/shared/week-start.js?v=202611012034"></script>
+<script src="https://katsuan.github.io/oqrn/shared/week-start.js?v=202611012034"></script>
 <script type="module" src="app.js?v=202611012034"></script>
-<script src="https://katsuan.github.io/line-share/shared/tool-share.js" data-tool="shoquji" defer></script>
+<script src="https://katsuan.github.io/oqrn/shared/tool-share.js" data-tool="shoquji" defer></script>
 <!-- 電波がなくても開けるように（sw.js） -->
 <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});</script>
 </body>
