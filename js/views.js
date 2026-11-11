@@ -140,11 +140,11 @@ export function mealSaveLabel(ui) {
   return ui.editing || ui.botEdit ? "食事時間を選んで直す" : "食事時間を記録";
 }
 
-// 記録のボタン（朝・昼・夜・間食。字は食事の名前だけ）。ui.meal（いまの時間帯か、前に押した食事）を大きく先に、ほかは MEALS の順。
-// [{ meal, text, main }] を返す
+// 記録のボタン（朝・昼・夜・間食。字は食事の名前だけ）。1行に MEALS の決まった順で並べ（押す場所が変わらないように）、
+// ui.meal（いまの時間帯か、前に押した食事）だけを濃い色に（main）。[{ meal, text, main }] を返す
 export function mealSaveButtons(ui) {
   const main = MEALS.includes(ui.meal) ? ui.meal : MEALS[0];
-  return [{ meal: main, text: main, main: true }].concat(MEALS.filter((m) => m !== main).map((m) => ({ meal: m, text: m, main: false })));
+  return MEALS.map((m) => ({ meal: m, text: m, main: m === main }));
 }
 
 export function formTexts(ui, dayOffset) {

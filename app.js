@@ -86,7 +86,7 @@ document.querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click
 $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.target.value));
 
 // ---- 朝・昼・夜・間食（記録のボタン） ----
-// いまの時間帯（または前に押した食事）を大きく、ほかを下の行に（js/views.js の mealSaveButtons）。押した食事で記録する
+// 1行に朝・昼・夜・間食。いまの時間帯（または前に押した食事）だけ濃い色（js/views.js の mealSaveButtons）。押した食事で記録する
 function renderMeals() {
   $("mealSaveLabel").textContent = mealSaveLabel(ui);
   $("mealSave").innerHTML = mealSaveButtons(ui)
@@ -98,7 +98,7 @@ function renderMeals() {
 $("mealSave").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");
   if (!b) return;
-  ui.meal = b.dataset.meal; // 押した食事は、つぎの記録でも大きいボタンに（続けて同じ食事を入れやすく）
+  ui.meal = b.dataset.meal; // 押した食事は、つぎの記録でも濃い色に（続けて同じ食事を入れやすく）
   saveEntry();
 });
 
@@ -259,7 +259,8 @@ let savingRemote = false;
 function setSaving(on) {
   const buttons = [$("saveBtn"), ...$("mealSave").querySelectorAll("button")];
   buttons.forEach((b) => (b.disabled = on));
-  if (on) ($("saveBtn").hidden ? $("mealSave").querySelector(".is-main") : $("saveBtn")).textContent = "保存中…";
+  if (on && !$("saveBtn").hidden) $("saveBtn").textContent = "保存中…";
+  if (on && $("saveBtn").hidden) say("保存中…");
 }
 // ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない。カロリーは要る）
 async function saveRemote(entry) {
