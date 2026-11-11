@@ -84,7 +84,10 @@
     </div>
     <div class="form-actions">
       <!-- 朝・昼・夜・間食のボタンで記録する：いまの時間帯（または前に押した食事）を大きく、ほかを下の行に小さく（app.js の renderMeals） -->
-      <div id="mealSave" class="meal-save" role="group" aria-label="いつ食べた？"></div>
+      <div class="meal-save-wrap" id="mealSaveWrap">
+        <p id="mealSaveLabel" class="meal-save-label">食事時間を記録</p>
+        <div id="mealSave" class="meal-save" role="group" aria-labelledby="mealSaveLabel"></div>
+      </div>
       <!-- MYメニューを直すときだけ（食事の区別がない） -->
       <button id="saveBtn" class="ls-button is-primary is-block" type="button" hidden><span class="ls-icon" data-icon="save" aria-hidden="true"></span><span>MYメニューに保存</span></button>
       <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>

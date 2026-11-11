@@ -82,6 +82,8 @@ body {
 .form-actions { display: grid; gap: 8px; }
 /* 記録のボタン：1行目にいまの食事を大きく、2行目にほかの3つを等分。
  * 色は前の朝・昼・夜・間食のタブの地（食事の色のうすい地）。線は付けない。大きいボタンは字を濃く */
+.meal-save-wrap { display: grid; gap: 8px; }
+.meal-save-label { margin: 0; font-size: 13px; font-weight: 800; color: var(--ls-subtext); }
 .meal-save { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .meal-save .ls-button { box-shadow: none; font-weight: 800; white-space: nowrap; }
 .meal-save .is-main {

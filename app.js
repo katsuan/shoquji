@@ -13,7 +13,7 @@ import { readLink } from "./js/link.js?v=202611012034";
 import { cancelRemoval, isWaiting } from "./js/removals.js?v=202611012034";
 import { $, esc, icon } from "./js/dom.js?v=202611012034";
 import { saveNoteIcon, saveNoteText } from "./js/outbox.js?v=202611012034";
-import { dayListHtml, estOptions, formTexts, mealBarHtml, mealSaveButtons, mealClass, mealSplitHtml, rangeLabel, totalsHtml, weekHtml, weekName } from "./js/views.js?v=202611012034";
+import { dayListHtml, estOptions, formTexts, mealBarHtml, mealSaveButtons, mealSaveLabel, mealClass, mealSplitHtml, rangeLabel, totalsHtml, weekHtml, weekName } from "./js/views.js?v=202611012034";
 
 
 let state = load();
@@ -88,10 +88,9 @@ $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.targ
 // ---- 朝・昼・夜・間食（記録のボタン） ----
 // いまの時間帯（または前に押した食事）を大きく、ほかを下の行に（js/views.js の mealSaveButtons）。押した食事で記録する
 function renderMeals() {
+  $("mealSaveLabel").textContent = mealSaveLabel(ui);
   $("mealSave").innerHTML = mealSaveButtons(ui)
-    .map((b) => b.main
-      ? `<button class="ls-button is-main ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${icon(ui.editing || ui.botEdit ? "edit" : "add")}<span>${esc(b.text)}</span></button>` // qcheck-ok: W1 決まった名前の線アイコンと、esc した字だけ
-      : `<button class="ls-button is-other ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${esc(b.text)}</button>`)
+    .map((b) => `<button class="ls-button ${b.main ? "is-main" : "is-other"} ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${esc(b.text)}</button>`)
     .join("");
   // 食べたものの欄までの枠は、大きいボタンの食事の色に
   $("mealFrame").className = `meal-frame ${mealClass(ui.meal)}`;
@@ -604,7 +603,7 @@ function render() {
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
   // MYメニューには食事の区別がないので、保存のボタン1つ。ほかは朝・昼・夜・間食のボタン
   $("saveBtn").hidden = !ui.masterEdit;
-  $("mealSave").hidden = !!ui.masterEdit;
+  $("mealSaveWrap").hidden = !!ui.masterEdit;
   drawStatus(); // 記録がふえた・へったら「まだ送っていません」の数も
 }
 

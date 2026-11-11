@@ -135,12 +135,16 @@ export function estOptions(meal) {
 }
 
 // 入力欄の見出しと、保存のボタン（線アイコンの名前と言葉）。ui は app.js の ui、dayOffset は きょう 0・きのう -1・ほか null
-// 記録のボタン（朝・昼・夜・間食）。ui.meal（いまの時間帯か、前に押した食事）を大きく「朝 を記録」、ほかは食事の名前だけ。
-// 直しているときは「朝 で直す」。[{ meal, text, main }] を MEALS の順（大きいものが先）で返す
+// 記録のボタン（朝・昼・夜・間食）の上の見出し。直しているときは「食事時間を選んで直す」
+export function mealSaveLabel(ui) {
+  return ui.editing || ui.botEdit ? "食事時間を選んで直す" : "食事時間を記録";
+}
+
+// 記録のボタン（朝・昼・夜・間食。字は食事の名前だけ）。ui.meal（いまの時間帯か、前に押した食事）を大きく先に、ほかは MEALS の順。
+// [{ meal, text, main }] を返す
 export function mealSaveButtons(ui) {
-  const verb = ui.editing || ui.botEdit ? "で直す" : "を記録";
   const main = MEALS.includes(ui.meal) ? ui.meal : MEALS[0];
-  return [{ meal: main, text: `${main} ${verb}`, main: true }].concat(MEALS.filter((m) => m !== main).map((m) => ({ meal: m, text: m, main: false })));
+  return [{ meal: main, text: main, main: true }].concat(MEALS.filter((m) => m !== main).map((m) => ({ meal: m, text: m, main: false })));
 }
 
 export function formTexts(ui, dayOffset) {
