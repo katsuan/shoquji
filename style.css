@@ -81,18 +81,18 @@ body {
 
 .form-actions { display: grid; gap: 8px; }
 /* 記録のボタン：1行目にいまの食事を大きく、2行目にほかの3つを等分。
- * 色は前の朝・昼・夜・間食のタブと同じ：大きいボタンは選んでいたタブ（食事の色の線・枠と同じ地）、小さいボタンは選んでいないタブ（食事の色のうすい地） */
+ * 色は前の朝・昼・夜・間食のタブの地（食事の色のうすい地）。線は付けない。大きいボタンは字を濃く */
 .meal-save { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .meal-save .ls-button { box-shadow: none; font-weight: 800; white-space: nowrap; }
 .meal-save .is-main {
   grid-column: 1 / -1; min-height: 56px; font-size: 17px;
-  border: 2px solid var(--m);
-  background: color-mix(in srgb, var(--m) 9%, var(--ls-surface));
+  border: 0;
+  background: color-mix(in srgb, var(--m) 16%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 55%, var(--ls-text));
 }
 .meal-save .is-other {
   min-height: 44px; padding: 0 4px;
-  border: 2px solid transparent;
+  border: 0;
   background: color-mix(in srgb, var(--m) 16%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 45%, var(--ls-subtext));
 }
