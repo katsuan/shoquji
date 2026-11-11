@@ -9,9 +9,14 @@ export function mealClass(meal) {
   return `m${Math.max(0, MEALS.indexOf(meal))}`;
 }
 
-// 目標にしめる割合（%。100 まで。目標がなければ 0）
+// 目標にしめる割合（%。目標をこえたら 120 などそのまま。目標がなければ 0）。文字に出す数
+export function rate(v, goal) {
+  return goal > 0 ? Math.round((v / goal) * 100) : 0;
+}
+
+// 棒の長さ（%。100 まで）
 export function pct(v, goal) {
-  return goal > 0 ? Math.min(100, Math.round((v / goal) * 100)) : 0;
+  return Math.min(100, rate(v, goal));
 }
 
 // 食事ごとの色のバー（横）。rows は byMeal の形。scale はバーの右はしにあたるカロリー
@@ -48,7 +53,7 @@ export function totalsHtml(logs, t, g) {
     .join("");
   const meals = byMeal(logs);
   return `
-      <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${pct(t.kcal, g.kcal)}%）</span></div>
+      <div class="kcal-line"><b>${fmt(t.kcal)}<small>kcal</small></b><span>目標 ${fmt(g.kcal)} kcal（${rate(t.kcal, g.kcal)}%）</span></div>
       ${mealBarHtml(meals, Math.max(g.kcal, t.kcal, 1), { over: t.kcal > g.kcal, goal: g.kcal })}
       ${mealSplitHtml(meals)}
       ${hasPfc ? `<div class="pfc">
