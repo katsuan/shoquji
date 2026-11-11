@@ -92,7 +92,7 @@ function renderMeals() {
   $("mealSave").innerHTML = mealSaveButtons(ui)
     .map((b) => `<button class="ls-button ${b.main ? "is-main" : "is-other"} ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${esc(b.text)}</button>`)
     .join("");
-  // 食べたものの欄までの枠は、大きいボタンの食事の色に
+  // 食べたものの欄の、入力欄を選んだ線・ご飯何杯分の選んだ印は、大きいボタンの食事の色に
   $("mealFrame").className = `meal-frame ${mealClass(ui.meal)}`;
 }
 $("mealSave").addEventListener("click", (e) => {
