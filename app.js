@@ -13,7 +13,7 @@ import { readLink } from "./js/link.js?v=202611012034";
 import { cancelRemoval, isWaiting } from "./js/removals.js?v=202611012034";
 import { $, esc, icon } from "./js/dom.js?v=202611012034";
 import { saveNoteIcon, saveNoteText } from "./js/outbox.js?v=202611012034";
-import { dayListHtml, estOptions, formTexts, mealBarHtml, mealClass, mealSplitHtml, rangeLabel, totalsHtml, weekHtml, weekName } from "./js/views.js?v=202611012034";
+import { dayListHtml, estOptions, formTexts, mealBarHtml, mealSaveButtons, mealClass, mealSplitHtml, rangeLabel, totalsHtml, weekHtml, weekName } from "./js/views.js?v=202611012034";
 
 
 let state = load();
@@ -85,19 +85,22 @@ function setDate(date) {
 document.querySelectorAll("[data-day]").forEach((b) => b.addEventListener("click", () => setDate(addDays(ymd(), Number(b.dataset.day)))));
 $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.target.value));
 
-// ---- 朝・昼・夜・間食 ----
+// ---- 朝・昼・夜・間食（記録のボタン） ----
+// いまの時間帯（または前に押した食事）を大きく、ほかを下の行に（js/views.js の mealSaveButtons）。押した食事で記録する
 function renderMeals() {
-  const box = document.querySelector(".meals");
-  box.innerHTML = MEALS.map((m) => `<button class="ls-chip ${mealClass(m)}" type="button" role="radio" aria-checked="${m === ui.meal}" aria-pressed="${m === ui.meal}" data-meal="${m}">${m}</button>`).join("");
-  // 食べたものの欄までの枠も、選んでいる食事の色に
+  $("mealSave").innerHTML = mealSaveButtons(ui)
+    .map((b) => b.main
+      ? `<button class="ls-button is-primary is-main" type="button" data-meal="${b.meal}">${icon(ui.editing || ui.botEdit ? "edit" : "add")}<span>${esc(b.text)}</span></button>` // qcheck-ok: W1 決まった名前の線アイコンと、esc した字だけ
+      : `<button class="ls-button is-other ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${esc(b.text)}</button>`)
+    .join("");
+  // 食べたものの欄までの枠は、大きいボタンの食事の色に
   $("mealFrame").className = `meal-frame ${mealClass(ui.meal)}`;
-  renderEst(); // 間食だけ「少し」がある
 }
-document.querySelector(".meals").addEventListener("click", (e) => {
+$("mealSave").addEventListener("click", (e) => {
   const b = e.target.closest("[data-meal]");
   if (!b) return;
-  ui.meal = b.dataset.meal;
-  renderMeals();
+  ui.meal = b.dataset.meal; // 押した食事は、つぎの記録でも大きいボタンに（続けて同じ食事を入れやすく）
+  saveEntry();
 });
 
 // ---- 食べたもの・よく食べるもの ----
@@ -138,8 +141,7 @@ function renderSuggest() {
 // ---- だいたいのカロリー（ご飯◯杯分。目安は js/views.js の estOptions） ----
 // ボタンを描く（押したものは選んだ印。カロリーを自分で入れたら外れる）
 function renderEst() {
-  const opts = estOptions(ui.meal);
-  if (ui.est && !opts.some((o) => o.key === ui.est)) ui.est = null; // 食事を切りかえて、その量がなくなったとき
+  const opts = estOptions(); // 食事はボタンを押すまで決まらないので、間食の「少し」もふくめて全部
   $("estChips").style.setProperty("--n", opts.length);
   $("estChips").innerHTML = opts
     .map((o) => `<button class="ls-chip" type="button" data-est="${o.key}" aria-pressed="${o.key === ui.est}">${o.label}<small>${o.kcal}kcal</small></button>`)
@@ -148,7 +150,7 @@ function renderEst() {
 $("estChips").addEventListener("click", (e) => {
   const b = e.target.closest("[data-est]");
   if (!b) return;
-  const o = estOptions(ui.meal).find((x) => x.key === b.dataset.est);
+  const o = estOptions().find((x) => x.key === b.dataset.est);
   if (!o) return;
   // もう一度押すと取り消す
   ui.est = ui.est === o.key ? null : o.key;
@@ -220,7 +222,8 @@ function clearForm() {
 }
 
 let savedAt = 0; // 記録した時刻（すぐの二度押しで「入れてね」を出さない）
-$("saveBtn").addEventListener("click", () => {
+// 記録する・直す（食事は ui.meal。朝・昼・夜・間食のボタンと、MYメニューの保存のボタンから）
+function saveEntry() {
   const entry = readForm();
   if (!entry.name.trim() && Date.now() - savedAt < 1000) return;
   // 足りないときは、その欄のすぐ下に赤い文字で
@@ -249,9 +252,16 @@ $("saveBtn").addEventListener("click", () => {
   persist();
   clearForm();
   render();
-});
+}
+$("saveBtn").addEventListener("click", saveEntry);
 
 let savingRemote = false;
+// 送っているあいだは、保存のボタン・記録のボタンを押せなくする（見えているほうに「保存中…」。終わったら render で描きなおす）
+function setSaving(on) {
+  const buttons = [$("saveBtn"), ...$("mealSave").querySelectorAll("button")];
+  buttons.forEach((b) => (b.disabled = on));
+  if (on) ($("saveBtn").hidden ? $("mealSave").querySelector(".is-main") : $("saveBtn")).textContent = "保存中…";
+}
 // ボットの記録を直す・MYメニューを保存する（端末の記録はふやさない。カロリーは要る）
 async function saveRemote(entry) {
   if (savingRemote) return;
@@ -265,11 +275,10 @@ async function saveRemote(entry) {
     return;
   }
   savingRemote = true;
-  $("saveBtn").disabled = true;
-  $("saveBtn").textContent = "保存中…";
+  setSaving(true);
   const res = ui.botEdit ? await lineLog().update(ui.botEdit, e) : await lineLog().saveMaster(ui.masterEdit.key, e, ui.masterEdit.keep);
   savingRemote = false;
-  $("saveBtn").disabled = false;
+  setSaving(false);
   if (!res.ok) {
     render();
     return say(lineLogMessage(res.error));
@@ -582,6 +591,7 @@ function render() {
   writeDays(view().logs);
   renderDays();
   renderMeals();
+  renderEst();
   renderSuggest();
   renderDay();
   renderWeekStart();
@@ -592,7 +602,9 @@ function render() {
   $("formHeading").textContent = heading;
   $("saveBtn").innerHTML = `${icon(saveIcon)}<span>${esc(saveText)}</span>`; // qcheck-ok: W1 icon() は決まった名前の線アイコンだけ、字は esc 済み
   $("cancelEdit").hidden = !ui.editing && !ui.botEdit && !ui.masterEdit;
-  document.querySelector(".meals").hidden = !!ui.masterEdit; // MYメニューには食事の区別がない
+  // MYメニューには食事の区別がないので、保存のボタン1つ。ほかは朝・昼・夜・間食のボタン
+  $("saveBtn").hidden = !ui.masterEdit;
+  $("mealSave").hidden = !!ui.masterEdit;
   drawStatus(); // 記録がふえた・へったら「まだ送っていません」の数も
 }
 

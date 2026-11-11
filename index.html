@@ -49,9 +49,7 @@
   <!-- 記録する -->
   <section class="ls-panel" aria-labelledby="formTitle">
     <h2 id="formTitle" class="ls-panel-title"><span class="ls-icon" data-icon="edit" aria-hidden="true"></span><span id="formHeading">記録する</span></h2>
-    <!-- 朝・昼・夜・間食はタブ。選んでいるタブは下の枠とつながり、枠（食べたもの〜栄養・量）はその食事の色（app.js の renderMeals）。
-         いまどの食事を記録しているか、入れているあいだずっとわかるように。「＋ 記録する」は枠の外 -->
-    <div class="meals meal-tabs" role="radiogroup" aria-label="いつ食べた？"></div>
+    <!-- 枠（食べたもの〜栄養・量）は、下の大きいボタンの食事の色（app.js の renderMeals） -->
     <div id="mealFrame" class="meal-frame">
       <label class="ls-field">
         <span class="ls-label">食べたもの</span>
@@ -85,7 +83,10 @@
       <p id="kcalError" class="ls-hint is-error" hidden>カロリーを入れてね（ボットの記録・MYメニューには要ります）</p>
     </div>
     <div class="form-actions">
-      <button id="saveBtn" class="ls-button is-primary is-block" type="button"><span class="ls-icon" data-icon="add" aria-hidden="true"></span><span>記録する</span></button>
+      <!-- 朝・昼・夜・間食のボタンで記録する：いまの時間帯（または前に押した食事）を大きく、ほかを下の行に小さく（app.js の renderMeals） -->
+      <div id="mealSave" class="meal-save" role="group" aria-label="いつ食べた？"></div>
+      <!-- MYメニューを直すときだけ（食事の区別がない） -->
+      <button id="saveBtn" class="ls-button is-primary is-block" type="button" hidden><span class="ls-icon" data-icon="save" aria-hidden="true"></span><span>MYメニューに保存</span></button>
       <button id="cancelEdit" class="ls-button is-block" type="button" hidden>やめる</button>
     </div>
     <p id="status" class="status" role="status"></p>

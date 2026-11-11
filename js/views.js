@@ -122,12 +122,22 @@ export function weekHtml(days, { today, goal }) {
 
 // だいたいのカロリー（ご飯◯杯分）。くらぶボットと同じ目安：ご飯1杯（150g）≈ 240kcal。朝・昼・夜は½〜3杯、間食は「少し」〜1.5杯
 const RICE_BOWL_KCAL = 240;
+// meal を渡さないとき（記録のボタンを押すまで食事が決まらない入力欄）は、間食の「少し」もふくめた全部
 export function estOptions(meal) {
-  const bowls = meal === "間食" ? [{ key: "few", label: "少し", kcal: 80 }, 0.5, 1, 1.5] : [0.5, 1, 1.5, 2, 3];
+  const few = { key: "few", label: "少し", kcal: 80 };
+  const bowls = meal === "間食" ? [few, 0.5, 1, 1.5] : meal ? [0.5, 1, 1.5, 2, 3] : [few, 0.5, 1, 1.5, 2, 3];
   return bowls.map((b) => (typeof b === "object" ? b : { key: String(b), label: `${b === 0.5 ? "½" : b}杯`, kcal: Math.round(RICE_BOWL_KCAL * b) }));
 }
 
 // 入力欄の見出しと、保存のボタン（線アイコンの名前と言葉）。ui は app.js の ui、dayOffset は きょう 0・きのう -1・ほか null
+// 記録のボタン（朝・昼・夜・間食）。ui.meal（いまの時間帯か、前に押した食事）を大きく「朝 を記録」、ほかは食事の名前だけ。
+// 直しているときは「朝 で直す」。[{ meal, text, main }] を MEALS の順（大きいものが先）で返す
+export function mealSaveButtons(ui) {
+  const verb = ui.editing || ui.botEdit ? "で直す" : "を記録";
+  const main = MEALS.includes(ui.meal) ? ui.meal : MEALS[0];
+  return [{ meal: main, text: `${main} ${verb}`, main: true }].concat(MEALS.filter((m) => m !== main).map((m) => ({ meal: m, text: m, main: false })));
+}
+
 export function formTexts(ui, dayOffset) {
   const heading = ui.botEdit
     ? "ボットの記録を直す"
