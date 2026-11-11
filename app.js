@@ -90,7 +90,7 @@ $("datePick").addEventListener("change", (e) => e.target.value && setDate(e.targ
 function renderMeals() {
   $("mealSave").innerHTML = mealSaveButtons(ui)
     .map((b) => b.main
-      ? `<button class="ls-button is-primary is-main" type="button" data-meal="${b.meal}">${icon(ui.editing || ui.botEdit ? "edit" : "add")}<span>${esc(b.text)}</span></button>` // qcheck-ok: W1 決まった名前の線アイコンと、esc した字だけ
+      ? `<button class="ls-button is-main ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${icon(ui.editing || ui.botEdit ? "edit" : "add")}<span>${esc(b.text)}</span></button>` // qcheck-ok: W1 決まった名前の線アイコンと、esc した字だけ
       : `<button class="ls-button is-other ${mealClass(b.meal)}" type="button" data-meal="${b.meal}">${esc(b.text)}</button>`)
     .join("");
   // 食べたものの欄までの枠は、大きいボタンの食事の色に

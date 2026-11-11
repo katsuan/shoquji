@@ -80,14 +80,21 @@ body {
 .pick small { color: var(--ls-subtext); font-size: 11px; font-weight: 700; }
 
 .form-actions { display: grid; gap: 8px; }
-/* 記録のボタン：1行目にいまの食事を大きく、2行目にほかの3つを等分。小さいボタンは、その食事の色のうすい地 */
+/* 記録のボタン：1行目にいまの食事を大きく、2行目にほかの3つを等分。
+ * 色は前の朝・昼・夜・間食のタブと同じ：大きいボタンは選んでいたタブ（食事の色の線・枠と同じ地）、小さいボタンは選んでいないタブ（食事の色のうすい地） */
 .meal-save { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.meal-save .is-main { grid-column: 1 / -1; min-height: 56px; font-size: 17px; }
-.meal-save .is-other {
-  min-height: 44px; padding: 0 4px; white-space: nowrap; font-weight: 800;
-  border-color: color-mix(in srgb, var(--m) 40%, var(--ls-line));
-  background: color-mix(in srgb, var(--m) 16%, var(--ls-surface));
+.meal-save .ls-button { box-shadow: none; font-weight: 800; white-space: nowrap; }
+.meal-save .is-main {
+  grid-column: 1 / -1; min-height: 56px; font-size: 17px;
+  border: 2px solid var(--m);
+  background: color-mix(in srgb, var(--m) 9%, var(--ls-surface));
   color: color-mix(in srgb, var(--m) 55%, var(--ls-text));
+}
+.meal-save .is-other {
+  min-height: 44px; padding: 0 4px;
+  border: 2px solid transparent;
+  background: color-mix(in srgb, var(--m) 16%, var(--ls-surface));
+  color: color-mix(in srgb, var(--m) 45%, var(--ls-subtext));
 }
 .ls-button.line { gap: 4px; border-color: var(--line-green); background: var(--line-green); color: #fff; }
 .ls-button.line small { font-size: 12px; opacity: 0.9; }
